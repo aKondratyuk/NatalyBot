@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+Hello {{ current_user.username }}, it's standart page after autentification
+<br>
+{% if current_user.is_authenticated and current_user.admin %}
+    <form action="/admin">
+        <input type="submit" value="Go to admin page!"/>
+    </form>
+{% endif %}
+<form action="/logout">
+    <input type="submit" value="Logout"/>
+</form>
+</body>
+</html>
