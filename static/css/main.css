@@ -3,7 +3,6 @@
 } */
 
 
-
 /*//////////////////////////////////////////////////////////////////
 [ FONT ]*/
 
@@ -280,6 +279,34 @@ iframe {
   left: -105px;
   width: 80px;
 
+}
+
+/*==================================================================
+[ Password control view ]*/
+#password-input {
+    font-family: Roboto-Regular;
+    font-size: 15px;
+    color: #555555;
+    line-height: 1.2;
+
+    display: block;
+    width: 100%;
+    background: transparent;
+    padding: 0 5px;
+}
+
+.password-control {
+	position: absolute;
+	top: 11px;
+	right: 6px;
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	background: url(../images/view.svg) 0 0 no-repeat;
+}
+
+.password-control.view {
+	background: url(../images/no-view.svg) 0 0 no-repeat;
 }
 
 /*---------------------------------------------*/

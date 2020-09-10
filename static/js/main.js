@@ -63,6 +63,16 @@
 
         $(thisAlert).removeClass('alert-validate');
     }
-    
+
+    $('body').on('click', '.password-control', function(){
+        if ($('.has-val.input100').attr('type') == 'password'){
+            $(this).addClass('view');
+            $('.has-val.input100').attr('type', 'text');
+        } else {
+            $(this).removeClass('view');
+            $('.has-val.input100').attr('type', 'password');
+        }
+        return false;
+    });
 
 })(jQuery);
