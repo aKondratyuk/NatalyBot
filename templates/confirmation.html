@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confirmation</title>
+<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<style type="text/css">
+  @font-face {
+       font-family: Roboto-Regular;
+       src: url('../fonts/roboto/Roboto-Regular.ttf');
+    }
+
+    body{
+        margin: 50px 15px 0;
+        font-family: Roboto-Regular;
+    }
+    h1{
+        color: #2FAC66;
+        font-weight: bold;
+        padding-bottom: 15px;
+    }
+    p{
+        color: #666666;
+        font-size: 16px;
+    }
+    i{
+        color: #2FAC66;
+        width: 60px;
+        height: 60px;
+        border-radius: 60px;
+        background: #f2f2f2;
+        display: inline-block;
+        line-height: 62px;
+        font-size: 28px;
+    }
+    a {
+        font-family: Roboto-Regular;
+        font-size: 16px;
+        line-height: 1.7;
+        color: #57b846;
+        margin: 0px;
+        transition: all 0.4s;
+        -webkit-transition: all 0.4s;
+        -o-transition: all 0.4s;
+        -moz-transition: all 0.4s;
+    }
+
+    a:focus {
+        outline: none !important;
+    }
+
+    a:hover {
+        text-decoration: none;
+        color: #57b846;
+    }
+</style>
+</head>
+<body>
+<div class="text-center">
+    <i class="icon-box"><span class="glyphicon glyphicon-ok"></span></i>
+    <h1>Подтверждение</h1>
+    <p>Форма успешно отправлена. Если ваша заявка одобрена администратором, можете <a href="{{ url_for('login') }}">войти на сайт.</a></p>
+</div>
+
+</body></html>
