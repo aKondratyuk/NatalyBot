@@ -527,6 +527,7 @@ input.input100 {
   font-family: FontAwesome;
   display: block;
   position: absolute;
+  background-color: #fff;
   color: #c80000;
   font-size: 15px;
   top: 50%;

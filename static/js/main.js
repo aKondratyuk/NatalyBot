@@ -65,12 +65,12 @@
     }
 
     $('body').on('click', '.password-control', function(){
-        if ($('.has-val.input100').attr('type') == 'password'){
+        if ($('#password-input').attr('type') == 'password'){
             $(this).addClass('view');
-            $('.has-val.input100').attr('type', 'text');
+            $('#password-input').attr('type', 'text');
         } else {
             $(this).removeClass('view');
-            $('.has-val.input100').attr('type', 'password');
+            $('#password-input').attr('type', 'password');
         }
         return false;
     });

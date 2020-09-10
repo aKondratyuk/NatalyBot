@@ -41,13 +41,13 @@
 				<form class="login100-form validate-form p-b-30" style="padding-left: 130px;">
 					<div class="wrap-input100 validate-input m-b-26" data-validate="Необходимо ввести email">
 						<span class="label-input100">Email</span>
-						<input class="input100" type="text" name="username" placeholder="Введите email">
+						<input class="input100" type="email" name="username" placeholder="Введите email" required>
 						<span class="focus-input100"></span>
 					</div>
 
 					<div class="wrap-input100 validate-input m-b-18" data-validate = "Необходимо ввести пароль">
 						<span class="label-input100">Пароль</span>
-						<input class="input100" type="password" name="pass" placeholder="Введите пароль">
+						<input class="input100" id="password-input" type="password" name="pass" placeholder="Введите пароль" size="30" maxlength="20" minlength="6" required>
 						<span class="focus-input100"></span>
 						<a href="#" class="password-control"></a>
 					</div>
