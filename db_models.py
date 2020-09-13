@@ -14,7 +14,6 @@ engine = create_engine(f'{env.DB_DIALECT}+{env.DB_DRIVER}://'
 Base = declarative_base()
 Session = sessionmaker()
 Session.configure(bind=engine)
-session = Session()
 
 
 class Categories(Base):
