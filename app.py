@@ -1,17 +1,18 @@
 # Imports the Flask class
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 from flask_bootstrap import Bootstrap
+
 # Creates an app and checks if its the main or imported
 app = Flask(__name__)
 Bootstrap(app)
 
-# Specifies what URL triggers hello_world()
+
+# Specifies what URL triggers login()
 @app.route('/')
 # The function run on the index route
 def login():
-    # Returns the text to be displayed
+    # Returns the html page to be displayed
     return render_template('login.html')
-# If this script isn't an import
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
