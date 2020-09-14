@@ -192,14 +192,15 @@ class ProfileDescription(Base):
                "looking_for_an_age_range='%s', name='%s', " \
                "nickname='%s', occupation='%s', " \
                "rate='%s', sex='%s', votes='%s')>" % (
-                       self.profile_id, self.zodiac,
-                       self.ethnicity_name, self.religion,
-                       self.age, self.city,
-                       self.credits_to_open_letter, self.description,
-                       self.income, self.last_online,
-                       self.looking_for_an_age_range, self.name,
-                       self.nickname, self.occupation,
-                       self.rate, self.sex, self.votes)
+                self.profile_id, self.zodiac,
+                self.ethnicity_name, self.religion,
+                self.age, self.city,
+                self.credits_to_open_letter,
+                self.description[:100] + '...',
+                self.income, self.last_online,
+                self.looking_for_an_age_range, self.name,
+                self.nickname, self.occupation,
+                self.rate, self.sex, self.votes)
 
 
 class ProfileLanguages(Base):
@@ -275,7 +276,7 @@ class Texts(Base):
 
     def __repr__(self):
         return "<Texts(text_id='%s', text='%s')>" % (
-                self.text_id, self.text)
+                self.text_id, self.text[:100] + '...')
 
 
 class UserRoles(Base):

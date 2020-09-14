@@ -32,27 +32,40 @@
 	<div class="limiter">
 		<div class="container-login100">
 			<div class="wrap-login100">
-				<div class="login100-form-title" style="background-image: url(static/images/bg-02.jpg);">
+				<div class="login100-form-title"
+					 style="background-image: url(static/images/bg-02.jpg);">
 					<span class="login100-form-title-1">
 						РЕГИСТРАЦИЯ В СИСТЕМЕ
 					</span>
 				</div>
 
-				<form class="login100-form validate-form p-b-30" style="padding-left: 130px;" action="" method="post">
-					<div class="wrap-input100 validate-input m-b-26" data-validate="Необходимо ввести email">
+				<form action=""
+					  class="login100-form validate-form p-b-30" method="post"
+					  style="padding-left: 130px;">
+					<input name="csrf_token" type="hidden"
+						   value="{{ csrf_token() }}"/>
+					<div class="wrap-input100 validate-input m-b-26"
+						 data-validate="Необходимо ввести email">
 						<span class="label-input100">Email</span>
-						<input class="input100" type="email" name="email" placeholder="Введите email" required>
+						<input class="input100" name="email"
+							   placeholder="Введите email"
+							   required type="email">
 						<span class="focus-input100"></span>
 					</div>
 
-					<div class="wrap-input100 validate-input m-b-18" data-validate = "Необходимо ввести пароль">
+					<div class="wrap-input100 validate-input m-b-18"
+						 data-validate="Необходимо ввести пароль">
 						<span class="label-input100">Пароль</span>
-						<input class="input100" id="password-input" type="password" name="password" placeholder="Введите пароль" size="30" maxlength="20" minlength="6" required>
+						<input class="input100" id="password-input"
+							   maxlength="20" minlength="6"
+							   name="password" placeholder="Введите пароль"
+							   required size="30" type="password">
 						<span class="focus-input100"></span>
 						<a href="#" class="password-control"></a>
 					</div>
 
-					<div class="container-login100-form-btn" style="padding-top: 54px;">
+					<div class="container-login100-form-btn"
+						 style="padding-top: 54px;">
 						<button class="login100-form-btn" type="submit">
 							Зарегестрироваться
 						</button>

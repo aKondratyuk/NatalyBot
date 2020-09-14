@@ -70,6 +70,8 @@ def login():
     print(current_user)
     print(request.form.get('email'))
     print(request.form.get('password'))
+    if current_user.is_authenticated:
+        return redirect(url_for('control_panel'))
     if request.method == 'POST':
         # Login and validate the user.
         # user should be an instance of your `User` class
@@ -78,20 +80,22 @@ def login():
             if user.check_password(request.form.get('password')):
                 # User saving in session
                 login_user(user, remember=request.form.get('remember-me'))
-
+                print(current_user)
                 logger.info(f"User {request.form.get('email')} "
                             "Logged in successfully.")
-
+                print(request.args)
                 next_url = request.args.get('next')
                 # is_safe_url should check if the url is safe for redirects.
                 if not is_safe_url(next_url):
                     return abort(400)
 
-                return redirect(next_url or url_for('signup'))
+                return redirect(next_url or url_for('control_panel'))
         logger.error(
                 f"Invalid username/password by {request.form.get('email')}")
+
     # Returns the html page to be displayed
-    return render_template('login.html')
+    return render_template('login.html',
+                           error='Неправильный логин или пароль!')
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -105,6 +109,7 @@ def signup():
 
 
 @app.route('/control_panel', methods=['GET', 'POST'])
+@login_required
 def control_panel():
     if request.method == 'POST':
         print(request.form.get('email'))

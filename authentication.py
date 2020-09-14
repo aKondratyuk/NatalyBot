@@ -8,12 +8,12 @@ class User(UserMixin):
     id = str()
     username = str()
     password = str()
-    role = str()
+    role = list()
     privileges = dict()
 
     def __init__(self, user_id: str, login: str, password: str,
                  role: list, privileges: dict):
-        self.user_id = user_id
+        self.id = user_id
         self.login = login
         self.password = password
         self.role = role
@@ -48,10 +48,15 @@ def find_user(login: str = None,
         if not login:
             return None
     if login:
-        user = session.query(Users).filter(Users.login == login).one()
+        user = session.query(Users).filter(Users.login == login).all()
+        if len(user) == 0:
+            return None
+        user = user[0]
         login = user.login
         password = user.user_password
         user_id = generate_password_hash(login, "sha256", salt_length=8)
+        print(type)
+        print(generate_password_hash(login, "sha256", salt_length=8))
 
         query = session.query(RolesOfUsers, Privileges)
         query = query.outerjoin(
@@ -78,4 +83,4 @@ def find_user(login: str = None,
         session.close()
         return User(user_id=user_id, login=login, password=password,
                     role=role, privileges=privileges)
-    return False
+    return None
