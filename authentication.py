@@ -11,9 +11,9 @@ class User(UserMixin):
     role = str()
     privileges = dict()
 
-    def __init__(self, id: str, login: str, password: str,
-                 role: str, privileges: dict):
-        self.id = id
+    def __init__(self, user_id: str, login: str, password: str,
+                 role: list, privileges: dict):
+        self.user_id = user_id
         self.login = login
         self.password = password
         self.role = role
@@ -40,27 +40,42 @@ def find_user(login: str = None,
     session = Session()
 
     if user_id:
-        db_user_logins = session.query(User).all()['login']
-        for db_user_login in db_user_logins:
-            if check_password_hash(user_id, login):
-                login = db_user_login
+        db_users = session.query(Users).all()
+        for db_user in db_users:
+            if check_password_hash(user_id, db_user.login):
+                login = db_user.login
+                break
         if not login:
             return None
-    login, password = session.query(User).filter(login=login).one()
-    if login != '':
+    if login:
+        user = session.query(Users).filter(Users.login == login).one()
+        login = user.login
+        password = user.user_password
         user_id = generate_password_hash(login, "sha256", salt_length=8)
-        role = session.query(RolesOfUsers).filter(login=login).one()
-        role = role['user_role']
-        privileges_names = session.query(PrivilegesAssigns).filter(
-                user_role=role)
-        privileges_names = privileges_names['privilege_name']
-        privileges = {
-                privilege_name: session.query(Privileges).filter(
-                        privilege_name=privilege_name).one()[
-                    'privilege_status']
-                for privilege_name in privileges_names}
-        session.close()
-        return User(id=user_id, login=login, password=password,
-                    role=role, privileges=privileges)
 
+        query = session.query(RolesOfUsers, Privileges)
+        query = query.outerjoin(
+                UserRoles,
+                UserRoles.user_role == RolesOfUsers.user_role)
+        query = query.outerjoin(
+                PrivilegesAssigns,
+                PrivilegesAssigns.user_role == UserRoles.user_role)
+        query = query.outerjoin(
+                Privileges,
+                Privileges.privilege_name == PrivilegesAssigns.privilege_name)
+        query = query.filter(RolesOfUsers.login == login)
+        q_result = query.all()
+        if len(q_result) == 0:
+            role, privileges = [], {}
+        elif len(q_result) == 1:
+            role = [row[0].user_role for row in q_result]
+            privileges = {}
+        else:
+            role = [row[0].user_role for row in q_result]
+            privileges = {row[1].privilege_name: row[1].privilege_status
+                          for row in q_result}
+
+        session.close()
+        return User(user_id=user_id, login=login, password=password,
+                    role=role, privileges=privileges)
     return False
