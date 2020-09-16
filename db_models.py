@@ -313,3 +313,23 @@ class Zodiacs(Base):
 
     def __repr__(self):
         return "<Zodiacs(zodiac='%s')>" % self.zodiac
+
+
+class Invites(Base):
+    __tablename__ = 'Invites'
+    invite_id = Column(BINARY(16), primary_key=True)
+    create_time = Column(TIMESTAMP, nullable=False)
+
+    def __repr__(self):
+        return "<Invites(invite_id='%s', invite_id='%s')>" % (
+                self.invite_id, self.create_time)
+
+
+class SentInvites(Base):
+    __tablename__ = 'Sent_invites'
+    invite_id = Column(BINARY(16), primary_key=True)
+    login = Column(VARCHAR(190), primary_key=True)
+
+    def __repr__(self):
+        return "<Sent_invites(invite_id='%s', invite_id='%s')>" % (
+                self.invite_id, self.login)

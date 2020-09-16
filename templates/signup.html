@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--suppress HtmlUnknownTarget -->
 <html lang="en">
 <head>
 	<title>Login V15</title>
@@ -46,8 +47,8 @@
 						   value="{{ csrf_token() }}"/>
 					<div class="wrap-input100 validate-input m-b-26"
 						 data-validate="Необходимо ввести email">
-						<span class="label-input100">Email</span>
-						<input class="input100" name="email"
+						<label class="label-input100" for="email">Email</label>
+						<input class="input100" id="email" name="email"
 							   placeholder="Введите email"
 							   required type="email">
 						<span class="focus-input100"></span>
@@ -55,7 +56,7 @@
 
 					<div class="wrap-input100 validate-input m-b-18"
 						 data-validate="Необходимо ввести пароль">
-						<span class="label-input100">Пароль</span>
+						<label class="label-input100" for="password-input">Пароль</label>
 						<input class="input100" id="password-input"
 							   maxlength="20" minlength="6"
 							   name="password" placeholder="Введите пароль"
@@ -75,7 +76,8 @@
 						<div>
 							<a href="{{ url_for('login') }}" class="txt3">
 								Уже есть аккаунт? Тогда войдите
-								<i class="fa fa-long-arrow-right m-l-5" aria-hidden="true"></i>
+								<i aria-hidden="true"
+								   class="fa fa-long-arrow-right m-l-5"></i>
 							</a>
 						</div>
 					</div>
