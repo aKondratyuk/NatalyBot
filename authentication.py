@@ -1,4 +1,5 @@
 from flask_login import UserMixin
+from sqlalchemy import update
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from db_models import *
@@ -23,12 +24,19 @@ class User(UserMixin):
         return "<{}:{}>".format(self.login, self.password)
 
     def set_password(self, password: str):
-        # Need to add encryption
-        self.password = password
+        session = Session()
+        self.password = generate_password_hash(password,
+                                               "sha256",
+                                               salt_length=8)
+
+        update_q = update(Users).where(Users.login == self.login). \
+            values(password=self.password)
+        session.execute(update_q)
+        session.close()
 
     def check_password(self, password: str) -> bool:
         # Need to add encryption
-        return self.password == password
+        return check_password_hash(self.password, password)
 
     def set_role(self, role: bool):
         # Need to add DB integration

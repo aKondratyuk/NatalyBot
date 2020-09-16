@@ -11,6 +11,7 @@ from flask_wtf.csrf import CSRFProtect
 
 import env_variables as env
 from authentication import find_user
+from control_panel import *
 
 # Creates an app and checks if its the main or imported
 app = Flask(__name__)
@@ -61,6 +62,24 @@ def is_safe_url(target):
 @login_required
 def logout():
     logout_user()
+    return redirect(url_for('login'))
+
+
+# logout
+@app.route('/test')
+@login_required
+def test():
+    create_invite(creator=current_user,
+                  invited_email='test_invite@gmail.com')
+    return redirect(url_for('login'))
+
+
+# logout
+@app.route('/test_create_user')
+@login_required
+def test_create_user():
+    create_user(login='admin2@gmail.com',
+                user_password='adminadmin')
     return redirect(url_for('login'))
 
 
