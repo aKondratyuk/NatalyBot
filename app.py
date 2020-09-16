@@ -79,7 +79,8 @@ def test():
 @login_required
 def test_create_user():
     create_user(login='admin2@gmail.com',
-                user_password='adminadmin')
+                user_password='adminadmin',
+                role='admin')
     return redirect(url_for('login'))
 
 

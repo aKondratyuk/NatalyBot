@@ -3,7 +3,7 @@ from uuid import uuid4
 from werkzeug.security import generate_password_hash
 
 from authentication import User
-from db_models import Invites, SentInvites, Session, Users
+from db_models import Invites, RolesOfUsers, SentInvites, Session, Users
 
 
 def create_invite(creator: User,
@@ -31,7 +31,8 @@ def create_invite(creator: User,
 
 
 def create_user(login: str,
-                user_password: str):
+                user_password: str,
+                role: str = 'moderator'):
     session = Session()
     new_user = Users(login=login,
                      user_password=generate_password_hash(
@@ -39,5 +40,9 @@ def create_user(login: str,
                              "sha256",
                              salt_length=8))
     session.add(new_user)
+    session.commit()
+    new_user_role = RolesOfUsers(login=new_user.login,
+                                 user_role=role)
+    session.add(new_user_role)
     session.commit()
     session.close()
