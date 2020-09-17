@@ -70,7 +70,8 @@ def logout():
 @login_required
 def test():
     create_invite(creator=current_user,
-                  invited_email='test_invite@gmail.com')
+                  invited_email='test_invite@gmail.com',
+                  role='default')
     return redirect(url_for('login'))
 
 
@@ -121,10 +122,12 @@ def login():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        print(request.form.get('email'))
-        print(request.form.get('password'))
-        return render_template("confirmation.html")
-
+        error = register_user(login=request.form.get('email'),
+                              user_password=request.form.get('password'))
+        if not error:
+            return render_template("confirmation.html")
+        else:
+            render_template('signup.html', error=error)
     return render_template('signup.html')
 
 
