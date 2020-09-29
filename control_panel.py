@@ -3,7 +3,6 @@ from uuid import uuid4
 from sqlalchemy import update
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app import logger
 from authentication import User
 from db_models import Invites, RolesOfUsers, SentInvites, Session, Users
 
@@ -41,6 +40,7 @@ def create_invite(creator: User,
 def create_user(login: str,
                 user_password: str,
                 role: str = 'default'):
+    from app import logger
     session = Session()
     new_user = Users(login=login,
                      user_password=generate_password_hash(
@@ -59,8 +59,11 @@ def create_user(login: str,
 
 def register_user(login: str,
                   user_password: str):
+    from app import logger
+
     session = Session()
     users = session.query(Users).filter(Users.login == login).all()
+
     if len(users) == 0:
         logger.info(f'User signup with wrong e-mail: {login}')
         return None
