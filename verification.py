@@ -1,3 +1,5 @@
+import requests
+
 from scraping import collect_info_from_profile, get_parsed_page, \
     get_profile_page, send_request
 
@@ -120,7 +122,85 @@ def not_in_age_bounds(messager_age, receiver_profile_id):
     return False
 
 
+def login(profile_login, password):
+    """Функция для входа на сайт
+
+    Keyword arguments:
+    profile_login -- логин аккаунта
+    password -- пароль аккаунта
+    """
+    # Создаем сессию для отправщика (не имея фиксированую сессию залогинено
+    # аккаунта не получится отправить сообщение)
+    session = requests.Session()
+
+    # Данные для отправки POST запроса
+    data = {
+            "rememberme": "1",
+            "imageField": "log in",
+            "ID": profile_login,
+            "Password": password
+            }
+    # Отправляем запрос для входа на сайт
+    request = send_request(session=session, method="POST",
+                           link="https://www.natashaclub.com/member.php",
+                           data=data)
+
+    # Если успешно вошли на сайт, то должен создаться logtrackID для
+    # залогиненого аккаунта
+    if "logtrackID" in request.text:
+        logtrack_id = request.text.split("'")[1]
+        # Узнаем ID аккаунта, что вошел на сайт
+        profile_id = logtrack_id.split("=")[1].split("&")[0]
+        print("Successfully logged to the website!")
+        # Функция возвращает ID аккаунта что вошел и его сессию
+        return session, profile_id
+    else:
+        print("Wrong login or password!")
+        # Функция возвращает False если логин или пароль оказались
+        # неправильными
+        return False
+
+
 def dialog_update(session, profile_id):
+    """Отправка сообщения
+
+    Keyword arguments:
+    session -- сессия залогиненого аккаунта
+    profile_id -- ID профиля которого мы ищем в Inbox
+    """
+    # Ищем в Inbox сообщение профиля
+    data = {
+            "filterID": profile_id,
+            "filterPPage": "20",
+            "page": "1"
+            }
+    response = send_request(session=session, method="POST",
+                            link="https://www.natashaclub.com/inbox.php",
+                            data=data)
+    inbox_page = get_parsed_page(response)
+    numbers = [int(number.text) for number in
+               inbox_page.find("td", class_="panel").find_all("b")]
+    # Эта переменная показывает общее количество сообщений от профиля,
+    # что мы искали в инбоксе
+    total_messages_in_inbox_from_profile = numbers[0]
+    numbers = [tr for tr in
+               inbox_page.find_all('tr', class_='table')]
+    numbers = list(map(lambda x: [td for td in x.find_all('td')], numbers))
+    numbers = [col for col in numbers if len(col) == 5]
+    print(numbers)
+    for i in numbers:
+        print(len(i))
+    # Эта переменная показывает общее количество сообщений от профиля,
+    # что мы искали в инбоксе
+    """total_messages_in_inbox_from_profile = numbers[0]
+    # Здесь показывается количетсво новых сообщений от этого профиля
+    new_messages_in_inbox_from_profile = numbers[1]
+
+    return total_messages_in_inbox_from_profile, \
+           new_messages_in_inbox_from_profile"""
+
+
+def dialog_download(session, profile_id):
     """Отправка сообщения
 
     Keyword arguments:
@@ -136,18 +216,28 @@ def dialog_update(session, profile_id):
                             link="https://www.natashaclub.com/inbox.php",
                             data=data)
     inbox_page = get_parsed_page(response)
-    numbers = [int(number.text) for number in
-               inbox_page.find("td", class_="panel").find_all("b")]
+    messages = [tr for tr in
+                inbox_page.find_all('tr', class_='table')]
+    messages = list(map(lambda x: [td for td in x.find_all('td')], messages))
+    messages = [col for col in messages if len(col) == 5]
+
+    print(messages[0][4].find('a').text)
+    for message in messages:
+        time = message[3]
+        text = message[4].text
+        message_url = message[4].find('a')["href"]
+        add_messages
     # Эта переменная показывает общее количество сообщений от профиля,
     # что мы искали в инбоксе
-    total_messages_in_inbox_from_profile = numbers[0]
+    """total_messages_in_inbox_from_profile = numbers[0]
     # Здесь показывается количетсво новых сообщений от этого профиля
     new_messages_in_inbox_from_profile = numbers[1]
 
     return total_messages_in_inbox_from_profile, \
-           new_messages_in_inbox_from_profile
+           new_messages_in_inbox_from_profile"""
 
 
-current_profile = get_profile_page(profile_id="1000868043")
-print(dialog_update(session=current_profile,
-                    profile_id="1001485714"))
+current_profile, profile_id = login(profile_login="1000868043",
+                                    password="SWEETY777")
+print(dialog_download(session=current_profile,
+                      profile_id="1001485714"))
