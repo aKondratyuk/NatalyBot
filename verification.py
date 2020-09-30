@@ -4,7 +4,7 @@ from scraping import collect_info_from_profile, get_parsed_page, \
     get_profile_page, send_request
 
 
-def profile_in_inbox(session, profile_id):
+def profile_in_inbox(session, profile_id, inbox=True):
     """Отправка сообщения
 
     Keyword arguments:
@@ -16,9 +16,14 @@ def profile_in_inbox(session, profile_id):
             "filterID": profile_id,
             "filterPPage": "20"
             }
+    if inbox:
+        link = "https://www.natashaclub.com/inbox.php"
+    else:
+        link = "https://www.natashaclub.com/outbox.php"
     response = send_request(session=session, method="POST",
-                            link="https://www.natashaclub.com/inbox.php",
+                            link=link,
                             data=data)
+
     inbox_page = get_parsed_page(response)
     numbers = [int(number.text) for number in
                inbox_page.find("td", class_="panel").find_all("b")]
@@ -160,62 +165,3 @@ def login(profile_login, password):
         # неправильными
         return False
 
-
-def text_format
-
-
-def get_message_text(session,
-                     message_url: str):
-    response = send_request(session=session,
-                            method="POST",
-                            link="https://www.natashaclub.com/" + message_url)
-    message_page = get_parsed_page(response)
-    message_text = message_page
-    print(message_text.find('td',
-                            class_='table').text)
-
-    exit()
-
-
-def dialog_download(session,
-                    profile_id: str):
-    """Отправка сообщения
-
-    Keyword arguments:
-    session -- сессия залогиненого аккаунта
-    profile_id -- ID профиля которого мы ищем в Inbox
-    """
-    # Ищем в Inbox сообщение профиля
-    data = {
-            "filterID": profile_id,
-            "filterPPage": "20"
-            }
-    response = send_request(session=session, method="POST",
-                            link="https://www.natashaclub.com/inbox.php",
-                            data=data)
-    inbox_page = get_parsed_page(response)
-    messages = [tr for tr in
-                inbox_page.find_all('tr', class_='table')]
-    messages = list(map(lambda x: [td for td in x.find_all('td')], messages))
-    messages = [col for col in messages if len(col) == 5]
-    for message in messages:
-        time = message[3]
-        text = message[4].text
-        message_url = message[4].find('a')["href"]
-        get_message_text(session=session,
-                         message_url=message_url)
-
-    # Эта переменная показывает общее количество сообщений от профиля,
-    # что мы искали в инбоксе
-    """total_messages_in_inbox_from_profile = numbers[0]
-    # Здесь показывается количетсво новых сообщений от этого профиля
-    new_messages_in_inbox_from_profile = numbers[1]
-
-    return total_messages_in_inbox_from_profile, \
-           new_messages_in_inbox_from_profile"""
-
-
-current_profile, profile_id = login(profile_login="1000868043",
-                                    password="SWEETY777")
-print(dialog_download(session=current_profile,
-                      profile_id="1001485714"))

@@ -1,7 +1,6 @@
 from sqlalchemy import Column, create_engine
-from sqlalchemy.dialects.mysql import \
-    BINARY, BOOLEAN, FLOAT, MEDIUMINT, TIMESTAMP, \
-    TINYINT, VARCHAR
+from sqlalchemy.dialects.mysql import BINARY, BOOLEAN, FLOAT, INTEGER, \
+    MEDIUMINT, TIMESTAMP, TINYINT, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -38,7 +37,7 @@ class CategoryLevel(Base):
 
 class ChatSessions(Base):
     __tablename__ = 'Chat_sessions'
-    chat_id = Column(VARCHAR(190), primary_key=True)
+    chat_id = Column(BINARY(16), primary_key=True)
     profile_id = Column(VARCHAR(190), primary_key=True)
 
     def __repr__(self):
@@ -217,11 +216,11 @@ class ProfileLanguages(Base):
 
 class Profiles(Base):
     __tablename__ = 'Profiles'
-    profile_id = Column(VARCHAR(190), primary_key=True)
-    profile_password = Column(BOOLEAN)
-    available = Column(VARCHAR(20))
-    can_receive = Column(VARCHAR(20))
-    msg_limit = Column(VARCHAR(20))
+    profile_id = Column(VARCHAR(20), primary_key=True)
+    profile_password = Column(VARCHAR(190))
+    available = Column(BOOLEAN)
+    can_receive = Column(BOOLEAN)
+    msg_limit = Column(INTEGER(11))
     profile_type = Column(VARCHAR(20))
 
     def __repr__(self):
