@@ -63,8 +63,6 @@ def find_user(login: str = None,
         login = user.login
         password = user.user_password
         user_id = generate_password_hash(login, "sha256", salt_length=8)
-        print(type)
-        print(generate_password_hash(login, "sha256", salt_length=8))
 
         query = session.query(RolesOfUsers, Privileges)
         query = query.outerjoin(
