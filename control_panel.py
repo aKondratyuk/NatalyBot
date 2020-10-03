@@ -94,13 +94,6 @@ def register_user(login: str,
     return 'Such account already exists'
 
 
-def db_show_dialog(sender: str,
-                   receiver: str):
-    db_session = Session()
-    db_session.execute()
-    db_session.close()
-
-
 def text_format(text: str):
     # deleting wrong new string
     text = re.sub(r' {3,}', '', text)
@@ -174,13 +167,15 @@ def db_chat_create(observer_login: str,
 
     # finding chat id for this users
     # find all chats with sender
-    query = db_session.query(ChatSessions).filter(
-            ChatSessions.profile_id == observer_login)
+    sub_query_1 = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.profile_id == observer_login).subquery()
     # find all chats with receiver
-    sub_query = db_session.query(ChatSessions).filter(
-            ChatSessions.profile_id == observer_login).subquery()
+    sub_query_2 = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.profile_id == target_profile).subquery()
     # find chat from sender to receiver
-    query.join(sub_query, ChatSessions.chat_id == ChatSessions.chat_id)
+    query = db_session.query(ChatSessions). \
+        filter(ChatSessions.chat_id.in_(sub_query_1)). \
+        filter(ChatSessions.chat_id.in_(sub_query_2))
     chat_sessions = query.all()
 
     # if chat found, we return chat_id
@@ -195,9 +190,12 @@ def db_chat_create(observer_login: str,
     db_session.commit()
     chat_session_1 = ChatSessions(chat_id=chat_id,
                                   profile_id=observer_login)
+    db_session.close()
+    db_session = Session()
+    db_session.add(chat_session_1)
+    db_session.commit()
     chat_session_2 = ChatSessions(chat_id=chat_id,
                                   profile_id=target_profile)
-    db_session.add(chat_session_1)
     db_session.add(chat_session_2)
     db_session.commit()
     db_session.close()
@@ -210,8 +208,8 @@ def db_chat_length_check(chat_id: bytes,
     # return count of new messages, which not presented in database
     db_session = Session()
     messages = db_session.query(Messages).filter(
-            Messages.chat_id == chat_id
-            and Messages.profile_id == sender_id)
+            Messages.chat_id == chat_id).filter(
+            Messages.profile_id == sender_id)
     db_session.close()
     return total_msg - len(messages.all())
 
@@ -327,7 +325,34 @@ def dialog_download(observer_login,
     return True
 
 
-print(dialog_download(observer_login="1000868043",
-                      obeserver_password="SWEETY777",
-                      sender_id="1000868043",
-                      receiver_profile_id="1001597106"))
+def db_show_dialog(sender: str,
+                   receiver: str):
+    # you can swap sender and receiver
+    """Returns list of dicts, with messages in dialogue for admin panel"""
+    db_session = Session()
+
+    # subquery for chats with sender
+    sub_query_1 = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.profile_id == sender).subquery()
+    # subquery for chats with receiver
+    sub_query_2 = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.profile_id == receiver).subquery()
+    # subquery for chats with this users
+    query_chat = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.chat_id.in_(sub_query_1)). \
+        filter(ChatSessions.chat_id.in_(sub_query_2)). \
+        subquery()
+    # query to show messages and texts
+    query = db_session.query(Messages.profile_id,
+                             Messages.send_time,
+                             Messages.viewed,
+                             Texts.text)
+    query = query.filter(Messages.chat_id.in_(query_chat))
+    query = query.outerjoin(Texts, Messages.text_id == Texts.text_id)
+    query = query.order_by(Messages.send_time)
+    result = query.all()
+    db_session.close()
+    return [{"profile_id": row[0],
+             "send_time": row[1],
+             "viewed": row[2],
+             "text": row[3]} for row in result]

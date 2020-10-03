@@ -77,9 +77,8 @@ def test():
 
 # logout
 @app.route('/test_create_user')
-@login_required
 def test_create_user():
-    create_user(login='admin2@gmail.com',
+    create_user(login='admin@gmail.com',
                 user_password='adminadmin',
                 role='admin')
     return redirect(url_for('login'))
