@@ -360,10 +360,3 @@ def db_show_dialog(sender: str,
              "send_time": row[1],
              "viewed": row[2],
              "text": row[3]} for row in result]
-
-
-"""print(dialog_download(observer_login='1000868043',
-                      observer_password='SWEETY777',
-                      sender_id='1001383055',
-                      receiver_profile_id='1001383055'))
-"""
