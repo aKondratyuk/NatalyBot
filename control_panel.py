@@ -327,7 +327,7 @@ def dialog_download(observer_login,
     return True
 
 
-print(dialog_download(observer_login="1000868043",
-                      obeserver_password="SWEETY777",
-                      sender_id="1000868043",
-                      receiver_profile_id="1001597106"))
+# print(dialog_download(observer_login="1000868043",
+#                       obeserver_password="SWEETY777",
+#                       sender_id="1000868043",
+#                       receiver_profile_id="1001597106"))

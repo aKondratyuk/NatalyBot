@@ -13,6 +13,7 @@ import env_variables as env
 from authentication import find_user
 from control_panel import *
 
+
 # Creates an app and checks if its the main or imported
 app = Flask(__name__)
 app.config.update(TESTING=True,
@@ -40,6 +41,8 @@ It should return None (not raise an exception)
 if the ID is not valid.
 (In that case, the ID will manually be removed 
 from the session and processing will continue.)"""
+
+
 
 
 @login_manager.user_loader
@@ -139,7 +142,13 @@ def control_panel():
         print(request.form.get('password'))
         return render_template("confirmation.html")
 
-    return render_template('control_panel.html')
+    return render_template('dashboard.html')
+
+
+@app.route('/icons', methods=['GET', 'POST'])
+@login_required
+def icons():
+    return render_template('icons.html')
 
 
 if __name__ == "__main__":
