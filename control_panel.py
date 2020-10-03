@@ -292,9 +292,9 @@ def dialog_download(observer_login: str,
         session=current_profile_session,
         profile_id=receiver_profile_id,
         inbox=sender_id == receiver_profile_id)
-    chat_id = db_chat_create(observer_login=observer_login,
+    chat_id = bytes((bytearray(db_chat_create(observer_login=observer_login,
                              observer_pass=observer_password,
-                             target_profile_id=receiver_profile_id)
+                             target_profile_id=receiver_profile_id))))
 
     db_new_msg_count = db_chat_length_check(chat_id=chat_id,
                                             total_msg=total_msg,
@@ -375,7 +375,6 @@ def db_download_new_msg(observer_login: str,
         filter(Messages.viewed == False)
     msg_delete.delete()  # return number of deleted msg
     db_session.commit()
-    db_session.delete(msg_delete)
     db_session.close()
     dialog_download(observer_login=observer_login,
                     observer_password=observer_password,

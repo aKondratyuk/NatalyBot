@@ -9,8 +9,12 @@ import env_variables as env
 
 engine = create_engine(f'{env.DB_DIALECT}+{env.DB_DRIVER}://'
                        f'{env.DB_USER}:{env.DB_PASS}@'
-                       f'{env.DB_ADRESS}/{env.DB_NAME}',
-                       pool_recycle=3600)
+                       f'{env.DB_ADRESS}/{env.DB_NAME}'
+                       f'?{env.DB_ENCODING}',
+                       pool_recycle=3600,
+                       encoding='utf8',
+                       connect_args={'use_pure': True})
+
 Base = declarative_base()
 Session = sessionmaker()
 Session.configure(bind=engine)
