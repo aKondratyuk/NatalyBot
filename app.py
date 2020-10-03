@@ -1,3 +1,4 @@
+# coding: utf8
 # Imports the Flask class
 import logging
 from urllib.parse import urljoin, urlparse

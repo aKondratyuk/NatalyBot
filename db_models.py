@@ -1,3 +1,4 @@
+# coding: utf8
 from sqlalchemy import Column, create_engine
 from sqlalchemy.dialects.mysql import BINARY, BOOLEAN, FLOAT, INTEGER, \
     MEDIUMINT, TIMESTAMP, TINYINT, VARCHAR
