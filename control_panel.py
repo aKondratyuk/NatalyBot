@@ -256,7 +256,7 @@ def dialog_page_upload(current_profile_session,
         else:
             viewed = not messages[i][1 - int(not inbox)].text == '\nNot read'
 
-        if viewed:
+        if viewed or download_new:
             text = get_message_text(session=current_profile_session,
                                     message_url=message_url)
         else:
@@ -360,3 +360,37 @@ def db_show_dialog(sender: str,
              "send_time": row[1],
              "viewed": row[2],
              "text": row[3]} for row in result]
+
+
+def db_download_new_msg(observer_login: str,
+                        observer_password: str,
+                        sender_id: str,
+                        receiver_profile_id: str) -> bool:
+    # find chat in db to delete new messages
+    chat_id = db_chat_create(observer_login=observer_login,
+                             observer_pass=observer_password,
+                             target_profile_id=receiver_profile_id)
+    db_session = Session()
+    msg_delete = db_session.query(Messages). \
+        filter(Messages.chat_id == chat_id). \
+        filter(Messages.viewed == False)
+    msg_delete.delete()  # return number of deleted msg
+    db_session.commit()
+    db_session.delete(msg_delete)
+    db_session.close()
+    dialog_download(observer_login=observer_login,
+                    observer_password=observer_password,
+                    sender_id=sender_id,
+                    receiver_profile_id=receiver_profile_id,
+                    download_new=True)
+    return True
+
+
+"""print(db_download_new_msg("1000868043",
+                          "SWEETY777",
+                          "1001485714",
+                          "1001485714"))"""
+"""print(dialog_download("1000868043",
+                      "SWEETY777",
+                      "1001485714",
+                      "1001485714"))"""
