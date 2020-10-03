@@ -1,3 +1,4 @@
+# coding: utf8
 from flask_login import UserMixin
 from sqlalchemy import update
 from werkzeug.security import check_password_hash, generate_password_hash
