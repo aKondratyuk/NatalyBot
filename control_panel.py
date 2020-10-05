@@ -80,9 +80,9 @@ def register_user(login: str,
             update_q = update(Users).where(
                 Users.login == login). \
                 values(user_password=generate_password_hash(
-                user_password,
-                "sha256",
-                salt_length=8))
+                    user_password,
+                    "sha256",
+                    salt_length=8))
             session.add(update_q)
             session.commit()
             session.close()
@@ -253,6 +253,8 @@ def dialog_page_upload(current_profile_session,
         if inbox:
             viewed = not messages[i][1 - int(not inbox)].contents[1]['src'] \
                          == '/templates/tmpl_nc/images_nc/new.gif'
+        elif download_new:
+            viewed = True
         else:
             viewed = not messages[i][1 - int(not inbox)].text == '\nNot read'
 
@@ -282,19 +284,22 @@ def dialog_download(observer_login: str,
     data = {
         "page": "1",
         "filterID": receiver_profile_id,
-        "filterPPage": "20"
-    }
+            "filterPPage": "20"
+            }
 
     current_profile_session, profile_id = login(
-        profile_login=observer_login,
-        password=observer_password)
+            profile_login=observer_login,
+            password=observer_password)
     total_msg, new_msg = profile_in_inbox(
-        session=current_profile_session,
-        profile_id=receiver_profile_id,
-        inbox=sender_id == receiver_profile_id)
-    chat_id = bytes((bytearray(db_chat_create(observer_login=observer_login,
-                             observer_pass=observer_password,
-                             target_profile_id=receiver_profile_id))))
+            session=current_profile_session,
+            profile_id=receiver_profile_id,
+            inbox=sender_id == receiver_profile_id)
+    chat_id = bytes(
+            (bytearray(
+                    db_chat_create(
+                            observer_login=observer_login,
+                            observer_pass=observer_password,
+                            target_profile_id=receiver_profile_id))))
 
     db_new_msg_count = db_chat_length_check(chat_id=chat_id,
                                             total_msg=total_msg,
@@ -372,7 +377,7 @@ def db_download_new_msg(observer_login: str,
     db_session = Session()
     msg_delete = db_session.query(Messages). \
         filter(Messages.chat_id == chat_id). \
-        filter(Messages.viewed == False)
+        filter(Messages.viewed is False)
     msg_delete.delete()  # return number of deleted msg
     db_session.commit()
     db_session.close()
@@ -384,10 +389,37 @@ def db_download_new_msg(observer_login: str,
     return True
 
 
-print(db_download_new_msg("1000868043",
+def db_get_users() -> list:
+    db_session = Session()
+    query = db_session.query(Users.login,
+                             Users.user_password,
+                             SentInvites.invite_id,
+                             RolesOfUsers.user_role)
+    query = query.outerjoin(SentInvites,
+                            Users.login == SentInvites.login)
+    query = query.outerjoin(RolesOfUsers,
+                            Users.login == RolesOfUsers.login)
+    users = query.all()
+    users = [{
+            "login": user[0],
+            "register_status": check_password_hash(user[1], user[2]),
+            "invite_status": bool(user[2]),
+            "role": user[3]
+            }
+            for user in users
+            ]
+    db_session.close()
+    return users
+
+
+print(db_get_users())
+"""print(create_invite(creator='admin@gmail.com',
+                    invited_email='test@gmail.com',
+                    role='admin'))"""
+"""print(db_download_new_msg("1000868043",
                           "SWEETY777",
                           "1001485714",
-                          "1001485714"))
+                          "1001485714"))"""
 """print(dialog_download("1000868043",
                       "SWEETY777",
                       "1001485714",
