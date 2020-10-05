@@ -76,14 +76,14 @@ def register_user(login: str,
         return None
     db_invites = session.query(Invites).all()
     for db_invite in db_invites:
-        if check_password_hash(user_password, db_invite.invite_id):
+        if check_password_hash(users[0].user_password, db_invite.invite_id):
             update_q = update(Users).where(
-                Users.login == login). \
+                    Users.login == login). \
                 values(user_password=generate_password_hash(
                     user_password,
                     "sha256",
                     salt_length=8))
-            session.add(update_q)
+            session.execute(update_q)
             session.commit()
             session.close()
             logger.info(f'User {login} successful registered '
@@ -402,8 +402,7 @@ def db_get_users() -> list:
     users = query.all()
     users = [{
             "login": user[0],
-            "register_status": check_password_hash(user[1], user[2]),
-            "invite_status": bool(user[2]),
+            "register_status": not check_password_hash(user[1], user[2]),
             "role": user[3]
             }
             for user in users
