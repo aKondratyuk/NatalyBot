@@ -47,7 +47,7 @@ def create_invite(creator: User,
 def create_user(login: str,
                 user_password: str,
                 role: str = 'default'):
-    from app import logger
+    from main import logger
     session = Session()
     new_user = Users(login=login,
                      user_password=generate_password_hash(
@@ -66,7 +66,7 @@ def create_user(login: str,
 
 def register_user(login: str,
                   user_password: str):
-    from app import logger
+    from main import logger
 
     session = Session()
     users = session.query(Users).filter(Users.login == login).all()
