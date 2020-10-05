@@ -1,16 +1,19 @@
 # coding: utf8
+import os
+
 from sqlalchemy import Column, create_engine
 from sqlalchemy.dialects.mysql import BINARY, BOOLEAN, FLOAT, INTEGER, \
     MEDIUMINT, TIMESTAMP, TINYINT, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-import env_variables as env
-
-engine = create_engine(f'{env.DB_DIALECT}+{env.DB_DRIVER}://'
-                       f'{env.DB_USER}:{env.DB_PASS}@'
-                       f'{env.DB_ADRESS}/{env.DB_NAME}'
-                       f'?{env.DB_ENCODING}',
+engine = create_engine(f"{os.environ.get('DB_DIALECT')}+"
+                       f"{os.environ.get('DB_DRIVER')}://"
+                       f"{os.environ.get('DB_USER')}:"
+                       f"{os.environ.get('DB_PASS')}@"
+                       f"{os.environ.get('DB_ADRESS')}/"
+                       f"{os.environ.get('DB_NAME')}"
+                       f"?{os.environ.get('DB_ENCODING')}",
                        pool_recycle=3600,
                        encoding='utf8',
                        connect_args={'use_pure': True})

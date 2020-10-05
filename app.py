@@ -1,6 +1,7 @@
 # coding: utf8
 # Imports the Flask class
 import logging
+import os
 from urllib.parse import urljoin, urlparse
 
 from flask import Flask, abort, redirect, render_template, request, url_for
@@ -10,14 +11,13 @@ from flask_login import LoginManager, current_user, login_required, \
     logout_user
 from flask_wtf.csrf import CSRFProtect
 
-import env_variables as env
 from authentication import find_user
 from control_panel import *
 
 # Creates an app and checks if its the main or imported
 app = Flask(__name__)
 app.config.update(TESTING=True,
-                  SECRET_KEY=env.APP_SECRET_KEY)
+                  SECRET_KEY=os.environ.get('APP_SECRET_KEY'))
 Bootstrap(app)
 CSRFProtect(app)
 # login manager instance creation and setting
