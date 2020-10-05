@@ -142,8 +142,3 @@ def control_panel():
         return render_template("confirmation.html")
 
     return render_template('control_panel.html')
-
-
-if __name__ == "__main__":
-    # Run the app until stopped
-    app.run()
