@@ -17,7 +17,8 @@ from control_panel import *
 # Creates an app and checks if its the main or imported
 app = Flask(__name__)
 app.config.update(TESTING=True,
-                  SECRET_KEY=os.environ.get('APP_SECRET_KEY'))
+                  SECRET_KEY=os.environ.get('APP_SECRET_KEY'),
+                  port=5005)
 Bootstrap(app)
 CSRFProtect(app)
 # login manager instance creation and setting
@@ -88,6 +89,7 @@ def test_create_user():
 @app.route('/', methods=['GET', 'POST'])
 # The function run on the index route
 def login():
+
     print(current_user)
     print(request.form.get('email'))
     print(request.form.get('password'))
@@ -144,4 +146,4 @@ def control_panel():
 
 if __name__ == "__main__":
     # Run the app until stopped
-    app.run(host='0.0.0.0')
+    app.run()
