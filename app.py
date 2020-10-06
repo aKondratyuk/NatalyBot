@@ -13,7 +13,6 @@ import env_variables as env
 from authentication import find_user
 from control_panel import *
 
-
 # Creates an app and checks if its the main or imported
 app = Flask(__name__)
 app.config.update(TESTING=True,
@@ -41,8 +40,6 @@ It should return None (not raise an exception)
 if the ID is not valid.
 (In that case, the ID will manually be removed 
 from the session and processing will continue.)"""
-
-
 
 
 @login_manager.user_loader
@@ -115,7 +112,7 @@ def login():
 
                 return redirect(next_url or url_for('control_panel'))
         logger.error(
-                f"Invalid username/password by {request.form.get('email')}")
+            f"Invalid username/password by {request.form.get('email')}")
 
     # Returns the html page to be displayed
     return render_template('login.html',
@@ -134,6 +131,11 @@ def signup():
     return render_template('signup.html')
 
 
+########################################################################################################################
+###                                                                                                                  ###
+###                                 Веб-страницы составляющие контрольную панель                                     ###
+###                                                                                                                  ###
+########################################################################################################################
 @app.route('/control_panel', methods=['GET', 'POST'])
 @login_required
 def control_panel():
@@ -149,6 +151,12 @@ def control_panel():
 @login_required
 def icons():
     return render_template('icons.html')
+
+
+@app.route('/users', methods=['GET', 'POST'])
+@login_required
+def users():
+    return render_template('users.html')
 
 
 if __name__ == "__main__":
