@@ -17,8 +17,7 @@ from control_panel import *
 # Creates an app and checks if its the main or imported
 app = Flask(__name__)
 app.config.update(TESTING=True,
-                  SECRET_KEY=os.environ.get('APP_SECRET_KEY'),
-                  port=5005)
+                  SECRET_KEY=os.environ.get('APP_SECRET_KEY'))
 Bootstrap(app)
 CSRFProtect(app)
 # login manager instance creation and setting
