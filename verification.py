@@ -1,3 +1,4 @@
+# coding: utf8
 import requests
 
 from scraping import collect_info_from_profile, get_parsed_page, \

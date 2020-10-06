@@ -1,3 +1,4 @@
+# coding: utf8
 import re
 from datetime import datetime
 from math import ceil
@@ -20,9 +21,9 @@ def create_invite(creator: User,
     invite = Invites(invite_id=uuid4().bytes)
     new_user = Users(login=invited_email,
                      user_password=generate_password_hash(
-                             invite.invite_id,
-                             "sha256",
-                             salt_length=8))
+                         invite.invite_id,
+                         "sha256",
+                         salt_length=8))
 
     new_user_role = RolesOfUsers(login=invited_email,
                                  user_role=role)
@@ -46,13 +47,13 @@ def create_invite(creator: User,
 def create_user(login: str,
                 user_password: str,
                 role: str = 'default'):
-    from app import logger
+    from main import logger
     session = Session()
     new_user = Users(login=login,
                      user_password=generate_password_hash(
-                             user_password,
-                             "sha256",
-                             salt_length=8))
+                         user_password,
+                         "sha256",
+                         salt_length=8))
     session.add(new_user)
     session.commit()
     new_user_role = RolesOfUsers(login=new_user.login,
@@ -65,7 +66,7 @@ def create_user(login: str,
 
 def register_user(login: str,
                   user_password: str):
-    from app import logger
+    from main import logger
 
     session = Session()
     users = session.query(Users).filter(Users.login == login).all()
@@ -75,14 +76,14 @@ def register_user(login: str,
         return None
     db_invites = session.query(Invites).all()
     for db_invite in db_invites:
-        if check_password_hash(user_password, db_invite.invite_id):
+        if check_password_hash(users[0].user_password, db_invite.invite_id):
             update_q = update(Users).where(
                     Users.login == login). \
                 values(user_password=generate_password_hash(
                     user_password,
                     "sha256",
                     salt_length=8))
-            session.add(update_q)
+            session.execute(update_q)
             session.commit()
             session.close()
             logger.info(f'User {login} successful registered '
@@ -92,13 +93,6 @@ def register_user(login: str,
     logger.info(f'User signup with e-mail: {login}, '
                 f'but this account already exists')
     return 'Such account already exists'
-
-
-def db_show_dialog(sender: str,
-                   receiver: str):
-    db_session = Session()
-    db_session.execute()
-    db_session.close()
 
 
 def text_format(text: str):
@@ -148,7 +142,7 @@ def db_message_create(chat_id: bytes,
 
 def db_chat_create(observer_login: str,
                    observer_pass: str,
-                   target_profile: str) -> bytes:
+                   target_profile_id: str) -> bytes:
     # chat session require profiles in database
     # check profiles in database
     sender_profile = Profiles(profile_id=observer_login,
@@ -158,15 +152,15 @@ def db_chat_create(observer_login: str,
     db_session = Session()
     # check if sender profile exists in database
     profiles = db_session.query(Profiles).filter(
-            Profiles.profile_id == sender_profile.profile_id).all()
+        Profiles.profile_id == sender_profile.profile_id).all()
     if len(profiles) == 0:
         db_session.add(sender_profile)
         db_session.commit()
     # check receiver profile in database
     profiles = db_session.query(Profiles).filter(
-            Profiles.profile_id == target_profile).all()
+        Profiles.profile_id == target_profile_id).all()
     if len(profiles) == 0:
-        target_profile = Profiles(profile_id=target_profile,
+        target_profile = Profiles(profile_id=target_profile_id,
                                   can_receive=True,
                                   available=True)
         db_session.add(target_profile)
@@ -174,13 +168,15 @@ def db_chat_create(observer_login: str,
 
     # finding chat id for this users
     # find all chats with sender
-    query = db_session.query(ChatSessions).filter(
-            ChatSessions.profile_id == observer_login)
+    sub_query_1 = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.profile_id == observer_login).subquery()
     # find all chats with receiver
-    sub_query = db_session.query(ChatSessions).filter(
-            ChatSessions.profile_id == observer_login).subquery()
+    sub_query_2 = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.profile_id == target_profile_id).subquery()
     # find chat from sender to receiver
-    query.join(sub_query, ChatSessions.chat_id == ChatSessions.chat_id)
+    query = db_session.query(ChatSessions). \
+        filter(ChatSessions.chat_id.in_(sub_query_1)). \
+        filter(ChatSessions.chat_id.in_(sub_query_2))
     chat_sessions = query.all()
 
     # if chat found, we return chat_id
@@ -195,9 +191,12 @@ def db_chat_create(observer_login: str,
     db_session.commit()
     chat_session_1 = ChatSessions(chat_id=chat_id,
                                   profile_id=observer_login)
-    chat_session_2 = ChatSessions(chat_id=chat_id,
-                                  profile_id=target_profile)
+    db_session.close()
+    db_session = Session()
     db_session.add(chat_session_1)
+    db_session.commit()
+    chat_session_2 = ChatSessions(chat_id=chat_id,
+                                  profile_id=target_profile_id)
     db_session.add(chat_session_2)
     db_session.commit()
     db_session.close()
@@ -210,8 +209,8 @@ def db_chat_length_check(chat_id: bytes,
     # return count of new messages, which not presented in database
     db_session = Session()
     messages = db_session.query(Messages).filter(
-            Messages.chat_id == chat_id
-            and Messages.profile_id == sender_id)
+        Messages.chat_id == chat_id).filter(
+        Messages.profile_id == sender_id)
     db_session.close()
     return total_msg - len(messages.all())
 
@@ -222,7 +221,8 @@ def dialog_page_upload(current_profile_session,
                        open_msg_count: int,
                        chat_id: bytes,
                        sender_id: str,
-                       inbox: bool):
+                       inbox: bool,
+                       download_new: bool = False):
     data['page'] = page
 
     if inbox:
@@ -230,10 +230,10 @@ def dialog_page_upload(current_profile_session,
     else:
         link = "https://www.natashaclub.com/outbox.php"
     response = send_request(
-            session=current_profile_session, method="GET",
-            link=link + "?page={page}&"
-                        "filterID={filterID}&"
-                        "filterPPage={filterPPage}".format(**data))
+        session=current_profile_session, method="GET",
+        link=link + "?page={page}&"
+                    "filterID={filterID}&"
+                    "filterPPage={filterPPage}".format(**data))
     inbox_page = get_parsed_page(response)
 
     messages = [tr for tr in
@@ -252,12 +252,13 @@ def dialog_page_upload(current_profile_session,
         message_url = messages[i][4 - int(not inbox)].find('a')["href"]
         if inbox:
             viewed = not messages[i][1 - int(not inbox)].contents[1]['src'] \
-                         == \
-                         '/templates/tmpl_nc/images_nc/new.gif'
+                         == '/templates/tmpl_nc/images_nc/new.gif'
+        elif download_new:
+            viewed = True
         else:
             viewed = not messages[i][1 - int(not inbox)].text == '\nNot read'
 
-        if viewed:
+        if viewed or download_new:
             text = get_message_text(session=current_profile_session,
                                     message_url=message_url)
         else:
@@ -269,33 +270,36 @@ def dialog_page_upload(current_profile_session,
                           text=text)
 
 
-def dialog_download(observer_login,
-                    obeserver_password,
+def dialog_download(observer_login: str,
+                    observer_password: str,
                     sender_id: str,
-                    receiver_profile_id: str):
+                    receiver_profile_id: str,
+                    download_new: bool = False) -> bool:
     """Отправка сообщения
-
     Keyword arguments:
     session -- сессия залогиненого аккаунта
     profile_id -- ID профиля которого мы ищем в Inbox
     """
     # Ищем в Inbox сообщение профиля
     data = {
-            "page": "1",
-            "filterID": receiver_profile_id,
+        "page": "1",
+        "filterID": receiver_profile_id,
             "filterPPage": "20"
             }
 
     current_profile_session, profile_id = login(
             profile_login=observer_login,
-            password=obeserver_password)
+            password=observer_password)
     total_msg, new_msg = profile_in_inbox(
             session=current_profile_session,
             profile_id=receiver_profile_id,
             inbox=sender_id == receiver_profile_id)
-    chat_id = db_chat_create(observer_login=observer_login,
-                             observer_pass=obeserver_password,
-                             target_profile=receiver_profile_id)
+    chat_id = bytes(
+            (bytearray(
+                    db_chat_create(
+                            observer_login=observer_login,
+                            observer_pass=observer_password,
+                            target_profile_id=receiver_profile_id))))
 
     db_new_msg_count = db_chat_length_check(chat_id=chat_id,
                                             total_msg=total_msg,
@@ -322,12 +326,100 @@ def dialog_download(observer_login,
                            open_msg_count=open_msg_count,
                            chat_id=chat_id,
                            sender_id=sender_id,
-                           inbox=inbox)
+                           inbox=inbox,
+                           download_new=download_new)
         open_msg_count -= int(data['filterPPage'])
+    # function has added new messages
     return True
 
 
-# print(dialog_download(observer_login="1000868043",
-#                       obeserver_password="SWEETY777",
-#                       sender_id="1000868043",
-#                       receiver_profile_id="1001597106"))
+def db_show_dialog(sender: str,
+                   receiver: str) -> list:
+    # you can swap sender and receiver
+    """Returns list of dicts, with messages in dialogue for admin panel"""
+    db_session = Session()
+
+    # subquery for chats with sender
+    sub_query_1 = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.profile_id == sender).subquery()
+    # subquery for chats with receiver
+    sub_query_2 = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.profile_id == receiver).subquery()
+    # subquery for chats with this users
+    query_chat = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.chat_id.in_(sub_query_1)). \
+        filter(ChatSessions.chat_id.in_(sub_query_2)). \
+        subquery()
+    # query to show messages and texts
+    query = db_session.query(Messages.profile_id,
+                             Messages.send_time,
+                             Messages.viewed,
+                             Texts.text)
+    query = query.filter(Messages.chat_id.in_(query_chat))
+    query = query.outerjoin(Texts, Messages.text_id == Texts.text_id)
+    query = query.order_by(Messages.send_time)
+    result = query.all()
+    db_session.close()
+    return [{"profile_id": row[0],
+             "send_time": row[1],
+             "viewed": row[2],
+             "text": row[3]} for row in result]
+
+
+def db_download_new_msg(observer_login: str,
+                        observer_password: str,
+                        sender_id: str,
+                        receiver_profile_id: str) -> bool:
+    # find chat in db to delete new messages
+    chat_id = db_chat_create(observer_login=observer_login,
+                             observer_pass=observer_password,
+                             target_profile_id=receiver_profile_id)
+    db_session = Session()
+    msg_delete = db_session.query(Messages). \
+        filter(Messages.chat_id == chat_id). \
+        filter(Messages.viewed is False)
+    msg_delete.delete()  # return number of deleted msg
+    db_session.commit()
+    db_session.close()
+    dialog_download(observer_login=observer_login,
+                    observer_password=observer_password,
+                    sender_id=sender_id,
+                    receiver_profile_id=receiver_profile_id,
+                    download_new=True)
+    return True
+
+
+def db_get_users() -> list:
+    db_session = Session()
+    query = db_session.query(Users.login,
+                             Users.user_password,
+                             SentInvites.invite_id,
+                             RolesOfUsers.user_role)
+    query = query.outerjoin(SentInvites,
+                            Users.login == SentInvites.login)
+    query = query.outerjoin(RolesOfUsers,
+                            Users.login == RolesOfUsers.login)
+    users = query.all()
+    users = [{
+            "login": user[0],
+            "register_status": not check_password_hash(user[1], user[2]),
+            "role": user[3]
+            }
+            for user in users
+            ]
+    db_session.close()
+    return users
+
+
+"""print(db_get_users())"""
+"""print(create_invite(creator='admin@gmail.com',
+                    invited_email='test@gmail.com',
+                    role='admin'))"""
+"""print(db_download_new_msg("1000868043",
+                          "SWEETY777",
+                          "1001485714",
+                          "1001485714"))"""
+"""print(dialog_download("1000868043",
+                      "SWEETY777",
+                      "1001485714",
+                      "1001485714"))"""
