@@ -411,7 +411,7 @@ def db_get_users() -> list:
     return users
 
 
-print(db_get_users())
+"""print(db_get_users())"""
 """print(create_invite(creator='admin@gmail.com',
                     invited_email='test@gmail.com',
                     role='admin'))"""
