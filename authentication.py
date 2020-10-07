@@ -8,7 +8,7 @@ from db_models import *
 
 class User(UserMixin):
     id = str()
-    username = str()
+    login = str()
     password = str()
     role = list()
     privileges = dict()

@@ -4,7 +4,8 @@ from datetime import datetime
 from math import ceil
 from uuid import uuid4
 
-from sqlalchemy import update
+from flask_login import current_user
+from sqlalchemy import exc, inspect, update
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from authentication import User
@@ -51,45 +52,63 @@ def create_user(login: str,
     session = Session()
     new_user = Users(login=login,
                      user_password=generate_password_hash(
-                         user_password,
-                         "sha256",
-                         salt_length=8))
-    session.add(new_user)
-    session.commit()
+                             user_password,
+                             "sha256",
+                             salt_length=8))
+    try:
+        session.add(new_user)
+        session.commit()
+    except exc.IntegrityError:
+        session.rollback()
+        logger.error(f"{current_user.login} get IntegrityError because "
+                     f"user with such parameters already exists:\n"
+                     f"login = {login}"
+                     f"password = {user_password}"
+                     f"role = {role}")
+        return False
     new_user_role = RolesOfUsers(login=new_user.login,
                                  user_role=role)
-    session.add(new_user_role)
-    session.commit()
+    try:
+        session.add(new_user_role)
+        session.commit()
+    except exc.IntegrityError:
+        session.rollback()
+        logger.error(f"{current_user.login} get IntegrityError because "
+                     f"user {login} already has {role} role")
+        return False
     session.close()
     logger.info(f'User {login} successful created')
+    return True
 
 
 def register_user(login: str,
                   user_password: str):
     from main import logger
 
-    session = Session()
-    users = session.query(Users).filter(Users.login == login).all()
-
+    db_session = Session()
+    users = db_session.query(Users).filter(Users.login == login).all()
+    test = inspect(Invites)
     if len(users) == 0:
         logger.info(f'User signup with wrong e-mail: {login}')
         return None
-    db_invites = session.query(Invites).all()
+    db_invites = db_session.query(Invites).all()
     for db_invite in db_invites:
         if check_password_hash(users[0].user_password, db_invite.invite_id):
+            invite_id = db_invite.invite_id
             update_q = update(Users).where(
                     Users.login == login). \
                 values(user_password=generate_password_hash(
                     user_password,
                     "sha256",
                     salt_length=8))
-            session.execute(update_q)
-            session.commit()
-            session.close()
+            db_session.execute(update_q)
+            db_session.commit()
+            db_session.close()
             logger.info(f'User {login} successful registered '
-                        f'with invite_id: {db_invite.invite_id}')
+                        f'with invite_id: {invite_id}')
             return None
 
+    db_session.close()
     logger.info(f'User signup with e-mail: {login}, '
                 f'but this account already exists')
     return 'Such account already exists'

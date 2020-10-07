@@ -8,7 +8,7 @@ from urllib.parse import urljoin, urlparse
 from flask import Flask, abort, jsonify, redirect, render_template, request, \
     url_for
 from flask_bootstrap import Bootstrap
-from flask_login import LoginManager, current_user, login_required, \
+from flask_login import LoginManager, login_required, \
     login_user, \
     logout_user
 from flask_wtf.csrf import CSRFProtect
@@ -19,7 +19,8 @@ from control_panel import *
 # Creates an app and checks if its the main or imported
 app = Flask(__name__)
 app.config.update(TESTING=True,
-                  SECRET_KEY=os.environ.get('APP_SECRET_KEY'))
+                  SECRET_KEY=os.environ.get('APP_SECRET_KEY'),
+                  debug=True)
 Bootstrap(app)
 CSRFProtect(app)
 # login manager instance creation and setting
@@ -33,7 +34,6 @@ login_manager.login_message = 'You are not authorized, please log in'
 INFO on first use. If there is no handler for 
 that level, a StreamHandler is added."""
 logger = logging.getLogger("werkzeug")
-
 """You will need to provide a user_loader callback.
 This callback is used to reload the user object from 
 the user ID stored in the session.
@@ -81,24 +81,29 @@ def new_invite():
 
 
 # logout
-@app.route('/test_create_user')
-def test_create_user():
-    create_user(login='admin@gmail.com',
-                user_password='adminadmin',
-                role='admin')
+@app.route('/create_new_user:<login>:<user_password>:<role>')
+def create_new_user(login, user_password, role):
+    result = create_user(login='admin@gmail.com',
+                         user_password='adminadmin',
+                         role='admin')
+    if result:
+        logger.info(f"User {current_user.login} manualy created user with:\n"
+                    f"login = {login}"
+                    f"login = {user_password}"
+                    f"login = {role}")
     return redirect(url_for('login'))
 
 
 @app.route('/', methods=['GET', 'POST'])
 # The function run on the index route
 def login():
-
-    print(current_user)
-    print(request.form.get('email'))
-    print(request.form.get('password'))
+    logger.info(f'User {current_user} opened site')
     if current_user.is_authenticated:
         return redirect(url_for('control_panel'))
     if request.method == 'POST':
+        logger.info(f"User {current_user} tried to log in\n"
+                    f"with email: {request.form.get('email')}\n"
+                    f"and password: {request.form.get('password')}")
         # Login and validate the user.
         # user should be an instance of your `User` class
         user = find_user(login=request.form.get('email'))
@@ -106,10 +111,8 @@ def login():
             if user.check_password(request.form.get('password')):
                 # User saving in session
                 login_user(user, remember=request.form.get('remember-me'))
-                print(current_user)
                 logger.info(f"User {request.form.get('email')} "
                             "Logged in successfully.")
-                print(request.args)
                 next_url = request.args.get('next')
                 # is_safe_url should check if the url is safe for redirects.
                 if not is_safe_url(next_url):
@@ -145,8 +148,9 @@ def signup():
 @login_required
 def control_panel():
     if request.method == 'POST':
-        print(request.form.get('email'))
-        print(request.form.get('password'))
+        logger.info(
+                f'User {current_user.login} sent POST request on '
+                f'control_panel')
         return render_template("confirmation.html")
 
     return render_template('dashboard.html')
@@ -161,34 +165,33 @@ def icons():
 @app.route('/users', methods=['GET', 'POST'])
 @login_required
 def users():
-    users_list = db_get_users()
-    return render_template('users.html', users_list=users_list)
+    logger.info(f'User {current_user.login} opened user list')
+    user_list = db_get_users()
+    return render_template('users.html', user_list=user_list)
 
 
 @app.route('/messages', methods=['GET', 'POST'])
 @login_required
 def messages():
-    print(request)
-    print(request.method)
+    sending = False
+
     if request.method == 'POST':
         for k, v in zip(request.form.keys(), request.form.values()):
             print(f"{k}:", v, type(v))
-        search = 'weqasdasd'
+        sending = True
         return render_template("messages.html",
-                               search=search,
-                               sending=True)
-    search = "Начать поиск"
-    return render_template('messages.html', search=search)
+                               sending=sending)
+    return render_template('messages.html', sending=sending)
 
 
 @app.route('/users_list', methods=['GET', 'POST'])
 @login_required
 def users_list():
-    print('test')
-    users_list = db_get_users()
-    return jsonify(rows=users_list)
+    logger.info(f'User {current_user.login} load user list')
+    user_list = db_get_users()
+    return jsonify(rows=user_list)
 
 
 if __name__ == "__main__":
     # Run the app until stopped
-    app.run()
+    app.run(debug=True)

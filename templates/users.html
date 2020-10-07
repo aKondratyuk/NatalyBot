@@ -164,12 +164,12 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {% for i in range(users_list|length) %}
+                            {% for i in range(user_list|length) %}
                                 <tr>
                                     <td>{{ i }}</td>
-                                    <td>{{ users_list[i]['login'] }}</td>
-                                    <td>{{ users_list[i]['role'] }}</td>
-                                    {% if users_list[i]['register_status'] %}
+                                    <td>{{ user_list[i]['login'] }}</td>
+                                    <td>{{ user_list[i]['role'] }}</td>
+                                    {% if user_list[i]['register_status'] %}
                                         <td>Зарегистрирован</td>
                                     {% else %}
                                         <td>Не зарегистрирован</td>
