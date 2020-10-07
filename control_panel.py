@@ -77,7 +77,7 @@ def create_user(login: str,
                      f"user {login} already has {role} role")
         return False
     session.close()
-    logger.info(f'User {login} successful created')
+    logger.info(f'User {login} successfully created')
     return True
 
 

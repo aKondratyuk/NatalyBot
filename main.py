@@ -83,14 +83,15 @@ def new_invite():
 # logout
 @app.route('/create_new_user:<login>:<user_password>:<role>')
 def create_new_user(login, user_password, role):
-    result = create_user(login='admin@gmail.com',
-                         user_password='adminadmin',
-                         role='admin')
+    result = create_user(login=login,
+                         user_password=user_password,
+                         role=role)
     if result:
-        logger.info(f"User {current_user.login} manualy created user with:\n"
-                    f"login = {login}"
-                    f"login = {user_password}"
-                    f"login = {role}")
+        logger.info(f"User {current_user.login} manualy create "
+                    f"user with parameters:\n"
+                    f"login = {login}\n"
+                    f"password = {user_password}\n"
+                    f"role = {role}")
     return redirect(url_for('login'))
 
 
