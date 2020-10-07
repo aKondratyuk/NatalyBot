@@ -35,21 +35,21 @@
                     </a>
                 </div>
                 <ul class="nav">
-                    <li class="nav-item active">
+                    <li>
                         <a class="nav-link" href="{{ url_for('control_panel') }}">
                             <i class="nc-icon nc-chart-pie-35"></i>
                             <p>Контрольная панель</p>
                         </a>
                     </li>
-                    <li>
+                    <li class="nav-item active">
                         <a class="nav-link" href="{{ url_for('users') }}">
                             <i class="nc-icon nc-circle-09"></i>
                             <p>Пользователи</p>
                         </a>
                     </li>
                     <li>
-                        <a class="nav-link" href="./table.html">
-                            <i class="nc-icon nc-notes"></i>
+                        <a class="nav-link" href="{{ url_for('messages') }}">
+                            <i class="nc-icon nc-email-85"></i>
                             <p>Рассылка сообщений</p>
                         </a>
                     </li>

@@ -159,6 +159,20 @@ def users():
     return render_template('users.html')
 
 
+@app.route('/messages', methods=['GET', 'POST'])
+@login_required
+def messages():
+    print(request)
+    if request.method == 'POST':
+        print(request.form.get('yearsoldfrom'))
+        print(request.form.get('yearsoldto'))
+        print(request.form.get('photosonly'))
+        search = "Остановить поиск"
+        return render_template("messages.html", search=search)
+    search = "Начать поиск"
+    return render_template('messages.html', search=search)
+
+
 if __name__ == "__main__":
     # Run the app until stopped
     app.run()
