@@ -72,12 +72,61 @@ def logout():
 @app.route('/new_invite')
 @login_required
 def new_invite():
-    invited_email = f'{randint(1, 999)}@gmail.com'
+    invited_email = f'{randint(1, 999999)}@gmail.com'
     create_invite(creator=current_user,
                   invited_email=invited_email,
                   role='default')
     logger.info(f'created invite for e-mail: {invited_email}')
-    return redirect(url_for('login'))
+    return render_template('new_invite.html')
+
+
+# logout
+@app.route('/profile_dialogue', methods=['GET', 'POST'])
+@login_required
+def profile_dialogue():
+    """
+    invited_email = f'{randint(1, 999)}@gmail.com'
+    create_invite(creator=current_user,
+                  invited_email=invited_email,
+                  role='default')
+    logger.info(f'created invite for e-mail: {invited_email}')"""
+    senders = db_get_profiles(Profiles.profile_password)
+    receivers = None
+    dialog = None
+    sender = None
+    receiver = None
+    if request.method == "POST":
+        sender = request.form.get('sender_id')
+        if request.form.get('receiver_id_manual'):
+            receiver = request.form.get('receiver_id_manual')
+        else:
+            receiver = request.form.get('receiver_id')
+        if sender:
+            receivers = db_show_receivers(sender)
+        if receiver:
+            if request.form.get('receiver_id_manual'):
+                sender_info_list = db_get_profiles(
+                        Profiles.profile_id == sender)
+                sender_info = sender_info_list[0]
+                dialog_download(
+                        observer_login=sender_info['profile_id'],
+                        observer_password=sender_info['profile_password'],
+                        sender_id=receiver,
+                        receiver_profile_id=receiver)
+                dialog_download(
+                        observer_login=sender_info['profile_id'],
+                        observer_password=sender_info['profile_password'],
+                        sender_id=sender_info['profile_id'],
+                        receiver_profile_id=receiver)
+                receivers = db_show_receivers(sender)
+            dialog = db_show_dialog(sender=sender,
+                                    receiver=receiver)
+    return render_template('profile_dialogue.html',
+                           dialog=dialog,
+                           senders=senders,
+                           receivers=receivers,
+                           selected_sender=sender,
+                           selected_receiver=receiver)
 
 
 # logout
@@ -140,11 +189,11 @@ def signup():
     return render_template('signup.html')
 
 
-########################################################################################################################
-###                                                                                                                  ###
-###                                 Веб-страницы составляющие контрольную панель                                     ###
-###                                                                                                                  ###
-########################################################################################################################
+###############################################################################
+#                                                                             #
+#               Веб-страницы составляющие контрольную панель                  #
+#                                                                             #
+###############################################################################
 @app.route('/control_panel', methods=['GET', 'POST'])
 @login_required
 def control_panel():

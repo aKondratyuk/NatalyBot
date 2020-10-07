@@ -313,6 +313,8 @@ def dialog_download(observer_login: str,
             session=current_profile_session,
             profile_id=receiver_profile_id,
             inbox=sender_id == receiver_profile_id)
+    if total_msg == 0:
+        return False
     chat_id = bytes(
             (bytearray(
                     db_chat_create(
@@ -408,6 +410,24 @@ def db_download_new_msg(observer_login: str,
     return True
 
 
+def db_show_receivers(sender: str) -> list:
+    # you can swap sender and receiver
+    """Returns list of dicts, with messages in dialogue for admin panel"""
+    db_session = Session()
+
+    # subquery for chats with sender
+    sub_query_1 = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.profile_id == sender).subquery()
+    # subquery for chats with this users
+    query = db_session.query(ChatSessions.profile_id). \
+        filter(ChatSessions.chat_id.in_(sub_query_1)). \
+        filter(ChatSessions.profile_id != sender)
+    # query to show messages and texts
+    receivers = query.all()
+    db_session.close()
+    return [{"profile_id": row[0]} for row in receivers]
+
+
 def db_get_users() -> list:
     db_session = Session()
     query = db_session.query(
@@ -432,6 +452,34 @@ def db_get_users() -> list:
     return users
 
 
+def db_get_profiles(*args) -> list:
+    db_session = Session()
+    query = db_session.query(
+            Profiles.profile_id,
+            Profiles.profile_password,
+            Profiles.available,
+            Profiles.can_receive,
+            Profiles.msg_limit,
+            Profiles.profile_type)
+    for statement in args:
+        query = query.filter(statement != '')
+    profiles = query.all()
+    profiles = [{
+            "profile_id": profile[0],
+            "profile_password": profile[1],
+            "available": profile[2],
+            "can_receive": profile[3],
+            "msg_limit": profile[4],
+            "profile_type": profile[5]
+            }
+            for profile in profiles
+            ]
+    db_session.close()
+    return profiles
+
+
+"""print(db_show_dialog('1000868043',
+                     '1001716782'))"""
 """print(db_get_users())"""
 """print(create_invite(creator='admin@gmail.com',
                     invited_email='test@gmail.com',
