@@ -159,89 +159,110 @@
         <div class="content">
             <div class="container-fluid">
                 <div class="container mb-3 mt-3">
-                    <form>
-                        <div class="form-group">
-                            <label for="profileselect">Выбрерите профиль для
-                                рассылки сообщений</label>
-                            <select class="form-control" id="profileselect"
-                                    onchange="run()">
-                                <option disabled selected value="disabled">
-                                    Доступные профили
-                                </option>
-                                <option value="Magnificent_Julia">
-                                    Magnificent_Julia
-                                </option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                            </select>
-                        </div>
-                        TextBox1<br>
-                        <input type="text" id="srt"
-                               placeholder="get value on option select">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <div class="card-title">
-                                            <h4 style="margin-top: auto;">
-                                                Заполните форму для рассылки
-                                                &#8595;</h4>
-                                        </div>
-
+                    <div class="form-group">
+                        <label for="profileselect">Выбрерите профиль для
+                            рассылки сообщений</label>
+                        <select class="form-control" id="profileselect"
+                                onchange="run()">
+                            <option disabled selected value="disabled">
+                                Доступные профили
+                            </option>
+                            <option value="Magnificent_Julia">
+                                Magnificent_Julia
+                            </option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    TextBox1<br>
+                    <input type="text" id="srt"
+                           placeholder="get value on option select">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">
+                                        <h4 style="margin-top: auto;">
+                                            Заполните форму для рассылки
+                                            &#8595;</h4>
                                     </div>
-                                    <div class="card-body">
+
+                                </div>
+                                <div class="card-body">
+                                    <form method="post"
+                                          action="{{ url_for('messages') }}">
+                                        <input type="hidden" name="csrf_token"
+                                               value="{{ csrf_token() }}"/>
+                                        <div class="form-group">
+                                            <label style="color: black;"
+                                                   for="yearsoldfrom">Возраст
+                                                от</label>
+                                            <input type="number"
+                                                   class="form-control"
+                                                   id="yearsoldfrom"
+                                                   name="yearsoldfrom"
+                                                   placeholder="Минимальный возраст 18"
+                                                   required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label style="color: black;"
+                                                   for="yearsoldto">Возраст
+                                                до</label>
+                                            <input type="number"
+                                                   class="form-control"
+                                                   id="yearsoldto"
+                                                   name="yearsoldto"
+                                                   placeholder="Максимальный возраст 75"
+                                                   required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label style="color: black;"
+                                                   for="messagestosent">Сколько
+                                                сообщений отправить</label>
+                                            <input type="number"
+                                                   class="form-control"
+                                                   id="messagestosent"
+                                                   name="messagestosent"
+                                                   placeholder="Максимальное значение 30"
+                                                   required>
+                                        </div>
+                                        <div class="form-check">
+                                            <label class="form-check-label"
+                                                   style="color: black;">
+                                                <input class="form-check-input"
+                                                       type="checkbox"
+                                                       value=""
+                                                       name="photosonly">
+                                                <span class="form-check-sign"></span>
+                                                Поиск только с фото
+                                            </label>
+                                        </div>
+                                        <input type="submit"
+                                               style="margin-top: 30px; margin-left: 25%; width: 50%;"
+                                               class="btn btn-fill
+                                                   btn-round btn-success"
+                                               value="{{ search }}">
+                                    </form>
+                                    {% if sending %}
                                         <form action="{{ url_for('messages') }}"
                                               method="post">
-                                            <div class="form-group">
-                                                <label style="color: black;"
-                                                       for="yearsoldfrom">Возраст
-                                                    от</label>
-                                                <input type="number"
-                                                       class="form-control"
-                                                       id="yearsoldfrom"
-                                                       name="yearsoldfrom"
-                                                       placeholder="Минимальный возраст 18"
-                                                       required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label style="color: black;"
-                                                       for="yearsoldto">Возраст
-                                                    до</label>
-                                                <input type="number"
-                                                       class="form-control"
-                                                       id="yearsoldto"
-                                                       name="yearsoldto"
-                                                       placeholder="Максимальный возраст 75"
-                                                       required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label style="color: black;"
-                                                       for="messagestosent">Сколько
-                                                    сообщений отправить</label>
-                                                <input type="number"
-                                                       class="form-control"
-                                                       id="messagestosent"
-                                                       name="messagestosent"
-                                                       placeholder="Максимальное значение 30"
-                                                       required>
-                                            </div>
-                                            <div class="form-check">
-                                                <label class="form-check-label"
-                                                       style="color: black;">
-                                                    <input class="form-check-input"
-                                                           type="checkbox"
-                                                           value=""
-                                                           name="photosonly">
-                                                    <span class="form-check-sign"></span>
-                                                    Поиск только с фото
-                                                </label>
-                                            </div>
+                                            <input type="hidden"
+                                                   name="csrf_token"
+                                                   value="{{ csrf_token() }}"/>
+                                            <input type="hidden"
+                                                   name="stop"
+                                                   value="True">
                                             <button type="submit"
                                                     style="margin-top: 30px; margin-left: 25%; width: 50%;"
-                                                    class="btn btn-fill btn-round btn-success">{{ search }}</button>
+                                                    class="btn btn-fill
+                                                    btn-round
+                                                    btn-danger">Отменить поиск
+                                            </button>
                                         </form>
+                                    {% endif %}
+                                    {% if sending %}
                                         <h5 style="margin-top: 40px; font-weight: bold;">
                                             Прогресс:</h5>
                                         <p>Отправлено анкет: 22</p>
@@ -258,47 +279,48 @@
                                                 75%
                                             </div>
                                         </div>
-                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="card">
-                                    <div class="card-image">
-                                        <img src="https://images2.minutemediacdn.com/image/upload/c_crop,h_1600,w_2378,x_11,y_0/v1569260079/shape/mentalfloss/gettyimages-1053614486_1.jpg?itok=r2LUV-RS?fit=crop&amp;fm=jpg&amp;h=300&amp;q=75&amp;w=400"
-                                             alt="...">
-                                    </div>
-                                    <img style="border: 5px solid #ffffff5e; border-radius: 10px; display: block; margin-left: auto; margin-right: auto; margin-top: -150px; z-index: 100;"
-                                         src="https://photo.not.cdn.1st-social.com/1000868/1000868043-0-5693686911983251942.jpg"
-                                         alt="Фотография профиля">
-                                    <div class="card-body">
-                                        <div class="author">
-                                            <h5 class="title"
-                                                style="text-align: center;">
-                                                Magnificent_Julia_</h5>
-                                            <p style="text-align: center; font-size: 14px; font-weight: bold;">
-                                                Возраст: 30 лет</p>
-                                            <a style="text-align: center;"
-                                               href="https://www.natashaclub.com/Magnificent_Julia_">
-                                                <h5 class="title">
-                                                    <button type="button"
-                                                            style="width: 100%"
-                                                            class="btn btn-link btn-round btn-fill btn-primary"
-                                                            style="margin-top: 20px;">
-                                                        Посетить профиль
-                                                    </button>
-                                                </h5>
-                                            </a>
-                                        </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-image">
+                                    <img src="https://images2.minutemediacdn.com/image/upload/c_crop,h_1600,w_2378,x_11,y_0/v1569260079/shape/mentalfloss/gettyimages-1053614486_1.jpg?itok=r2LUV-RS?fit=crop&amp;fm=jpg&amp;h=300&amp;q=75&amp;w=400"
+                                         alt="...">
+                                </div>
+                                <img style="border: 5px solid #ffffff5e; border-radius: 10px; display: block; margin-left: auto; margin-right: auto; margin-top: -150px; z-index: 100;"
+                                     src="https://photo.not.cdn.1st-social.com/1000868/1000868043-0-5693686911983251942.jpg"
+                                     alt="Фотография профиля">
+                                <div class="card-body">
+                                    <div class="author">
+                                        <h5 class="title"
+                                            style="text-align: center;">
+                                            Magnificent_Julia_</h5>
+                                        <p style="text-align: center; font-size: 14px; font-weight: bold;">
+                                            Возраст: 30 лет</p>
+                                        <a style="text-align: center;"
+                                           href="https://www.natashaclub.com/Magnificent_Julia_">
+                                            <h5 class="title">
+                                                <button type="button"
+                                                        style="width: 100%"
+                                                        class="btn btn-link btn-round btn-fill btn-primary"
+                                                        style="margin-top: 20px;">
+                                                    Посетить профиль
+                                                </button>
+                                            </h5>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <script>
-                            function run() {
-                                document.getElementById("srt").value = document.getElementById("profileselect").value;
-                            }
-                        </script>
-                    </form>
+                    </div>
+                    <script>
+                        function run() {
+                            document.getElementById("srt").value = document.getElementById("profileselect").value;
+                        }
+                    </script>
+
                 </div>
             </div>
         </div>

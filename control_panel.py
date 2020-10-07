@@ -282,8 +282,8 @@ def dialog_download(observer_login: str,
     """
     # Ищем в Inbox сообщение профиля
     data = {
-        "page": "1",
-        "filterID": receiver_profile_id,
+            "page": "1",
+            "filterID": receiver_profile_id,
             "filterPPage": "20"
             }
 
@@ -391,14 +391,16 @@ def db_download_new_msg(observer_login: str,
 
 def db_get_users() -> list:
     db_session = Session()
-    query = db_session.query(Users.login,
-                             Users.user_password,
-                             SentInvites.invite_id,
-                             RolesOfUsers.user_role)
+    query = db_session.query(
+            Users.login,
+            Users.user_password,
+            SentInvites.invite_id,
+            RolesOfUsers.user_role)
     query = query.outerjoin(SentInvites,
                             Users.login == SentInvites.login)
     query = query.outerjoin(RolesOfUsers,
                             Users.login == RolesOfUsers.login)
+    query = query.group_by(Users.login)
     users = query.all()
     users = [{
             "login": user[0],

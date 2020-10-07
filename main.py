@@ -2,9 +2,11 @@
 # Imports the Flask class
 import logging
 import os
+from random import randint
 from urllib.parse import urljoin, urlparse
 
-from flask import Flask, abort, redirect, render_template, request, url_for
+from flask import Flask, abort, jsonify, redirect, render_template, request, \
+    url_for
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, current_user, login_required, \
     login_user, \
@@ -67,12 +69,14 @@ def logout():
 
 
 # logout
-@app.route('/test')
+@app.route('/new_invite')
 @login_required
-def test():
+def new_invite():
+    invited_email = f'{randint(1, 999)}@gmail.com'
     create_invite(creator=current_user,
-                  invited_email='test_invite@gmail.com',
+                  invited_email=invited_email,
                   role='default')
+    logger.info(f'created invite for e-mail: {invited_email}')
     return redirect(url_for('login'))
 
 
@@ -157,21 +161,32 @@ def icons():
 @app.route('/users', methods=['GET', 'POST'])
 @login_required
 def users():
-    return render_template('users.html')
+    users_list = db_get_users()
+    return render_template('users.html', users_list=users_list)
 
 
 @app.route('/messages', methods=['GET', 'POST'])
 @login_required
 def messages():
     print(request)
+    print(request.method)
     if request.method == 'POST':
-        print(request.form.get('yearsoldfrom'))
-        print(request.form.get('yearsoldto'))
-        print(request.form.get('photosonly'))
-        search = "Остановить поиск"
-        return render_template("messages.html", search=search)
+        for k, v in zip(request.form.keys(), request.form.values()):
+            print(f"{k}:", v, type(v))
+        search = 'weqasdasd'
+        return render_template("messages.html",
+                               search=search,
+                               sending=True)
     search = "Начать поиск"
     return render_template('messages.html', search=search)
+
+
+@app.route('/users_list', methods=['GET', 'POST'])
+@login_required
+def users_list():
+    print('test')
+    users_list = db_get_users()
+    return jsonify(rows=users_list)
 
 
 if __name__ == "__main__":

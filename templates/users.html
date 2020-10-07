@@ -139,71 +139,64 @@
                 <div class="container-fluid">
                     <div class="container mb-3 mt-3">
                         <div id="toolbar" style="padding-bottom: 20px;">
-                            <button type="button" id="add" class="btn btn-fill btn-success">Добавить пользователя</button>
-                            <button type="button" id="delete" class="btn btn-fill btn-danger">Удалить</button>
+                            <button type="button" id="add"
+                                    class="btn btn-fill btn-success">Добавить
+                                пользователя
+                            </button>
+                            <button type="button" id="delete"
+                                    class="btn btn-fill btn-danger">Удалить
+                            </button>
                         </div>
-                        <table id="table" class="table table-striped table table-bordered mydatatable" style="width: 100%">
+                        <table id="table"
+                               class="table table-striped table table-bordered mydatatable"
+                               style="width: 100%">
                             <thead>
-                                <tr>
-                                    <th data-field="id">ID</th>
-                                    <th data-field="email">Email</th>
-                                    <th data-field="role">Роль</th>
-                                    <th data-field="registered">Зарегестрирован в системе</th>
-                                    <th data-field="action" data-sortable="false">Действия</th>
-                                </tr>
+                            <tr>
+                                <th data-field="num">№</th>
+                                <th data-field="email">Email</th>
+                                <th data-field="role">Роль</th>
+                                <th data-field="registered">Зарегестрирован в
+                                    системе
+                                </th>
+                                <th data-field="action" data-sortable="false">
+                                    Действия
+                                </th>
+                            </tr>
                             </thead>
                             <tbody>
+                            {% for i in range(users_list|length) %}
                                 <tr>
-                                    <td>1</td>
-                                    <td>plug2up@gmail.com</td>
-                                    <td>Администратор</td>
-                                    <td>Не зарегестрирован</td>
+                                    <td>{{ i }}</td>
+                                    <td>{{ users_list[i]['login'] }}</td>
+                                    <td>{{ users_list[i]['role'] }}</td>
+                                    {% if users_list[i]['register_status'] %}
+                                        <td>Зарегистрирован</td>
+                                    {% else %}
+                                        <td>Не зарегистрирован</td>
+                                    {% endif %}
                                     <td class="td-actions" align="center">
-                                        <a rel="tooltip" title="Просмотреть профиль" class="btn-sm table-action view" style="color: blue;" href="javascript:void(0)">
+                                        <a rel="tooltip"
+                                           title="Просмотреть профиль"
+                                           class="btn-sm table-action view"
+                                           style="color: blue;"
+                                           href="javascript:void(0)">
                                             <i class="fa fa-user"></i>
                                         </a>
-                                        <a rel="tooltip" title="Изменить" class="btn-sm table-action edit" style="color: green;" href="javascript:void(0)">
+                                        <a rel="tooltip" title="Изменить"
+                                           class="btn-sm table-action edit"
+                                           style="color: green;"
+                                           href="javascript:void(0)">
                                             <i class="fa fa-edit"></i>
                                         </a>
-                                        <a rel="tooltip" title="Удалить" class="btn-sm table-action remove" style="color: red;" href="javascript:void(0)">
+                                        <a rel="tooltip" title="Удалить"
+                                           class="btn-sm table-action remove"
+                                           style="color: red;"
+                                           href="javascript:void(0)">
                                             <i class="fa fa-times"></i>
                                         </a>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>illyamalyarenko@gmail.com</td>
-                                    <td>Администратор</td>
-                                    <td>Не зарегестрирован</td>
-                                    <td class="td-actions" align="center">
-                                        <a rel="tooltip" title="Просмотреть профиль" class="btn-sm table-action view" style="color: blue;" href="javascript:void(0)">
-                                            <i class="fa fa-user"></i>
-                                        </a>
-                                        <a rel="tooltip" title="Изменить" class="btn-sm table-action edit" style="color: green;" href="javascript:void(0)">
-                                            <i class="fa fa-edit"></i>
-                                        </a>
-                                        <a rel="tooltip" title="Удалить" class="btn-sm table-action remove" style="color: red;" href="javascript:void(0)">
-                                            <i class="fa fa-times"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td>wrongemail@lolkek.com</td>
-                                    <td>Работник</td>
-                                    <td>Не зарегестрирован</td>
-                                    <td class="td-actions" align="center">
-                                        <a rel="tooltip" title="Просмотреть профиль" class="btn-sm table-action view" style="color: blue;" href="javascript:void(0)">
-                                            <i class="fa fa-user"></i>
-                                        </a>
-                                        <a rel="tooltip" title="Изменить" class="btn-sm table-action edit" style="color: green;" href="javascript:void(0)">
-                                            <i class="fa fa-edit"></i>
-                                        </a>
-                                        <a rel="tooltip" title="Удалить" class="btn-sm table-action remove" style="color: red;" href="javascript:void(0)">
-                                            <i class="fa fa-times"></i>
-                                        </a>
-                                    </td>
-                                </tr>
+                            {% endfor %}
                             </tbody>
                             <tfoot>
                                 <tr>
