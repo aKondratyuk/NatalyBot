@@ -1850,8 +1850,8 @@ fieldset[disabled] .form-control {
     position: absolute;
     width: 19px;
     height: 19px;
-    margin-top: -12px;
-    margin-left: -23px;
+    margin-top: 0px;
+    margin-left: -33px;
     font-size: 21px;
     cursor: pointer;
     -webkit-transition: opacity 0.3s linear;

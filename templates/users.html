@@ -21,45 +21,47 @@
 </head>
 
 <body>
-    <div class="wrapper">
-        <div class="sidebar" data-image="static/images/sidebar-5.jpg">
-            <!--
-        Tip 1: You can change the color of the sidebar using: data-color="purple | blue | green | orange | red"
+<div class="wrapper">
+    <div class="sidebar" data-image="static/images/sidebar-5.jpg">
+        <!--
+    Tip 1: You can change the color of the sidebar using: data-color="purple | blue | green | orange | red"
 
-        Tip 2: you can also add an image using data-image tag
-    -->
-            <div class="sidebar-wrapper">
-                <div class="logo">
-                    <a href="{{ url_for('control_panel') }}" class="simple-text">
-                        NatalyBot
+    Tip 2: you can also add an image using data-image tag
+-->
+        <div class="sidebar-wrapper">
+            <div class="logo">
+                <a href="{{ url_for('control_panel') }}"
+                   class="simple-text">
+                    NatalyBot
+                </a>
+            </div>
+            <ul class="nav">
+                <li>
+                    <a class="nav-link"
+                       href="{{ url_for('control_panel') }}">
+                        <i class="nc-icon nc-chart-pie-35"></i>
+                        <p>Контрольная панель</p>
                     </a>
-                </div>
-                <ul class="nav">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="{{ url_for('control_panel') }}">
-                            <i class="nc-icon nc-chart-pie-35"></i>
-                            <p>Контрольная панель</p>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="nav-link" href="{{ url_for('users') }}">
-                            <i class="nc-icon nc-circle-09"></i>
-                            <p>Пользователи</p>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="nav-link" href="./table.html">
-                            <i class="nc-icon nc-notes"></i>
-                            <p>Рассылка сообщений</p>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="nav-link" href="./typography.html">
-                            <i class="nc-icon nc-paper-2"></i>
-                            <p>Статистика</p>
-                        </a>
-                    </li>
-                    <li>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="{{ url_for('users') }}">
+                        <i class="nc-icon nc-circle-09"></i>
+                        <p>Пользователи</p>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="{{ url_for('messages') }}">
+                        <i class="nc-icon nc-email-85"></i>
+                        <p>Рассылка сообщений</p>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="./typography.html">
+                        <i class="nc-icon nc-paper-2"></i>
+                        <p>Статистика</p>
+                    </a>
+                </li>
+                <li>
                         <a class="nav-link" href="./notifications.html">
                             <i class="nc-icon nc-bell-55"></i>
                             <p>Оповещения</p>
