@@ -471,6 +471,7 @@ def db_get_users(*statements) -> list:
     query = query.outerjoin(RolesOfUsers,
                             Users.login == RolesOfUsers.login)
     query = query.group_by(Users.login)
+    query = query.filter(Users.login != 'anonymous')
     for statement in statements:
         query = query.filter(statement != '')
     users = query.all()

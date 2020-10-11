@@ -1,6 +1,10 @@
 # coding: utf8
+import logging
 import os
+import traceback
+from uuid import uuid4
 
+from flask_login import current_user
 from sqlalchemy import Column, create_engine
 from sqlalchemy.dialects.mysql import BINARY, BOOLEAN, FLOAT, INTEGER, \
     MEDIUMINT, TIMESTAMP, TINYINT, VARCHAR
@@ -21,7 +25,7 @@ engine = create_engine(f"{os.environ.get('DB_DIALECT')}+"
 Base = declarative_base()
 Session = sessionmaker()
 Session.configure(bind=engine)
-
+logger_db_session = Session()
 
 class Categories(Base):
     __tablename__ = 'Categories'
@@ -361,3 +365,23 @@ class EmailInfo(Base):
                        self.email_host, self.email_password,
                        self.email_subject, self.email_text,
                        self.email_description)
+
+
+class SQLAlchemyHandler(logging.Handler):
+    # A very basic logger that commits a LogRecord to the SQL Db
+    def emit(self, record):
+        trace = None
+        exc = record.__dict__['exc_info']
+        if exc:
+            trace = traceback.format_exc()
+        if current_user:
+            user_login = current_user.login
+        else:
+            user_login = 'anonymous'
+        log = Logs(
+                log_id=uuid4().bytes,
+                login=user_login,
+                category=record.__dict__['levelname'],
+                message=record.__dict__['msg'])
+        logger_db_session.add(log)
+        logger_db_session.commit()

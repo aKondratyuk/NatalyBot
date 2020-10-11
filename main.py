@@ -14,6 +14,7 @@ from flask_wtf.csrf import CSRFProtect
 
 from authentication import find_user
 from control_panel import *
+from db_models import SQLAlchemyHandler
 from email_service import send_email_instruction
 
 # Creates an app and checks if its the main or imported
@@ -34,7 +35,9 @@ INFO on first use. If there is no handler for
 that level, a StreamHandler is added."""
 logger = logging.getLogger("werkzeug")
 stream_handler = logging.StreamHandler()
+sql_hander = SQLAlchemyHandler()
 logger.addHandler(stream_handler)
+logger.addHandler(sql_hander)
 logger.setLevel(logging.INFO)
 app.logger = logger
 """You will need to provide a user_loader callback.
