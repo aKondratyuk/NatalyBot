@@ -35,9 +35,9 @@ INFO on first use. If there is no handler for
 that level, a StreamHandler is added."""
 logger = logging.getLogger("werkzeug")
 stream_handler = logging.StreamHandler()
-sql_hander = SQLAlchemyHandler()
+sql_handler = SQLAlchemyHandler()
 logger.addHandler(stream_handler)
-logger.addHandler(sql_hander)
+logger.addHandler(sql_handler)
 logger.setLevel(logging.INFO)
 app.logger = logger
 """You will need to provide a user_loader callback.

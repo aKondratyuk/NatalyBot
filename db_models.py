@@ -5,6 +5,7 @@ import socket
 import traceback
 from uuid import uuid4
 
+from flask import request
 from flask_login import current_user
 from sqlalchemy import Column, create_engine
 from sqlalchemy.dialects.mysql import BINARY, BOOLEAN, FLOAT, INTEGER, \
@@ -375,11 +376,15 @@ class SQLAlchemyHandler(logging.Handler):
         exc = record.__dict__['exc_info']
         if exc:
             trace = traceback.format_exc()
+
+        user_login = 'anonymous'
         if current_user:
-            user_ip = current_user.ip
-            user_login = current_user.login
+            if current_user.is_anonymous:
+                user_ip = request.environ['REMOTE_ADDR']
+            else:
+                user_ip = current_user.ip
+                user_login = current_user.login
         else:
-            user_login = 'anonymous'
             hostname = socket.gethostname()
             user_ip = socket.gethostbyname(hostname)
         log = Logs(
