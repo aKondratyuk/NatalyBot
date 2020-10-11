@@ -1,6 +1,7 @@
 # coding: utf8
 import logging
 import os
+import socket
 import traceback
 from uuid import uuid4
 
@@ -375,13 +376,17 @@ class SQLAlchemyHandler(logging.Handler):
         if exc:
             trace = traceback.format_exc()
         if current_user:
+            user_ip = current_user.ip
             user_login = current_user.login
         else:
             user_login = 'anonymous'
+            hostname = socket.gethostname()
+            user_ip = socket.gethostbyname(hostname)
         log = Logs(
                 log_id=uuid4().bytes,
                 login=user_login,
                 category=record.__dict__['levelname'],
-                message=record.__dict__['msg'])
+                message=record.__dict__['msg'],
+                ip=user_ip)
         logger_db_session.add(log)
         logger_db_session.commit()
