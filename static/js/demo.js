@@ -500,6 +500,40 @@ demo = {
         marker.setMap(map);
     },
 
+    showDangerNotification: function(from, align) {
+        color = 4;
+
+        $.notify({
+            icon: "nc-icon nc-bell-55",
+            message: "<strong>Пользователь уже зарегестрирован!</strong> Приглашение не выслано."
+
+        }, {
+            type: type[color],
+            timer: 8000,
+            placement: {
+                from: from,
+                align: align
+            }
+        });
+    },
+
+    showSuccessNotification: function(from, align) {
+        color = 2;
+
+        $.notify({
+            icon: "nc-icon nc-bell-55",
+            message: "<strong>Успех!</strong> Приглашение выслано по указаному email адрессу."
+
+        }, {
+            type: type[color],
+            timer: 8000,
+            placement: {
+                from: from,
+                align: align
+            }
+        });
+    },
+
     showNotification: function(from, align) {
         color = Math.floor((Math.random() * 4) + 1);
 
@@ -516,7 +550,5 @@ demo = {
             }
         });
     }
-
-
 
 }
