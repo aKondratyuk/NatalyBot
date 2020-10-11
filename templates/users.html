@@ -4,12 +4,38 @@
         <div class="container-fluid">
             <div class="container mb-3 mt-3">
                 <div id="toolbar" style="padding-bottom: 20px;">
-                    <button href="/new_invite"
-                            type="button"
+                    <button type="button"
                             id="add"
+                            data-toggle="modal"
+                            data-target = "#UserModal"
                             class="btn btn-fill btn-success">Создать
                         приглашение
                     </button>
+                    <div class="modal fade" id="UserModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                      <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Отправка инстркции для регистрации в системе NatalyBot</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true" style="position: fixed; margin-top: -35px; margin-left: 5px; color: #FF4A55;">&times;</span>
+                            </button>
+                          </div>
+                            <form action="{{ url_for('invite_user') }}" method="post">
+                          <div class="modal-body">
+                              <div class="form-group">
+                                <label for="recipient-name" class="col-form-label">Получатель:</label>
+                                  <input name="csrf_token" type="hidden" value="{{ csrf_token() }}"/>
+                                <input type="text" class="form-control" name="recipient-name" id="recipient-name" placeholder="email@example.com">
+                              </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-fill btn-danger" data-dismiss="modal">Закрыть</button>
+                            <button type="submit" class="btn btn-fill btn-primary">Отправить</button>
+                          </div>
+                            </form>
+                        </div>
+                      </div>
+                    </div>
                     <button type="button" id="delete"
                             class="btn btn-fill btn-danger">Удалить
                     </button>
@@ -112,5 +138,12 @@
     <script src="https://unpkg.com/bootstrap-table@1.18.0/dist/bootstrap-table.min.js"></script>
     <script>
         $('.mydatatable').DataTable();
+    </script>
+    <script>
+        $('#UserModal').on('show.bs.modal', function (event) {
+          var button = $(event.relatedTarget) // Button that triggered the modal
+          // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+          // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+        })
     </script>
 {% endblock %}

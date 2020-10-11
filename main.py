@@ -15,6 +15,7 @@ from flask_wtf.csrf import CSRFProtect
 
 from authentication import find_user
 from control_panel import *
+from email_service import send_email_instruction
 
 # Creates an app and checks if its the main or imported
 app = Flask(__name__)
@@ -68,16 +69,17 @@ def logout():
     return redirect(url_for('login'))
 
 
-# logout
-@app.route('/new_invite')
+@app.route('/invite_user', methods=['POST'])
 @login_required
-def new_invite():
-    invited_email = f'{randint(1, 999999)}@gmail.com'
+def invite_user():
+    invited_email = request.form.get('recipient-name')
+    send_email_instruction(email_to=invited_email)
     create_invite(creator=current_user,
                   invited_email=invited_email,
                   role='default')
     logger.info(f'created invite for e-mail: {invited_email}')
-    return render_template('new_invite.html')
+    user_list = db_get_users()
+    return render_template('users.html', user_list=user_list)
 
 
 # logout
