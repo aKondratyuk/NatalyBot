@@ -2,7 +2,6 @@
 # Imports the Flask class
 import logging
 import os
-from random import randint
 from urllib.parse import urljoin, urlparse
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, \
@@ -21,7 +20,7 @@ from email_service import send_email_instruction
 app = Flask(__name__)
 app.config.update(TESTING=True,
                   SECRET_KEY=os.environ.get('APP_SECRET_KEY'),
-                  debug=True)
+                  FLASK_DEBUG=1)
 Bootstrap(app)
 CSRFProtect(app)
 # login manager instance creation and setting
@@ -29,12 +28,14 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'You are not authorized, please log in'
-
 # Werkzeug logging
 """If the logger level is not set, it will be set to 
 INFO on first use. If there is no handler for 
 that level, a StreamHandler is added."""
 logger = logging.getLogger("werkzeug")
+stream_handler = logging.StreamHandler()
+logger.addHandler(stream_handler)
+app.logger = logger
 """You will need to provide a user_loader callback.
 This callback is used to reload the user object from 
 the user ID stored in the session.
@@ -74,12 +75,13 @@ def logout():
 def invite_user():
     invited_email = request.form.get('recipient-name')
     send_email_instruction(email_to=invited_email)
-    create_invite(creator=current_user,
-                  invited_email=invited_email,
-                  role='default')
-    logger.info(f'created invite for e-mail: {invited_email}')
+    error = not create_invite(creator=current_user,
+                              invited_email=invited_email,
+                              role='default')
     user_list = db_get_users()
-    return render_template('users.html', user_list=user_list)
+    return render_template('users.html',
+                           user_list=user_list,
+                           error=error)
 
 
 # logout
@@ -172,7 +174,7 @@ def login():
 
                 return redirect(next_url or url_for('control_panel'))
         logger.error(
-            f"Invalid username/password by {request.form.get('email')}")
+                f"Invalid username/password by {request.form.get('email')}")
 
     # Returns the html page to be displayed
     return render_template('login.html',
@@ -245,5 +247,6 @@ def users_list():
 
 
 if __name__ == "__main__":
+
     # Run the app until stopped
     app.run(debug=True)

@@ -17,32 +17,63 @@ from verification import login, profile_in_inbox
 
 def create_invite(creator: User,
                   invited_email: str,
-                  role: str):
-    session = Session()
+                  role: str) -> bool:
+    from main import logger
+    db_session = Session()
     invite = Invites(invite_id=uuid4().bytes)
+
+    # new user creating
     new_user = Users(login=invited_email,
                      user_password=generate_password_hash(
-                         invite.invite_id,
-                         "sha256",
-                         salt_length=8))
-
+                             invite.invite_id,
+                             "sha256",
+                             salt_length=8))
+    # assign role to user
     new_user_role = RolesOfUsers(login=invited_email,
                                  user_role=role)
+    # create invite from user
     sent_invite_from = SentInvites(invite_id=invite.invite_id,
                                    login=creator.login)
+    # create invite to user
     sent_invite_to = SentInvites(invite_id=invite.invite_id,
                                  login=new_user.login)
-    session.add(invite)
-    session.add(new_user)
-    session.commit()
 
-    session.add(new_user_role)
-    session.commit()
+    # database duplicate check
+    users = db_get_users(Users.login == invited_email)
+    if len(users) > 0:
+        # user already created
+        if users[0]['register_status']:
+            # user already registered
+            logger.info(f'User {current_user.login} '
+                        f'tried to create invite for '
+                        f'already registered user: {invited_email}')
+            return False
+        if users[0]['role'] != role:
+            # user role another from db role
+            update_q = update(RolesOfUsers).where(
+                    RolesOfUsers.login == invited_email). \
+                values(user_role=role)
+            db_session.execute(update_q)
+            logger.info(f'User {current_user.login} '
+                        f'update role for unregistered user: {invited_email}')
 
-    session.add(sent_invite_from)
-    session.add(sent_invite_to)
-    session.commit()
-    session.close()
+        logger.info(f'User {current_user.login} '
+                    f'resend invite to: {invited_email}')
+        return True
+    else:
+        # no user in DB
+        db_session.add(invite)
+        db_session.commit()
+        db_session.add(new_user)
+        db_session.commit()
+        db_session.add(new_user_role)
+        db_session.commit()
+        db_session.add(sent_invite_from)
+        db_session.add(sent_invite_to)
+        db_session.commit()
+        db_session.close()
+        logger.info(f'created invite for e-mail: {invited_email}')
+        return True
 
 
 def create_user(login: str,
@@ -428,7 +459,7 @@ def db_show_receivers(sender: str) -> list:
     return [{"profile_id": row[0]} for row in receivers]
 
 
-def db_get_users() -> list:
+def db_get_users(*statements) -> list:
     db_session = Session()
     query = db_session.query(
             Users.login,
@@ -440,6 +471,8 @@ def db_get_users() -> list:
     query = query.outerjoin(RolesOfUsers,
                             Users.login == RolesOfUsers.login)
     query = query.group_by(Users.login)
+    for statement in statements:
+        query = query.filter(statement != '')
     users = query.all()
     users = [{
             "login": user[0],
@@ -476,6 +509,26 @@ def db_get_profiles(*args) -> list:
             ]
     db_session.close()
     return profiles
+
+
+def db_get_rows(tables: list,
+                *statements) -> list:
+    db_session = Session()
+    query = db_session.query(*tables)
+    for statement in statements:
+        query = query.filter(statement != '')
+    result = query.all()
+    db_session.close()
+    return result
+
+
+def db_duplicate_check(tables: list,
+                       *statements) -> bool:
+    result_rows = db_get_rows(tables, *statements)
+    if len(result_rows) > 0:
+        return True
+    else:
+        return False
 
 
 """print(db_show_dialog('1000868043',

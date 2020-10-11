@@ -340,3 +340,24 @@ class SentInvites(Base):
     def __repr__(self):
         return "<Sent_invites(invite_id='%s', invite_id='%s')>" % (
                 self.invite_id, self.login)
+
+
+class EmailInfo(Base):
+    __tablename__ = 'Email_info'
+    email_address = Column(VARCHAR(190), primary_key=True)
+    email_port = Column(INTEGER(11))
+    email_host = Column(VARCHAR(190))
+    email_password = Column(VARCHAR(190))
+    email_subject = Column(VARCHAR(10000))
+    email_text = Column(VARCHAR(10000))
+    email_description = Column(VARCHAR(190))
+
+    def __repr__(self):
+        return "<Email_info(email_address='%s', email_port='%s'," \
+               "email_host='%s', email_password='%s'," \
+               "email_subject='%s', email_text='%s'," \
+               "email_description='%s')>" % (
+                       self.email_address, self.email_port,
+                       self.email_host, self.email_password,
+                       self.email_subject, self.email_text,
+                       self.email_description)

@@ -3,22 +3,33 @@ import smtplib
 # Экзепляр Email сообщения
 from email.message import EmailMessage
 
-# Настройки по умолчанию
-HOST = "euhost01.twinservers.net"
-PORT = 587
-EMAIL = "ladyjuly@a2.kh.ua"
-PASSWORD = "iX}srvOfUH!p"
-SUBJECT = "Инструкция для регистрации в системе NatalyBot"
-TEXT = "Hello, admin writing to you!"
+from db_models import EmailInfo, Session
 
 
 def send_email_instruction(email_to):
-    """Функция выполняет отправку сообщения на указанный email адресс с инструкцией для регистрации в системе NatalyBot
+    """Функция выполняет отправку сообщения на указанный email адресс с
+    инструкцией для регистрации в системе NatalyBot
 
     Keyword arguments:
     email_to -- адрессат, которому будет доставлено сообщение с инструкцией
 
     """
+
+    # Настройки по умолчанию
+    db_session = Session()
+    query = db_session.query(EmailInfo.email_host,
+                             EmailInfo.email_port,
+                             EmailInfo.email_address,
+                             EmailInfo.email_password,
+                             EmailInfo.email_subject,
+                             EmailInfo.email_text).filter(
+            EmailInfo.email_description == 'default_register')
+    default_email_info = query.all()
+
+    if len(default_email_info) > 0:
+        HOST, PORT, EMAIL, PASSWORD, SUBJECT, TEXT = default_email_info[0]
+    db_session.close()
+
     # Соединяемся с почтовым сервисом
     smtpObj = smtplib.SMTP(HOST, PORT)
     # Шифруем сообщение
