@@ -35,6 +35,7 @@ that level, a StreamHandler is added."""
 logger = logging.getLogger("werkzeug")
 stream_handler = logging.StreamHandler()
 logger.addHandler(stream_handler)
+logger.setLevel(logging.INFO)
 app.logger = logger
 """You will need to provide a user_loader callback.
 This callback is used to reload the user object from 
