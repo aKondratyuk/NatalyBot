@@ -93,5 +93,5 @@ def find_user(login: str = None,
         session.close()
         return User(user_id=user_id, login=login,
                     password=password, role=role,
-                    privileges=privileges, ip=request.environ['REMOTE_ADDR'])
+                    privileges=privileges, ip=request.remote_addr)
     return None
