@@ -91,7 +91,12 @@ def find_user(login: str = None,
                           for row in q_result}
 
         session.close()
+        if request.environ['REMOTE_ADDR']:
+            user_ip = request.environ['REMOTE_ADDR']
+        else:
+            hostname = socket.gethostname()
+            user_ip = socket.gethostbyname(hostname)
         return User(user_id=user_id, login=login,
                     password=password, role=role,
-                    privileges=privileges, ip=request.remote_addr)
+                    privileges=privileges, ip=user_ip)
     return None
