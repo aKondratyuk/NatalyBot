@@ -377,14 +377,15 @@ class SQLAlchemyHandler(logging.Handler):
         if exc:
             trace = traceback.format_exc()
 
-        user_login = 'anonymous'
         if current_user:
             if current_user.is_anonymous:
+                user_login = 'anonymous'
                 user_ip = request.environ['REMOTE_ADDR']
             else:
                 user_ip = current_user.ip
                 user_login = current_user.login
         else:
+            user_login = 'server'
             hostname = socket.gethostname()
             user_ip = socket.gethostbyname(hostname)
         log = Logs(
