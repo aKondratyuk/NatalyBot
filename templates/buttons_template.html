@@ -1,0 +1,37 @@
+{% block users_edit_button %}
+<div class="modal fade" id="EditModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="EditModalLabel">Режим редактирования пользователя {{ user_edit_login }}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true" style="position: fixed; margin-top: -35px; margin-left: 5px; color: #FF4A55;">&times;</span>
+        </button>
+      </div>
+        <form action="{{ url_for('invite_user') }}" method="post">
+      <div class="modal-body">
+           <div class="form-group">
+            <label for="recipient-edit-role" class="col-form-label">Роль:</label>
+                <select class="custom-select" name="recipient-role" id="recipient-edit-role" required style="display: block;">
+                    <option selected value="default">Переводчик</option>
+                    <option value="moderator">Модератор</option>
+                    <option value="admin">Администратор</option>
+                </select>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-fill btn-danger" data-dismiss="modal">Закрыть</button>
+        <button type="submit" class="btn btn-fill btn-primary">Изменить</button>
+      </div>
+        </form>
+    </div>
+  </div>
+</div>
+<script>
+    $('#EditModal').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget) // Button that triggered the modal
+      // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+      // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+    })
+</script>
+{% endblock %}

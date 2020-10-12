@@ -228,6 +228,14 @@ def users():
     return render_template('users.html', user_list=user_list)
 
 
+@app.route('/users/edit/<login>', methods=['GET', 'POST'])
+@login_required
+def users_edit(login):
+    logger.info(f'User {current_user.login} opened user list')
+    user_list = db_get_users()
+    return render_template('users.html', user_list=user_list, user_edit_login=login)
+
+
 @app.route('/messages', methods=['GET', 'POST'])
 @login_required
 def messages():
