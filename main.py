@@ -2,6 +2,7 @@
 # Imports the Flask class
 import logging
 import os
+from logging import Logger
 from urllib.parse import urljoin, urlparse
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, \
@@ -33,22 +34,26 @@ login_manager.login_message = 'You are not authorized, please log in'
 """If the logger level is not set, it will be set to 
 INFO on first use. If there is no handler for 
 that level, a StreamHandler is added."""
-logger = logging.getLogger("werkzeug")
+
+
+class MyLogger(Logger):
+    def __init__(self, name, level=0):
+        super().__init__(name, level)
+        logging.addLevelName(30, "NOTIFICATION")
+
+    def notification(self, message, *args, **kws):
+        if self.isEnabledFor(30):
+            # Yes, logger takes its '*args' as 'args'.
+            self._log(30, message, args, **kws)
+
+
+logger = MyLogger("werkzeug")
+
 stream_handler = logging.StreamHandler()
 sql_handler = SQLAlchemyHandler()
 logger.addHandler(stream_handler)
 logger.addHandler(sql_handler)
-logger.setLevel(logging.INFO)
 app.logger = logger
-"""You will need to provide a user_loader callback.
-This callback is used to reload the user object from 
-the user ID stored in the session.
-It should take the unicode ID of a user, and return 
-the corresponding user object.
-It should return None (not raise an exception) 
-if the ID is not valid.
-(In that case, the ID will manually be removed 
-from the session and processing will continue.)"""
 
 
 @login_manager.user_loader
