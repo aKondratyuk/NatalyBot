@@ -15,7 +15,7 @@ from flask_wtf.csrf import CSRFProtect
 
 from authentication import find_user
 from control_panel import *
-from db_models import Profiles, SQLAlchemyHandler, Users, Visibility
+from db_models import Logs, Profiles, SQLAlchemyHandler, Users, Visibility
 from email_service import send_email_instruction
 
 # Creates an app and checks if its the main or imported
@@ -269,6 +269,13 @@ def users_list():
     logger.info(f'User {current_user.login} load user list')
     user_list = db_get_users()
     return jsonify(rows=user_list)
+
+
+@app.route('/logs', methods=['GET', 'POST'])
+@login_required
+def logs():
+    logs = db_get_rows([Logs])
+    return render_template('logs.html', logs=logs)
 
 
 # logout
