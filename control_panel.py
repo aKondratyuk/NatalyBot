@@ -465,6 +465,18 @@ def db_show_receivers(sender: str) -> list:
     return [{"profile_id": row[0]} for row in receivers]
 
 
+def db_change_user_role(user_login: str, role: str):
+    db_session = Session()
+    update_q = update(RolesOfUsers).where(
+        RolesOfUsers.login == user_login). \
+        values(user_role=role)
+    db_session.execute(update_q)
+    db_session.commit()
+    db_session.close()
+
+    return None
+
+
 def db_get_users(*statements) -> list:
     db_session = Session()
     query = db_session.query(
