@@ -231,9 +231,10 @@ def users():
 @login_required
 def users_edit(user_id):
     print(app.root_path)
+    print(user_id)
     logger.info(f'User {current_user.login} opened user list')
     user_list = db_get_users()
-    return render_template('users.html', user_list=user_list)
+    return redirect(url_for('users'))
 
 
 @app.route('/messages', methods=['GET', 'POST'])
