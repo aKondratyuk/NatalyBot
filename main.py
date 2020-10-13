@@ -220,20 +220,21 @@ def icons():
     return render_template('icons.html')
 
 
-@app.route('/users', methods=['GET', 'POST'])
 @login_required
+@app.route('/users', methods=['GET', 'POST'])
 def users():
     logger.info(f'User {current_user.login} opened user list')
     user_list = db_get_users()
     return render_template('users.html', user_list=user_list)
 
 
-@app.route('/users/edit/<login>', methods=['GET', 'POST'])
+@app.route('/users/<user_id>', methods=['GET', 'POST'])
 @login_required
-def users_edit(login):
+def users_edit(user_id):
+    print(app.root_path)
     logger.info(f'User {current_user.login} opened user list')
     user_list = db_get_users()
-    return render_template('users.html', user_list=user_list, user_edit_login=login)
+    return render_template('users.html', user_list=user_list)
 
 
 @app.route('/messages', methods=['GET', 'POST'])
@@ -261,4 +262,4 @@ def users_list():
 if __name__ == "__main__":
 
     # Run the app until stopped
-    app.run(debug=True)
+    app.run()
