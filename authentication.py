@@ -1,4 +1,5 @@
 # coding: utf8
+from flask import request
 from flask_login import UserMixin
 from sqlalchemy import update
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -8,18 +9,20 @@ from db_models import *
 
 class User(UserMixin):
     id = str()
-    username = str()
+    login = str()
     password = str()
     role = list()
     privileges = dict()
+    ip = str()
 
     def __init__(self, user_id: str, login: str, password: str,
-                 role: list, privileges: dict):
+                 role: list, privileges: dict, ip: str):
         self.id = user_id
         self.login = login
         self.password = password
         self.role = role
         self.privileges = privileges
+        self.ip = ip
 
     def __repr__(self):
         return "<{}:{}>".format(self.login, self.password)
@@ -88,6 +91,12 @@ def find_user(login: str = None,
                           for row in q_result}
 
         session.close()
-        return User(user_id=user_id, login=login, password=password,
-                    role=role, privileges=privileges)
+        if request.environ['REMOTE_ADDR']:
+            user_ip = request.environ['REMOTE_ADDR']
+        else:
+            hostname = socket.gethostname()
+            user_ip = socket.gethostbyname(hostname)
+        return User(user_id=user_id, login=login,
+                    password=password, role=role,
+                    privileges=privileges, ip=user_ip)
     return None

@@ -4,7 +4,8 @@ from datetime import datetime
 from math import ceil
 from uuid import uuid4
 
-from sqlalchemy import update
+from flask_login import current_user
+from sqlalchemy import exc, inspect, update
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from authentication import User
@@ -16,32 +17,64 @@ from verification import login, profile_in_inbox
 
 def create_invite(creator: User,
                   invited_email: str,
-                  role: str):
-    session = Session()
+                  role: str) -> bool:
+    from main import logger
+    db_session = Session()
     invite = Invites(invite_id=uuid4().bytes)
+
+    # new user creating
     new_user = Users(login=invited_email,
                      user_password=generate_password_hash(
-                         invite.invite_id,
-                         "sha256",
-                         salt_length=8))
-
+                             invite.invite_id,
+                             "sha256",
+                             salt_length=8))
+    # assign role to user
     new_user_role = RolesOfUsers(login=invited_email,
                                  user_role=role)
+    # create invite from user
     sent_invite_from = SentInvites(invite_id=invite.invite_id,
                                    login=creator.login)
+    # create invite to user
     sent_invite_to = SentInvites(invite_id=invite.invite_id,
                                  login=new_user.login)
-    session.add(invite)
-    session.add(new_user)
-    session.commit()
 
-    session.add(new_user_role)
-    session.commit()
+    # database duplicate check
+    users = db_get_users(Users.login == invited_email)
+    if len(users) > 0:
+        # user already created
+        if users[0]['register_status']:
+            # user already registered
+            logger.info(f'User {current_user.login} '
+                        f'tried to create invite for '
+                        f'already registered user: {invited_email}')
+            return False
+        if users[0]['role'] != role:
+            # user role another from db role
+            update_q = update(RolesOfUsers).where(
+                    RolesOfUsers.login == invited_email). \
+                values(user_role=role)
+            db_session.execute(update_q)
+            db_session.commit()
+            logger.info(f'User {current_user.login} '
+                        f'update role for unregistered user: {invited_email}')
 
-    session.add(sent_invite_from)
-    session.add(sent_invite_to)
-    session.commit()
-    session.close()
+        logger.info(f'User {current_user.login} '
+                    f'resend invite to: {invited_email}')
+        return True
+    else:
+        # no user in DB
+        db_session.add(invite)
+        db_session.commit()
+        db_session.add(new_user)
+        db_session.commit()
+        db_session.add(new_user_role)
+        db_session.commit()
+        db_session.add(sent_invite_from)
+        db_session.add(sent_invite_to)
+        db_session.commit()
+        db_session.close()
+        logger.info(f'created invite for e-mail: {invited_email}')
+        return True
 
 
 def create_user(login: str,
@@ -51,45 +84,63 @@ def create_user(login: str,
     session = Session()
     new_user = Users(login=login,
                      user_password=generate_password_hash(
-                         user_password,
-                         "sha256",
-                         salt_length=8))
-    session.add(new_user)
-    session.commit()
+                             user_password,
+                             "sha256",
+                             salt_length=8))
+    try:
+        session.add(new_user)
+        session.commit()
+    except exc.IntegrityError:
+        session.rollback()
+        logger.error(f"{current_user.login} get IntegrityError because "
+                     f"user with such parameters already exists:\n"
+                     f"login = {login}"
+                     f"password = {user_password}"
+                     f"role = {role}")
+        return False
     new_user_role = RolesOfUsers(login=new_user.login,
                                  user_role=role)
-    session.add(new_user_role)
-    session.commit()
+    try:
+        session.add(new_user_role)
+        session.commit()
+    except exc.IntegrityError:
+        session.rollback()
+        logger.error(f"{current_user.login} get IntegrityError because "
+                     f"user {login} already has {role} role")
+        return False
     session.close()
-    logger.info(f'User {login} successful created')
+    logger.info(f'User {login} successfully created')
+    return True
 
 
 def register_user(login: str,
                   user_password: str):
     from main import logger
 
-    session = Session()
-    users = session.query(Users).filter(Users.login == login).all()
-
+    db_session = Session()
+    users = db_session.query(Users).filter(Users.login == login).all()
+    test = inspect(Invites)
     if len(users) == 0:
         logger.info(f'User signup with wrong e-mail: {login}')
         return None
-    db_invites = session.query(Invites).all()
+    db_invites = db_session.query(Invites).all()
     for db_invite in db_invites:
         if check_password_hash(users[0].user_password, db_invite.invite_id):
+            invite_id = db_invite.invite_id
             update_q = update(Users).where(
                     Users.login == login). \
                 values(user_password=generate_password_hash(
                     user_password,
                     "sha256",
                     salt_length=8))
-            session.execute(update_q)
-            session.commit()
-            session.close()
+            db_session.execute(update_q)
+            db_session.commit()
+            db_session.close()
             logger.info(f'User {login} successful registered '
-                        f'with invite_id: {db_invite.invite_id}')
+                        f'with invite_id: {invite_id}')
             return None
 
+    db_session.close()
     logger.info(f'User signup with e-mail: {login}, '
                 f'but this account already exists')
     return 'Such account already exists'
@@ -282,8 +333,8 @@ def dialog_download(observer_login: str,
     """
     # Ищем в Inbox сообщение профиля
     data = {
-        "page": "1",
-        "filterID": receiver_profile_id,
+            "page": "1",
+            "filterID": receiver_profile_id,
             "filterPPage": "20"
             }
 
@@ -294,6 +345,8 @@ def dialog_download(observer_login: str,
             session=current_profile_session,
             profile_id=receiver_profile_id,
             inbox=sender_id == receiver_profile_id)
+    if total_msg == 0:
+        return False
     chat_id = bytes(
             (bytearray(
                     db_chat_create(
@@ -389,16 +442,52 @@ def db_download_new_msg(observer_login: str,
     return True
 
 
-def db_get_users() -> list:
+def db_show_receivers(sender: str) -> list:
+    # you can swap sender and receiver
+    """Returns list of dicts, with messages in dialogue for admin panel"""
     db_session = Session()
-    query = db_session.query(Users.login,
-                             Users.user_password,
-                             SentInvites.invite_id,
-                             RolesOfUsers.user_role)
+
+    # subquery for chats with sender
+    sub_query_1 = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.profile_id == sender).subquery()
+    # subquery for chats with this users
+    query = db_session.query(ChatSessions.profile_id). \
+        filter(ChatSessions.chat_id.in_(sub_query_1)). \
+        filter(ChatSessions.profile_id != sender)
+    # query to show messages and texts
+    receivers = query.all()
+    db_session.close()
+    return [{"profile_id": row[0]} for row in receivers]
+
+
+def db_change_user_role(user_login: str, role: str):
+    db_session = Session()
+    update_q = update(RolesOfUsers).where(
+        RolesOfUsers.login == user_login). \
+        values(user_role=role)
+    db_session.execute(update_q)
+    db_session.commit()
+    db_session.close()
+
+    return None
+
+
+def db_get_users(*statements) -> list:
+    db_session = Session()
+    query = db_session.query(
+            Users.login,
+            Users.user_password,
+            SentInvites.invite_id,
+            RolesOfUsers.user_role)
     query = query.outerjoin(SentInvites,
                             Users.login == SentInvites.login)
     query = query.outerjoin(RolesOfUsers,
                             Users.login == RolesOfUsers.login)
+    query = query.group_by(Users.login)
+    query = query.filter(Users.login != 'anonymous')
+    query = query.filter(Users.login != 'server')
+    for statement in statements:
+        query = query.filter(statement != '')
     users = query.all()
     users = [{
             "login": user[0],
@@ -411,6 +500,54 @@ def db_get_users() -> list:
     return users
 
 
+def db_get_profiles(*args) -> list:
+    db_session = Session()
+    query = db_session.query(
+            Profiles.profile_id,
+            Profiles.profile_password,
+            Profiles.available,
+            Profiles.can_receive,
+            Profiles.msg_limit,
+            Profiles.profile_type)
+    for statement in args:
+        query = query.filter(statement != '')
+    profiles = query.all()
+    profiles = [{
+            "profile_id": profile[0],
+            "profile_password": profile[1],
+            "available": profile[2],
+            "can_receive": profile[3],
+            "msg_limit": profile[4],
+            "profile_type": profile[5]
+            }
+            for profile in profiles
+            ]
+    db_session.close()
+    return profiles
+
+
+def db_get_rows(tables: list,
+                *statements) -> list:
+    db_session = Session()
+    query = db_session.query(*tables)
+    for statement in statements:
+        query = query.filter(statement != '')
+    result = query.all()
+    db_session.close()
+    return result
+
+
+def db_duplicate_check(tables: list,
+                       *statements) -> bool:
+    result_rows = db_get_rows(tables, *statements)
+    if len(result_rows) > 0:
+        return True
+    else:
+        return False
+
+
+"""print(db_show_dialog('1000868043',
+                     '1001716782'))"""
 """print(db_get_users())"""
 """print(create_invite(creator='admin@gmail.com',
                     invited_email='test@gmail.com',

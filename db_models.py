@@ -1,6 +1,12 @@
 # coding: utf8
+import logging
 import os
+import socket
+import traceback
+from uuid import uuid4
 
+from flask import request
+from flask_login import current_user
 from sqlalchemy import Column, create_engine
 from sqlalchemy.dialects.mysql import BINARY, BOOLEAN, FLOAT, INTEGER, \
     MEDIUMINT, TIMESTAMP, TINYINT, VARCHAR
@@ -21,7 +27,7 @@ engine = create_engine(f"{os.environ.get('DB_DIALECT')}+"
 Base = declarative_base()
 Session = sessionmaker()
 Session.configure(bind=engine)
-
+logger_db_session = Session()
 
 class Categories(Base):
     __tablename__ = 'Categories'
@@ -340,3 +346,53 @@ class SentInvites(Base):
     def __repr__(self):
         return "<Sent_invites(invite_id='%s', invite_id='%s')>" % (
                 self.invite_id, self.login)
+
+
+class EmailInfo(Base):
+    __tablename__ = 'Email_info'
+    email_address = Column(VARCHAR(190), primary_key=True)
+    email_port = Column(INTEGER(11))
+    email_host = Column(VARCHAR(190))
+    email_password = Column(VARCHAR(190))
+    email_subject = Column(VARCHAR(10000))
+    email_text = Column(VARCHAR(10000))
+    email_description = Column(VARCHAR(190))
+
+    def __repr__(self):
+        return "<Email_info(email_address='%s', email_port='%s'," \
+               "email_host='%s', email_password='%s'," \
+               "email_subject='%s', email_text='%s'," \
+               "email_description='%s')>" % (
+                       self.email_address, self.email_port,
+                       self.email_host, self.email_password,
+                       self.email_subject, self.email_text,
+                       self.email_description)
+
+
+class SQLAlchemyHandler(logging.Handler):
+    # A very basic logger that commits a LogRecord to the SQL Db
+    def emit(self, record):
+        trace = None
+        exc = record.__dict__['exc_info']
+        if exc:
+            trace = traceback.format_exc()
+
+        if current_user:
+            if current_user.is_anonymous:
+                user_login = 'anonymous'
+                user_ip = request.environ['REMOTE_ADDR']
+            else:
+                user_ip = current_user.ip
+                user_login = current_user.login
+        else:
+            user_login = 'server'
+            hostname = socket.gethostname()
+            user_ip = socket.gethostbyname(hostname)
+        log = Logs(
+                log_id=uuid4().bytes,
+                login=user_login,
+                category=record.__dict__['levelname'],
+                message=record.__dict__['msg'],
+                ip=user_ip)
+        logger_db_session.add(log)
+        logger_db_session.commit()
