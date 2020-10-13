@@ -313,7 +313,7 @@ def available_profiles():
             if not user_in_db:
                 logger.info(
                         f'User {current_user.login} tried to add profiles for '
-                        f'{login} but such user not exists')
+                        f'{user} but such user not exists')
                 user = None
                 error = 'UserNotFound'
         else:
