@@ -54,6 +54,7 @@ def create_invite(creator: User,
                     RolesOfUsers.login == invited_email). \
                 values(user_role=role)
             db_session.execute(update_q)
+            db_session.commit()
             logger.info(f'User {current_user.login} '
                         f'update role for unregistered user: {invited_email}')
 
@@ -457,6 +458,18 @@ def db_show_receivers(sender: str) -> list:
     receivers = query.all()
     db_session.close()
     return [{"profile_id": row[0]} for row in receivers]
+
+
+def db_change_user_role(user_login: str, role: str):
+    db_session = Session()
+    update_q = update(RolesOfUsers).where(
+        RolesOfUsers.login == user_login). \
+        values(user_role=role)
+    db_session.execute(update_q)
+    db_session.commit()
+    db_session.close()
+
+    return None
 
 
 def db_get_users(*statements) -> list:

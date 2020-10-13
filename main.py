@@ -74,14 +74,15 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route('/invite_user', methods=['POST'])
+@app.route('/users/invite_user', methods=['POST'])
 @login_required
 def invite_user():
     invited_email = request.form.get('recipient-name')
+    assigned_role = request.form.get('recipient-role')
     send_email_instruction(email_to=invited_email)
     error = not create_invite(creator=current_user,
                               invited_email=invited_email,
-                              role='default')
+                              role=assigned_role)
     user_list = db_get_users()
     return render_template('users.html',
                            user_list=user_list,
@@ -223,28 +224,40 @@ def icons():
 @app.route('/users', methods=['GET', 'POST'])
 @login_required
 def users():
+    if request.method == "POST":
+        invited_email = request.form.get('recipient-name')
+        assigned_role = request.form.get('recipient-role')
+        send_email_instruction(email_to=invited_email)
+        error = not create_invite(creator=current_user,
+                                  invited_email=invited_email,
+                                  role=assigned_role)
+        user_list = db_get_users()
+        return render_template('users.html',
+                               user_list=user_list,
+                               error=error)
     logger.info(f'User {current_user.login} opened user list')
     user_list = db_get_users()
     return render_template('users.html', user_list=user_list)
 
 
-@app.route('/users/<login>', methods=['GET', 'POST'])
+@app.route('/users/edit/<login>', methods=['POST'])
 @login_required
 def users_edit(login):
-    print("Hello my dear friend")
-    logger.info(f'User {current_user.login} opened user list')
-    user_list = db_get_users()
-    return render_template('users.html', user_list=user_list, user_edit_login=login)
+    new_role = request.form.get('recipient-role')
+    old_role = db_get_rows([RolesOfUsers.user_role], Users.login == RolesOfUsers.login,
+                                            Users.login == login)[0][0]
+    if not new_role == old_role:
+        db_change_user_role(login, new_role)
+        logger.info(f'User {current_user.login} '
+                f'update role for user: {login} with old role: {old_role} on role: {new_role}')
+    return redirect(url_for('users'))
 
 
 @app.route('/messages', methods=['GET', 'POST'])
 @login_required
 def messages():
     sending = False
-
     if request.method == 'POST':
-        for k, v in zip(request.form.keys(), request.form.values()):
-            print(f"{k}:", v, type(v))
         sending = True
         return render_template("messages.html",
                                sending=sending)
