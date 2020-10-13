@@ -87,10 +87,10 @@
                                     <i class="fa fa-user"></i>
                                 </a>
                                 <a rel="tooltip" title="Изменить"
-                                   href="users/edit/{{ user_list[i]['login'] }}"
+                                   href="users/{{ user_list[i]['login'] }}"
                                    class="btn-sm table-action edit"
                                    style="color: green;"
-                                   href="javascript:void(0)"
+                                   onclick="return void(0)"
                                    data-toggle="modal"
                                    data-target = "#EditModal">
                                     <i class="fa fa-edit"></i>
