@@ -5,12 +5,12 @@ from math import ceil
 from uuid import uuid4
 
 from flask_login import current_user
-from sqlalchemy import exc, inspect, update
+from sqlalchemy import exc, update
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from authentication import User
 from db_models import ChatSessions, Chats, Invites, Messages, Profiles, \
-    RolesOfUsers, SentInvites, Session, Texts, Users
+    RolesOfUsers, SentInvites, Session, Texts, UserRoles, Users, Visibility
 from scraping import get_parsed_page, send_request
 from verification import login, profile_in_inbox
 
@@ -50,10 +50,17 @@ def create_invite(creator: User,
             return False
         if users[0]['role'] != role:
             # user role another from db role
+            # check user role is valid
+            query = db_session.query(UserRoles).filter(
+                    UserRoles.user_role == role
+                    )
+            if len(query.all()) == 0:
+                return False
             update_q = update(RolesOfUsers).where(
                     RolesOfUsers.login == invited_email). \
                 values(user_role=role)
             db_session.execute(update_q)
+            db_session.commit()
             logger.info(f'User {current_user.login} '
                         f'update role for unregistered user: {invited_email}')
 
@@ -118,7 +125,6 @@ def register_user(login: str,
 
     db_session = Session()
     users = db_session.query(Users).filter(Users.login == login).all()
-    test = inspect(Invites)
     if len(users) == 0:
         logger.info(f'User signup with wrong e-mail: {login}')
         return None
@@ -533,6 +539,56 @@ def db_duplicate_check(tables: list,
         return False
 
 
+def db_fill_visibility(login: str) -> bool:
+    """Adds all profiles"""
+    db_session = Session()
+    query = db_session.query(Profiles.profile_id)
+    for profile in query.all():
+        query_check = db_session.query(Visibility.profile_id,
+                                       Visibility.login)
+        query_check = query_check.filter(Visibility.login == login)
+        query_check = query_check.filter(Visibility.profile_id == profile[0])
+        check_result = query_check.all()
+        if len(check_result) > 0:
+            continue
+        access = Visibility(login=login,
+                            profile_id=profile[0])
+        db_session.add(access)
+        db_session.commit()
+    db_session.close()
+    return True
+
+
+def db_add_visibility(login: str,
+                      profile_id: str) -> str:
+    db_session = Session()
+    # check profile in database
+    profile_in_db = db_duplicate_check([Profiles.profile_id],
+                                       Profiles.profile_id == profile_id)
+    if not profile_in_db:
+        # profile not in database
+        return 'ProfileNotFound'
+
+    # check if user already has access to profile
+    access_in_db = db_duplicate_check([
+            Visibility.profile_id,
+            Visibility.login
+            ],
+            Visibility.login == login,
+            Visibility.profile_id == profile_id)
+    if access_in_db:
+        # user already has access to profile
+        return 'ProfileAlreadyAvailable'
+    # user already hasn't access to profile
+    access = Visibility(login=login,
+                        profile_id=profile_id)
+    db_session.add(access)
+    db_session.commit()
+    db_session.close()
+    return 'Success'
+
+
+# print(db_fill_visibility('admin@gmail.com'))
 """print(db_show_dialog('1000868043',
                      '1001716782'))"""
 """print(db_get_users())"""

@@ -15,7 +15,7 @@ from flask_wtf.csrf import CSRFProtect
 
 from authentication import find_user
 from control_panel import *
-from db_models import SQLAlchemyHandler
+from db_models import Profiles, SQLAlchemyHandler, Users, Visibility
 from email_service import send_email_instruction
 
 # Creates an app and checks if its the main or imported
@@ -30,6 +30,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'You are not authorized, please log in'
+
 # Werkzeug logging
 """If the logger level is not set, it will be set to 
 INFO on first use. If there is no handler for 
@@ -54,7 +55,6 @@ sql_handler = SQLAlchemyHandler()
 logger.addHandler(stream_handler)
 logger.addHandler(sql_handler)
 app.logger = logger
-
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -86,7 +86,7 @@ def invite_user():
     send_email_instruction(email_to=invited_email)
     error = not create_invite(creator=current_user,
                               invited_email=invited_email,
-                              role='default')
+                              role='moderator')
     user_list = db_get_users()
     return render_template('users.html',
                            user_list=user_list,
@@ -97,12 +97,6 @@ def invite_user():
 @app.route('/profile_dialogue', methods=['GET', 'POST'])
 @login_required
 def profile_dialogue():
-    """
-    invited_email = f'{randint(1, 999)}@gmail.com'
-    create_invite(creator=current_user,
-                  invited_email=invited_email,
-                  role='default')
-    logger.info(f'created invite for e-mail: {invited_email}')"""
     senders = db_get_profiles(Profiles.profile_password)
     receivers = None
     dialog = None
@@ -248,8 +242,6 @@ def messages():
     sending = False
 
     if request.method == 'POST':
-        for k, v in zip(request.form.keys(), request.form.values()):
-            print(f"{k}:", v, type(v))
         sending = True
         return render_template("messages.html",
                                sending=sending)
@@ -262,6 +254,57 @@ def users_list():
     logger.info(f'User {current_user.login} load user list')
     user_list = db_get_users()
     return jsonify(rows=user_list)
+
+
+# logout
+@app.route('/available_profiles', methods=['GET', 'POST'])
+@login_required
+def available_profiles():
+    users = db_get_rows([Users.login])
+    if request.form.get('user_login'):
+        user = request.form.get('user_login')
+        db_session = Session()
+        user_profiles = db_session.query(Visibility.profile_id)
+        user_profiles = user_profiles.filter(Visibility.login == user)
+        user_profiles = user_profiles.subquery()
+        new_profiles = db_session.query(Profiles.profile_id)
+        new_profiles = new_profiles.filter(
+                Profiles.profile_id.notin_(user_profiles))
+        profiles = new_profiles.all()
+        db_session.close()
+    else:
+        profiles = []
+    available_profiles = None
+    user = None
+    error = None
+    if request.method == "POST":
+        # show user's profiles
+        if request.form.get('user_login_manual'):
+            # user login is wrote in text input
+            user = request.form.get('user_login_manual')
+        else:
+            user = request.form.get('user_login')
+        # add user new profile
+        if request.form.get('profile_id_manual'):
+            # profile id is wrote in text input
+            profile = request.form.get('profile_id_manual')
+        else:
+            profile = request.form.get('profile_id')
+        if profile:
+            # add user access to profile
+            error = db_add_visibility(login=user,
+                                      profile_id=profile)
+        # load available profiles
+        if user:
+            available_profiles = db_get_rows([Visibility.profile_id],
+                                             Visibility.login == user)
+
+    return render_template('available_profiles.html',
+                           available_profiles=available_profiles,
+                           users=users,
+                           selected_user=user,
+                           profiles=profiles,
+                           error=error)
 
 
 if __name__ == "__main__":
