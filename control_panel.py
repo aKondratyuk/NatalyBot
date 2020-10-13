@@ -574,10 +574,25 @@ def db_fill_visibility(login: str) -> bool:
 def db_add_visibility(login: str,
                       profile_id: str) -> str:
     db_session = Session()
+    from main import logger
+    # check user in database
+    user_in_db = db_duplicate_check([Users.login],
+                                    Users.login == login,
+                                    Users.login != 'server',
+                                    Users.login != 'anonymous')
+    if not user_in_db:
+        logger.info(f'User {current_user.login} tried to add profiles for '
+                    f'{login} but such user not exists')
+        # profile not in database
+        return 'UserNotFound'
+
     # check profile in database
     profile_in_db = db_duplicate_check([Profiles.profile_id],
                                        Profiles.profile_id == profile_id)
     if not profile_in_db:
+        logger.info(f'User {current_user.login} tried to add profile '
+                    f'{profile_id}  for '
+                    f'{login} but such profile not exists')
         # profile not in database
         return 'ProfileNotFound'
 
@@ -589,6 +604,9 @@ def db_add_visibility(login: str,
             Visibility.login == login,
             Visibility.profile_id == profile_id)
     if access_in_db:
+        logger.info(f'User {current_user.login} tried to add '
+                    f'profile {profile_id} for '
+                    f'{login} but this account already has this profile')
         # user already has access to profile
         return 'ProfileAlreadyAvailable'
     # user already hasn't access to profile
@@ -597,6 +615,9 @@ def db_add_visibility(login: str,
     db_session.add(access)
     db_session.commit()
     db_session.close()
+    logger.info(f'User {current_user.login} added '
+                f'profile {profile_id} for user '
+                f'{login}')
     return 'Success'
 
 

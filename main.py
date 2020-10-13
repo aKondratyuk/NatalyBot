@@ -282,7 +282,9 @@ def logs():
 @app.route('/available_profiles', methods=['GET', 'POST'])
 @login_required
 def available_profiles():
-    users = db_get_rows([Users.login])
+    users = db_get_rows([Users.login],
+                        Users.login != 'server',
+                        Users.login != 'anonymous')
     if request.form.get('user_login'):
         user = request.form.get('user_login')
         db_session = Session()
@@ -304,6 +306,16 @@ def available_profiles():
         if request.form.get('user_login_manual'):
             # user login is wrote in text input
             user = request.form.get('user_login_manual')
+            user_in_db = db_duplicate_check([Users],
+                                            Users.login == user,
+                                            Users.login != 'server',
+                                            Users.login != 'anonymous')
+            if not user_in_db:
+                logger.info(
+                        f'User {current_user.login} tried to add profiles for '
+                        f'{login} but such user not exists')
+                user = None
+                error = 'UserNotFound'
         else:
             user = request.form.get('user_login')
         # add user new profile
