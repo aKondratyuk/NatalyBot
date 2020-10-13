@@ -279,9 +279,9 @@ def logs():
 
 
 # logout
-@app.route('/available_profiles', methods=['GET', 'POST'])
+@app.route('/users/access', methods=['GET', 'POST'])
 @login_required
-def available_profiles():
+def access():
     users = db_get_rows([Users.login],
                         Users.login != 'server',
                         Users.login != 'anonymous')
@@ -333,7 +333,7 @@ def available_profiles():
             available_profiles = db_get_rows([Visibility.profile_id],
                                              Visibility.login == user)
 
-    return render_template('available_profiles.html',
+    return render_template('access.html',
                            available_profiles=available_profiles,
                            users=users,
                            selected_user=user,
