@@ -252,6 +252,21 @@ def users_edit(login):
     return redirect(url_for('users'))
 
 
+@app.route('/users/delete/<login>', methods=['POST'])
+@login_required
+def users_selected_delete(login):
+    print(login)
+    return redirect(url_for('users'))
+
+
+@app.route('/users/selected/delete', methods=['POST'])
+@login_required
+def users_delete():
+    list_login = request.form.getlist('mycheckbox')
+    print(list_login)
+    return redirect(url_for('users'))
+
+
 @app.route('/messages', methods=['GET', 'POST'])
 @login_required
 def messages():
