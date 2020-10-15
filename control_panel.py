@@ -491,6 +491,7 @@ def db_get_users(*statements) -> list:
     query = query.group_by(Users.login)
     query = query.filter(Users.login != 'anonymous')
     query = query.filter(Users.login != 'server')
+    query = query.filter(Users.user_password != '')
     for statement in statements:
         query = query.filter(statement != '')
     users = query.all()
@@ -541,6 +542,54 @@ def db_get_rows(tables: list,
     db_session.close()
     return result
 
+
+def db_delete_rows(tables: list,
+                *statements) -> int:
+    db_session = Session()
+    query = db_session.query(*tables)
+    for statement in statements:
+        query = query.filter(statement != '')
+    rows = query.delete()  # return number of deleted msg
+    db_session.close()
+    return rows
+
+
+
+"""def db_update_rows(tables: list,
+                   upd_values: list,
+                   *statements) -> bool:
+    db_session = Session()
+    update_q = update(*tables)
+    update_q = db_session.query(*tables)
+    for statement in statements:
+        update_q = update_q.where(statement != '')
+    for value in upd_values:
+        update_q = update_q.values(value[0]=value[1])
+    db_session.execute(update_q)
+    db_session.commit()
+    return True"""
+
+
+def db_delete_user(user_login: str) -> bool:
+    db_session = Session()
+    update_q = update(RolesOfUsers).where(
+        RolesOfUsers.login == user_login). \
+        values(user_role='deleted')
+    db_session.execute(update_q)
+    db_session.commit()
+
+    update_q = update(Users).where(
+        Users.login == user_login). \
+        values(user_password=None)
+    db_session.execute(update_q)
+    db_session.commit()
+    db_session.close()
+    db_delete_rows([Visibility],
+                   Visibility.login == user_login)
+
+    db_delete_rows([SentInvites],
+                   SentInvites.login == user_login)
+    return True
 
 def db_duplicate_check(tables: list,
                        *statements) -> bool:
