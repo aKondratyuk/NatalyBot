@@ -256,6 +256,10 @@ def users_edit(login):
 @login_required
 def users_selected_delete(login):
     print(login)
+    if True:
+        logger.info(f'User {current_user.login} delete: {login}')
+    else:
+        logger.info(f'User {current_user.login} tryed to delete: {login} but something gone wrong!')
     return redirect(url_for('users'))
 
 
@@ -264,6 +268,10 @@ def users_selected_delete(login):
 def users_delete():
     list_login = request.form.getlist('mycheckbox')
     print(list_login)
+    if True:
+        logger.info(f'User {current_user.login} delete: {list_login}')
+    else:
+        logger.info(f'User {current_user.login} tried to delete: {list_login} but something gone wrong!')
     return redirect(url_for('users'))
 
 
