@@ -66,13 +66,6 @@
                         </a>
                     </li>
                     <li>
-                        <a class="nav-link"
-                           href="{{ url_for('access') }}">
-                            <i class="nc-icon nc-circle-09"></i>
-                            <p>Доступ к профилям</p>
-                        </a>
-                    </li>
-                    <li>
                         <a class="nav-link" href="{{ url_for('messages') }}">
                             <i class="nc-icon nc-email-85"></i>
                             <p>Рассылка сообщений</p>
@@ -121,8 +114,10 @@
             <!-- Navbar -->
             <nav class="navbar navbar-expand-lg " color-on-scroll="500">
                 <div class="container-fluid">
+                    {% block navbar_brand %}
                     <a class="navbar-brand" href="#pablo"> Контрольная
                         панель </a>
+                    {% endblock %}
                     <button href="" class="navbar-toggler navbar-toggler-right"
                             type="button" data-toggle="collapse"
                             aria-controls="navigation-index"
@@ -138,6 +133,7 @@
                             <li class="nav-item">
                                 <span class="d-lg-none">Контрольная панель</span>
                             </li>
+                            {% block notifications %}
                             <li class="dropdown nav-item">
                                 <a href="#" class="dropdown-toggle nav-link"
                                    data-toggle="dropdown">
@@ -160,17 +156,12 @@
                                 </ul>
                                 {% endblock %}
                             </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nc-icon nc-zoom-split"></i>
-                                    <span class="d-lg-block">&nbsp;Поиск</span>
-                                </a>
-                            </li>
+                            {% endblock %}
                         </ul>
                         <ul class="navbar-nav ml-auto">
                             <li class="nav-item">
                                 <a class="nav-link" href="#pablo">
-                                    <span class="no-icon">Аккаунт</span>
+                                    <span class="no-icon">Мой аккаунт</span>
                                 </a>
                             </li>
                             <li class="nav-item dropdown">
@@ -179,8 +170,9 @@
                                    id="navbarDropdownMenuLink"
                                    data-toggle="dropdown" aria-haspopup="true"
                                    aria-expanded="false">
-                                    <span class="no-icon">Dropdown</span>
+                                    <span class="no-icon">Меню</span>
                                 </a>
+                                {% block dropdown_menu %}
                                 <div class="dropdown-menu"
                                      aria-labelledby="navbarDropdownMenuLink">
                                     <a class="dropdown-item"
@@ -195,9 +187,10 @@
                                     <a class="dropdown-item" href="#">Separated
                                         link</a>
                                 </div>
+                                {% endblock %}
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="#pablo">
+                                <a class="nav-link" href="{{ url_for('logout') }}">
                                     <span class="no-icon">Выйти</span>
                                 </a>
                             </li>

@@ -252,6 +252,29 @@ def users_edit(login):
     return redirect(url_for('users'))
 
 
+@app.route('/users/delete/<login>', methods=['POST'])
+@login_required
+def users_delete(login):
+    if db_delete_user(login):
+        logger.info(f'User {current_user.login} delete: {login}')
+    else:
+        logger.info(f'User {current_user.login} tryed to delete: {login} but something gone wrong!')
+    return redirect(url_for('users'))
+
+
+@app.route('/users/selected/delete', methods=['POST'])
+@login_required
+def users_selected_delete():
+    list_login = request.form.getlist('mycheckbox')
+    logger.info(f'User {current_user.login} starting delete users: {list_login}')
+    for login in list_login:
+        if db_delete_user(login):
+            logger.info(f'User {current_user.login} delete: {login}')
+        else:
+            logger.info(f'User {current_user.login} tried to delete: {login} but something gone wrong!')
+    return redirect(url_for('users'))
+
+
 @app.route('/messages', methods=['GET', 'POST'])
 @login_required
 def messages():
