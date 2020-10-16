@@ -254,9 +254,8 @@ def users_edit(login):
 
 @app.route('/users/delete/<login>', methods=['POST'])
 @login_required
-def users_selected_delete(login):
-    print(login)
-    if True:
+def users_delete(login):
+    if db_delete_user(login):
         logger.info(f'User {current_user.login} delete: {login}')
     else:
         logger.info(f'User {current_user.login} tryed to delete: {login} but something gone wrong!')
@@ -265,13 +264,14 @@ def users_selected_delete(login):
 
 @app.route('/users/selected/delete', methods=['POST'])
 @login_required
-def users_delete():
+def users_selected_delete():
     list_login = request.form.getlist('mycheckbox')
-    print(list_login)
-    if True:
-        logger.info(f'User {current_user.login} delete: {list_login}')
-    else:
-        logger.info(f'User {current_user.login} tried to delete: {list_login} but something gone wrong!')
+    logger.info(f'User {current_user.login} starting delete users: {list_login}')
+    for login in list_login:
+        if db_delete_user(login):
+            logger.info(f'User {current_user.login} delete: {login}')
+        else:
+            logger.info(f'User {current_user.login} tried to delete: {login} but something gone wrong!')
     return redirect(url_for('users'))
 
 
