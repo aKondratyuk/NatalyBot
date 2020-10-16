@@ -41,6 +41,24 @@ def create_invite(creator: User,
     # database duplicate check
     users = db_get_users(Users.login == invited_email)
     if len(users) > 0:
+        if users[0]['role'] == 'deleted':
+            db_session = Session()
+            # create new invite id
+            db_session.add(invite)
+            db_session.commit()
+            # create new users-invite link
+            db_session.add(sent_invite_from)
+            db_session.add(sent_invite_to)
+            db_session.commit()
+            # change password from deleted to new, based on invite_id
+            update_q = update(Users).where(
+                    Users.login == invited_email). \
+                values(user_password=new_user.user_password)
+            db_session.execute(update_q)
+            db_session.commit()
+            db_session.close()
+            # reload users, for next checks
+            users = db_get_users(Users.login == invited_email)
         # user already created
         if users[0]['register_status']:
             # user already registered
@@ -549,25 +567,10 @@ def db_delete_rows(tables: list,
     query = db_session.query(*tables)
     for statement in statements:
         query = query.filter(statement != '')
-    rows = query.delete()  # return number of deleted msg
+    rows = query.delete() # return number of deleted msg
+    db_session.commit()  # return number of deleted msg
     db_session.close()
     return rows
-
-
-
-"""def db_update_rows(tables: list,
-                   upd_values: list,
-                   *statements) -> bool:
-    db_session = Session()
-    update_q = update(*tables)
-    update_q = db_session.query(*tables)
-    for statement in statements:
-        update_q = update_q.where(statement != '')
-    for value in upd_values:
-        update_q = update_q.values(value[0]=value[1])
-    db_session.execute(update_q)
-    db_session.commit()
-    return True"""
 
 
 def db_delete_user(user_login: str) -> bool:
@@ -580,15 +583,18 @@ def db_delete_user(user_login: str) -> bool:
 
     update_q = update(Users).where(
         Users.login == user_login). \
-        values(user_password=None)
+        values(user_password='deleted')
     db_session.execute(update_q)
     db_session.commit()
     db_session.close()
     db_delete_rows([Visibility],
                    Visibility.login == user_login)
-
+    invite_id = bytes((bytearray(db_get_rows([SentInvites.invite_id],
+                            SentInvites.login == user_login)[0][0])))
     db_delete_rows([SentInvites],
-                   SentInvites.login == user_login)
+                   SentInvites.invite_id == invite_id)
+    db_delete_rows([Invites],
+                   Invites.invite_id == invite_id)
     return True
 
 def db_duplicate_check(tables: list,
@@ -669,6 +675,7 @@ def db_add_visibility(login: str,
                 f'{login}')
     return 'Success'
 
+"""print(db_delete_user('111@gmail.com'))"""
 
 # print(db_fill_visibility('admin@gmail.com'))
 """print(db_show_dialog('1000868043',
