@@ -153,6 +153,7 @@ def create_new_user(login, user_password, role):
 @app.route('/', methods=['GET', 'POST'])
 # The function run on the index route
 def login():
+    error = False
     logger.info(f'User {current_user} opened site')
     if current_user.is_authenticated:
         return redirect(url_for('control_panel'))
@@ -173,14 +174,15 @@ def login():
                 # is_safe_url should check if the url is safe for redirects.
                 if not is_safe_url(next_url):
                     return abort(400)
-
                 return redirect(next_url or url_for('control_panel'))
+        error = True
         logger.error(
                 f"Invalid username/password by {request.form.get('email')}")
 
+
     # Returns the html page to be displayed
     return render_template('login.html',
-                           error='Неправильный логин или пароль!')
+                           error=error)
 
 
 @app.route('/signup', methods=['GET', 'POST'])
