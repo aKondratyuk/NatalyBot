@@ -1,4 +1,42 @@
 {% extends "dashboard_template.html" %}
+{% block navbar_brand %}
+    <a class="navbar-brand" href="{{ url_for('users') }}"> Пользовательская панель </a>
+{% endblock %}
+{% block notifications %}
+    <li class="dropdown nav-item">
+        <a href="#" class="dropdown-toggle nav-link"
+           data-toggle="dropdown">
+            <i class="nc-icon nc-planet"></i>
+            <span class="notification">11</span>
+            <span class="d-lg-none">Оповещения</span>
+        </a>
+        <ul class="dropdown-menu">
+            <a class="dropdown-item" href="#">Оповещение
+                1</a>
+            <a class="dropdown-item" href="#">Оповещение
+                2</a>
+            <a class="dropdown-item" href="#">Оповещение
+                3</a>
+            <a class="dropdown-item" href="#">Оповещение
+                4</a>
+            <a class="dropdown-item" href="#">Ёще
+                оповещения...</a>
+        </ul>
+    </li>
+{% endblock %}
+{% block dropdown_menu %}
+    <div class="dropdown-menu"
+         aria-labelledby="navbarDropdownMenuLink">
+        <a class="dropdown-item"
+           href="{{ url_for('access') }}">Доступ к профилям</a>
+        <a class="dropdown-item" href="#">Another
+            action</a>
+        <a class="dropdown-item"
+           href="#">Something</a>
+        <a class="dropdown-item" href="#">Something
+            else here</a>
+    </div>
+{% endblock %}
 {% block content %}
     <div class="content">
         <div class="container-fluid">
@@ -69,7 +107,7 @@
                     <tbody>
                     {% for i in range(user_list|length) %}
                         <tr>
-                            <td align="center">{{ i }}</td>
+                            <td align="center">{{ i + 1 }}</td>
                             <input name="csrf_token" type="hidden" value="{{ csrf_token() }}"/>
                             <td align="center"><input value="{{ user_list[i]['login'] }}" type="checkbox"
                                                       class="checkbox" name="mycheckbox"></td>
