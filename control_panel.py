@@ -163,6 +163,12 @@ def register_user(login: str,
                         f'with invite_id: {invite_id}')
             return None
 
+    role = db_session.query(RolesOfUsers.user_role).filter(
+            RolesOfUsers.login == login).all()
+    if role[0][0] == 'deleted':
+        logger.info(f'User signup with e-mail: {login}, '
+                    f'but this account deleted')
+        return None
     db_session.close()
     logger.info(f'User signup with e-mail: {login}, '
                 f'but this account already exists')
