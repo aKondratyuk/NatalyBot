@@ -140,24 +140,23 @@ class PrivilegesAssigns(Base):
     __tablename__ = 'Privileges_assigns'
     user_role = Column(VARCHAR(190), primary_key=True)
     privilege_name = Column(VARCHAR(190), primary_key=True)
+    privilege_status = Column(BOOLEAN)
 
     def __repr__(self):
         return "<Privileges_assigns(user_role='%s', " \
-               "privilege_name='%s')>" % (
+               "privilege_name='%s', privilege_status='%s')>" % (
                        self.user_role,
-                       self.privilege_name)
+                       self.privilege_name,
+                       self.privilege_status)
 
 
 class Privileges(Base):
     __tablename__ = 'Privileges'
     privilege_name = Column(VARCHAR(190), primary_key=True)
-    privilege_status = Column(BOOLEAN)
 
     def __repr__(self):
-        return "<Privileges(privilege_name='%s', " \
-               "privilege_status='%s')>" % (
-                       self.privilege_name,
-                       self.privilege_status)
+        return "<Privileges(privilege_name='%s')>" % (
+                       self.privilege_name)
 
 
 class ProfileCategories(Base):

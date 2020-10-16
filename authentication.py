@@ -68,27 +68,24 @@ def find_user(login: str = None,
         password = user.user_password
         user_id = generate_password_hash(login, "sha256", salt_length=8)
 
-        query = session.query(RolesOfUsers, Privileges)
+        query = session.query(RolesOfUsers, PrivilegesAssigns)
         query = query.outerjoin(
                 UserRoles,
                 UserRoles.user_role == RolesOfUsers.user_role)
         query = query.outerjoin(
                 PrivilegesAssigns,
                 PrivilegesAssigns.user_role == UserRoles.user_role)
-        query = query.outerjoin(
-                Privileges,
-                Privileges.privilege_name == PrivilegesAssigns.privilege_name)
         query = query.filter(RolesOfUsers.login == login)
         q_result = query.all()
         if len(q_result) == 0:
             role, privileges = [], {}
-        elif len(q_result) == 1:
-            role = [row[0].user_role for row in q_result]
-            privileges = {}
-        else:
+        elif q_result[0][1]:
             role = [row[0].user_role for row in q_result]
             privileges = {row[1].privilege_name: row[1].privilege_status
                           for row in q_result}
+        else:
+            role = [row[0].user_role for row in q_result]
+            privileges = {}
 
         session.close()
         if request.environ['REMOTE_ADDR']:
