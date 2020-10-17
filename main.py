@@ -305,9 +305,11 @@ def logs():
 @app.route('/users/access', methods=['GET', 'POST'])
 @login_required
 def access():
-    users = db_get_rows([Users.login],
+    users = db_get_rows([Users.login, RolesOfUsers],
                         Users.login != 'server',
-                        Users.login != 'anonymous')
+                        Users.login != 'anonymous',
+                        Users.login == RolesOfUsers.login,
+                        RolesOfUsers.user_role != 'deleted')
     if request.form.get('user_login'):
         user = request.form.get('user_login')
         db_session = Session()
@@ -329,10 +331,13 @@ def access():
         if request.form.get('user_login_manual'):
             # user login is wrote in text input
             user = request.form.get('user_login_manual')
-            user_in_db = db_duplicate_check([Users],
-                                            Users.login == user,
-                                            Users.login != 'server',
-                                            Users.login != 'anonymous')
+            user_in_db = db_duplicate_check(
+                    [Users, RolesOfUsers],
+                    Users.login == user,
+                    Users.login != 'server',
+                    Users.login != 'anonymous',
+                    Users.login == RolesOfUsers.login,
+                    RolesOfUsers.user_role != 'deleted')
             if not user_in_db:
                 logger.info(
                         f'User {current_user.login} tried to add profiles for '
