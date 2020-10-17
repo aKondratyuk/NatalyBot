@@ -94,7 +94,6 @@ def invite_user():
                            error=error)
 
 
-# logout
 @app.route('/profile_dialogue', methods=['GET', 'POST'])
 @login_required
 def profile_dialogue():
@@ -137,7 +136,6 @@ def profile_dialogue():
                            selected_receiver=receiver)
 
 
-# logout
 @app.route('/create_new_user:<login>:<user_password>:<role>')
 def create_new_user(login, user_password, role):
     result = create_user(login=login,
@@ -155,6 +153,7 @@ def create_new_user(login, user_password, role):
 @app.route('/', methods=['GET', 'POST'])
 # The function run on the index route
 def login():
+    error = False
     logger.info(f'User {current_user} opened site')
     if current_user.is_authenticated:
         return redirect(url_for('control_panel'))
@@ -175,14 +174,15 @@ def login():
                 # is_safe_url should check if the url is safe for redirects.
                 if not is_safe_url(next_url):
                     return abort(400)
-
                 return redirect(next_url or url_for('control_panel'))
+        error = True
         logger.error(
                 f"Invalid username/password by {request.form.get('email')}")
 
+
     # Returns the html page to be displayed
     return render_template('login.html',
-                           error='Неправильный логин или пароль!')
+                           error=error)
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -219,7 +219,11 @@ def control_panel():
 def icons():
     return render_template('icons.html')
 
-
+###############################################################################
+#                                                                             #
+#          Веб-страницы составляющие пользовательскую панель                  #
+#                                                                             #
+###############################################################################
 @app.route('/users', methods=['GET', 'POST'])
 @login_required
 def users():
@@ -275,33 +279,6 @@ def users_selected_delete():
     return redirect(url_for('users'))
 
 
-@app.route('/messages', methods=['GET', 'POST'])
-@login_required
-def messages():
-    sending = False
-    if request.method == 'POST':
-        sending = True
-        return render_template("messages.html",
-                               sending=sending)
-    return render_template('messages.html', sending=sending)
-
-
-@app.route('/users_list', methods=['GET', 'POST'])
-@login_required
-def users_list():
-    logger.info(f'User {current_user.login} load user list')
-    user_list = db_get_users()
-    return jsonify(rows=user_list)
-
-
-@app.route('/logs', methods=['GET', 'POST'])
-@login_required
-def logs():
-    logs = db_get_rows([Logs])
-    return render_template('logs.html', logs=logs)
-
-
-# logout
 @app.route('/users/access', methods=['GET', 'POST'])
 @login_required
 def access():
@@ -367,6 +344,55 @@ def access():
                            selected_user=user,
                            profiles=profiles,
                            error=error)
+
+
+@app.route('/users/access/delete/<profile_id>', methods=['POST'])
+@login_required
+def users_access_delete(profile_id):
+    if True:
+        logger.info(f'User {current_user.login} delete: {profile_id}')
+    else:
+        logger.info(f'User {current_user.login} tryed to delete: {profile_id} but something gone wrong!')
+    return redirect(request.referrer)
+
+
+@app.route('/users/access/selected/delete', methods=['POST'])
+@login_required
+def users_access_selected_delete():
+    list_profiles = request.form.getlist('mycheckbox')
+    logger.info(f'User {current_user.login} starting delete profiles: {list_profiles}')
+    for profile in list_profiles:
+        if True:
+            logger.info(f'User {current_user.login} delete: {profile}')
+        else:
+            logger.info(f'User {current_user.login} tried to delete profile: {profile} but something gone wrong!')
+    return redirect(request.referrer)
+
+
+@app.route('/messages', methods=['GET', 'POST'])
+@login_required
+def messages():
+    sending = False
+    if request.method == 'POST':
+        sending = True
+        return render_template("messages.html",
+                               sending=sending)
+    return render_template('messages.html', sending=sending)
+
+
+@app.route('/users_list', methods=['GET', 'POST'])
+@login_required
+def users_list():
+    logger.info(f'User {current_user.login} load user list')
+    user_list = db_get_users()
+    return jsonify(rows=user_list)
+
+
+@app.route('/logs', methods=['GET', 'POST'])
+@login_required
+def logs():
+    logs = db_get_rows([Logs])
+    return render_template('logs.html', logs=logs)
 
 
 if __name__ == "__main__":

@@ -332,6 +332,7 @@
             type="text/javascript"></script>
     <!-- Light Bootstrap Dashboard DEMO methods, don't include it in your project! -->
     <script src="{{ url_for('static', filename='js/demo.js') }}"></script>
+    {% block notification_script %}
     <script type="text/javascript">
         $(document).ready(function () {
             // Javascript method's body can be found in assets/js/demos.js
@@ -341,5 +342,6 @@
 
         });
     </script>
+    {% endblock %}
 {% endblock %}
 </html>

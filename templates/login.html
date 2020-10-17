@@ -56,7 +56,7 @@
 				  method="post" style="padding-left: 130px;">
 				<input name="csrf_token" type="hidden"
 					   value="{{ csrf_token() }}"/>
-				<div class="wrap-input100 validate-input m-b-26"
+				<div class="wrap-input100 validate-input m-b-{% if error %}10{% else %}26{% endif %}"
 					 data-validate="Необходимо ввести email">
 					<span class="label-input100">Email</span>
 					<input class="input100" name="email"
@@ -64,7 +64,11 @@
 						   required type="email">
 					<span class="focus-input100"></span>
 				</div>
-
+				{% if error %}
+				<div class="invalid-feedback" style="display: inline;">
+				  Неверный логин или пароль!
+				</div>
+				{% endif %}
 				<div class="wrap-input100 validate-input m-b-18"
 					 data-validate="Необходимо ввести пароль">
 					<span class="label-input100">Пароль</span>
