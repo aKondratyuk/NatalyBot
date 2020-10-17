@@ -1,4 +1,3 @@
-# coding: utf8
 from datetime import datetime
 
 import requests
@@ -181,8 +180,8 @@ def collect_info_from_profile(profile_id):
 
     # Имя
     name = \
-        profile_page.find("td", class_="ContentHeaders").find("h1").text.split(
-                ":")[0]
+    profile_page.find("td", class_="ContentHeaders").find("h1").text.split(
+        ":")[0]
     if not name:
         name = "Not specified"
 
@@ -283,9 +282,9 @@ def collect_info_from_profile(profile_id):
     # Собираем рейтинг и сколько человек проголосовало
     rating_table = profile_page.find_all("table", class_="rate_profile")
     rate = float(rating_table[0].find_all("table", class_="text2")[0].find(
-            "td").text.split(" ")[1])
+        "td").text.split(" ")[1])
     votes = int(rating_table[0].find_all("table", class_="text2")[1].find(
-            "td").text.split(" ")[1])
+        "td").text.split(" ")[1])
 
     # Формируем словарь, который имеет в себе все собранные данные
     collected_data = {"Name": name, "Nickname": nickname, "Age": age,

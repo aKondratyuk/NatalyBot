@@ -11,7 +11,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from authentication import User
 from db_models import ChatSessions, Chats, Invites, Messages, Profiles, \
     RolesOfUsers, SentInvites, Session, Texts, UserRoles, Users, Visibility
-from scraping import get_parsed_page, send_request
+from scraping import collect_info_from_profile, get_parsed_page, send_request
 from verification import login, profile_in_inbox
 
 
@@ -680,6 +680,12 @@ def db_add_visibility(login: str,
                 f'profile {profile_id} for user '
                 f'{login}')
     return 'Success'
+
+
+def db_load_profile_details(profile_id: str) -> bool:
+    # collect info from site
+    profile_details = collect_info_from_profile(profile_id=profile_id)
+
 
 """print(db_delete_user('111@gmail.com'))"""
 
