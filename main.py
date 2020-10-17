@@ -56,6 +56,7 @@ logger.addHandler(stream_handler)
 logger.addHandler(sql_handler)
 app.logger = logger
 
+
 @login_manager.user_loader
 def load_user(user_id):
     # Return User object or None
@@ -179,7 +180,6 @@ def login():
         logger.error(
                 f"Invalid username/password by {request.form.get('email')}")
 
-
     # Returns the html page to be displayed
     return render_template('login.html',
                            error=error)
@@ -219,6 +219,7 @@ def control_panel():
 def icons():
     return render_template('icons.html')
 
+
 ###############################################################################
 #                                                                             #
 #          Веб-страницы составляющие пользовательскую панель                  #
@@ -247,12 +248,14 @@ def users():
 @login_required
 def users_edit(login):
     new_role = request.form.get('recipient-role')
-    old_role = db_get_rows([RolesOfUsers.user_role], Users.login == RolesOfUsers.login,
-                                            Users.login == login)[0][0]
+    old_role = db_get_rows([RolesOfUsers.user_role],
+                           Users.login == RolesOfUsers.login,
+                           Users.login == login)[0][0]
     if not new_role == old_role:
         db_change_user_role(login, new_role)
         logger.info(f'User {current_user.login} '
-                f'update role for user: {login} with old role: {old_role} on role: {new_role}')
+                    f'update role for user: {login} with old '
+                    f'role: {old_role} on role: {new_role}')
     return redirect(url_for('users'))
 
 
@@ -262,7 +265,8 @@ def users_delete(login):
     if db_delete_user(login):
         logger.info(f'User {current_user.login} delete: {login}')
     else:
-        logger.info(f'User {current_user.login} tryed to delete: {login} but something gone wrong!')
+        logger.info(f'User {current_user.login} tryed to '
+                    f'delete: {login} but something gone wrong!')
     return redirect(url_for('users'))
 
 
@@ -270,12 +274,14 @@ def users_delete(login):
 @login_required
 def users_selected_delete():
     list_login = request.form.getlist('mycheckbox')
-    logger.info(f'User {current_user.login} starting delete users: {list_login}')
+    logger.info(f'User {current_user.login} starting '
+                f'delete users: {list_login}')
     for login in list_login:
         if db_delete_user(login):
             logger.info(f'User {current_user.login} delete: {login}')
         else:
-            logger.info(f'User {current_user.login} tried to delete: {login} but something gone wrong!')
+            logger.info(f'User {current_user.login} tried to '
+                        f'delete: {login} but something gone wrong!')
     return redirect(url_for('users'))
 
 
@@ -340,7 +346,7 @@ def access():
 
     return render_template('access.html',
                            available_profiles=available_profiles,
-                           users=users,
+                           users=users_list,
                            selected_user=user,
                            profiles=profiles,
                            error=error)
@@ -350,9 +356,11 @@ def access():
 @login_required
 def users_access_delete(profile_id):
     if True:
-        logger.info(f'User {current_user.login} delete: {profile_id}')
+        logger.info(f'User {current_user.login} successfully deleted:'
+                    f' {profile_id}')
     else:
-        logger.info(f'User {current_user.login} tryed to delete: {profile_id} but something gone wrong!')
+        logger.info(f'User {current_user.login} tried to '
+                    f'delete: {profile_id} but something gone wrong!')
     return redirect(request.referrer)
 
 
@@ -360,12 +368,14 @@ def users_access_delete(profile_id):
 @login_required
 def users_access_selected_delete():
     list_profiles = request.form.getlist('mycheckbox')
-    logger.info(f'User {current_user.login} starting delete profiles: {list_profiles}')
+    logger.info(f'User {current_user.login} starting '
+                f'delete profiles: {list_profiles}')
     for profile in list_profiles:
         if True:
             logger.info(f'User {current_user.login} delete: {profile}')
         else:
-            logger.info(f'User {current_user.login} tried to delete profile: {profile} but something gone wrong!')
+            logger.info(f'User {current_user.login} tried to delete '
+                        f'profile: {profile} but something gone wrong!')
     return redirect(request.referrer)
 
 
