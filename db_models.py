@@ -29,6 +29,7 @@ Session = sessionmaker()
 Session.configure(bind=engine)
 logger_db_session = Session()
 
+
 class Categories(Base):
     __tablename__ = 'Categories'
     category_name = Column(VARCHAR(190), primary_key=True)
@@ -46,7 +47,7 @@ class CategoryLevel(Base):
     def __repr__(self):
         return "<Category_level(level_name='%s'," \
                "level_name='%s')>" % (
-                       self.level_name, self.category_name)
+                self.level_name, self.category_name)
 
 
 class ChatSessions(Base):
@@ -73,17 +74,6 @@ class Ethnicities(Base):
 
     def __repr__(self):
         return "<Ethnicities(ethnicity_name='%s')>" % self.ethnicity_name
-
-
-class LanguageLevel(Base):
-    __tablename__ = 'Language_level'
-    language = Column(VARCHAR(190), primary_key=True)
-    level_name = Column(VARCHAR(190), primary_key=True)
-
-    def __repr__(self):
-        return "<Language_level(language='%s', level_name='%s')>" % (
-                self.language,
-                self.level_name)
 
 
 class Languages(Base):
@@ -162,26 +152,26 @@ class Privileges(Base):
 class ProfileCategories(Base):
     __tablename__ = 'Profile_categories'
     level_name = Column(VARCHAR(190), primary_key=True)
-    privilege_status = Column(BOOLEAN, primary_key=True)
+    category_name = Column(VARCHAR(190), primary_key=True)
     profile_id = Column(VARCHAR(20), primary_key=True)
 
     def __repr__(self):
         return "<Profile_categories(level_name='%s', " \
-               "privilege_status='%s', " \
+               "category_name='%s', " \
                "profile_id='%s')>" % (
                        self.level_name,
-                       self.privilege_status,
+                       self.category_name,
                        self.profile_id)
 
 
 class ProfileDescription(Base):
     __tablename__ = 'Profile_description'
     profile_id = Column(VARCHAR(190), primary_key=True)
-    zodiac = Column(BOOLEAN)
+    zodiac = Column(VARCHAR(190))
     ethnicity_name = Column(VARCHAR(20))
-    religion = Column(VARCHAR(20))
+    religion = Column(VARCHAR(190))
     age = Column(TINYINT(4))
-    city = Column(VARCHAR(20))
+    city = Column(VARCHAR(190))
     credits_to_open_letter = Column(FLOAT)
     description = Column(VARCHAR(10000))
     income = Column(VARCHAR(190))
@@ -193,6 +183,7 @@ class ProfileDescription(Base):
     rate = Column(FLOAT)
     sex = Column(VARCHAR(190))
     votes = Column(MEDIUMINT(9))
+    country = Column(VARCHAR(190))
 
     def __repr__(self):
         return "<Profile_description(" \
@@ -203,22 +194,24 @@ class ProfileDescription(Base):
                "income='%s', last_online='%s', " \
                "looking_for_an_age_range='%s', name='%s', " \
                "nickname='%s', occupation='%s', " \
-               "rate='%s', sex='%s', votes='%s')>" % (
-                self.profile_id, self.zodiac,
-                self.ethnicity_name, self.religion,
-                self.age, self.city,
-                self.credits_to_open_letter,
-                self.description[:100] + '...',
-                self.income, self.last_online,
-                self.looking_for_an_age_range, self.name,
-                self.nickname, self.occupation,
-                self.rate, self.sex, self.votes)
+               "rate='%s', sex='%s', " \
+               "votes='%s', country='%s')>" % (
+                       self.profile_id, self.zodiac,
+                       self.ethnicity_name, self.religion,
+                       self.age, self.city,
+                       self.credits_to_open_letter,
+                       self.description[:100] + '...',
+                       self.income, self.last_online,
+                       self.looking_for_an_age_range, self.name,
+                       self.nickname, self.occupation,
+                       self.rate, self.sex,
+                       self.votes, self.country)
 
 
 class ProfileLanguages(Base):
     __tablename__ = 'Profile_languages'
     language = Column(VARCHAR(190), primary_key=True)
-    level_name = Column(BOOLEAN, primary_key=True)
+    level_name = Column(VARCHAR(190), primary_key=True)
     profile_id = Column(VARCHAR(20), primary_key=True)
 
     def __repr__(self):
@@ -261,6 +254,15 @@ class RolesOfUsers(Base):
     def __repr__(self):
         return "<Roles_of_users(login='%s', user_role='%s')>" % (
                 self.login, self.user_role)
+
+
+class Countries(Base):
+    __tablename__ = 'Countries'
+    country = Column(VARCHAR(190), primary_key=True)
+
+    def __repr__(self):
+        return "<Roles_of_users(country='%s')>" % (
+                self.country)
 
 
 class Tagging(Base):
@@ -315,7 +317,7 @@ class Visibility(Base):
     login = Column(VARCHAR(190), primary_key=True)
 
     def __repr__(self):
-        return "<Profile_languages(profile_id='%s', login='%s')>" % (
+        return "<Visibility(profile_id='%s', login='%s')>" % (
                 self.profile_id, self.login)
 
 

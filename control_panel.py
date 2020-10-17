@@ -9,8 +9,12 @@ from sqlalchemy import exc, update
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from authentication import User
-from db_models import ChatSessions, Chats, Invites, Messages, Profiles, \
-    RolesOfUsers, SentInvites, Session, Texts, UserRoles, Users, Visibility
+from db_models import Categories, CategoryLevel, ChatSessions, Chats, \
+    Invites, \
+    Levels, Messages, ProfileCategories, ProfileDescription, \
+    ProfileLanguages, \
+    Profiles, RolesOfUsers, SentInvites, Session, Texts, UserRoles, Users, \
+    Visibility
 from scraping import collect_info_from_profile, get_parsed_page, send_request
 from verification import login, profile_in_inbox
 
@@ -568,12 +572,12 @@ def db_get_rows(tables: list,
 
 
 def db_delete_rows(tables: list,
-                *statements) -> int:
+                   *statements) -> int:
     db_session = Session()
     query = db_session.query(*tables)
     for statement in statements:
         query = query.filter(statement != '')
-    rows = query.delete() # return number of deleted msg
+    rows = query.delete()  # return number of deleted msg
     db_session.commit()  # return number of deleted msg
     db_session.close()
     return rows
@@ -596,12 +600,14 @@ def db_delete_user(user_login: str) -> bool:
     db_delete_rows([Visibility],
                    Visibility.login == user_login)
     invite_id = bytes((bytearray(db_get_rows([SentInvites.invite_id],
-                            SentInvites.login == user_login)[0][0])))
+                                             SentInvites.login == user_login)[
+                                     0][0])))
     db_delete_rows([SentInvites],
                    SentInvites.invite_id == invite_id)
     db_delete_rows([Invites],
                    Invites.invite_id == invite_id)
     return True
+
 
 def db_duplicate_check(tables: list,
                        *statements) -> bool:
@@ -682,10 +688,113 @@ def db_add_visibility(login: str,
     return 'Success'
 
 
+def db_add_category_level(category_name: str,
+                          level_list: str):
+    db_session = Session()
+    if not db_duplicate_check([Categories],
+                              Categories.category_name == category_name):
+        new_category = Categories(category_name=category_name)
+        db_session.add(new_category)
+        db_session.commit()
+        print('Added category: ', category_name)
+    db_session.close()
+    print('START ADD LEVELS LEVELS')
+    for row in level_list:
+        db_session = Session()
+        if not db_duplicate_check([Levels],
+                                  Levels.level_name == row):
+            new_row = Levels(level_name=row)
+            db_session.add(new_row)
+            db_session.commit()
+            print(f'Added level_name: ', row)
+        db_session.close()
+    print('START ADD CATEGORY LEVELS')
+    for row in level_list:
+        db_session = Session()
+        if not db_duplicate_check([CategoryLevel],
+                                  CategoryLevel.category_name == category_name,
+                                  CategoryLevel.level_name == row):
+            new_row = CategoryLevel(category_name=category_name,
+                                    level_name=row)
+            db_session.add(new_row)
+            db_session.commit()
+            print(f'Added CategoryLevel: {category_name} with level: {row}')
+        db_session.close()
+
+
 def db_load_profile_details(profile_id: str) -> bool:
+    from main import logger
+    logger.info(f'User {current_user} opened load of profile '
+                f'description for profile_id: {profile_id}')
     # collect info from site
     profile_details = collect_info_from_profile(profile_id=profile_id)
+    db_session = Session()
 
+    # delete old profile info
+    if db_duplicate_check([ProfileDescription],
+                          ProfileDescription.profile_id == profile_id):
+        logger.info(f'User {current_user} deleted old profile '
+                    f'description for profile_id: {profile_id}')
+    # delete profile description
+    db_delete_rows([ProfileDescription],
+                   ProfileDescription.profile_id == profile_id)
+    # delete old category level
+    db_delete_rows([ProfileCategories],
+                   ProfileCategories.profile_id == profile_id)
+    # delete old languages
+    db_delete_rows([ProfileLanguages],
+                   ProfileLanguages.profile_id == profile_id)
+
+    # create new profile info
+    new_pr_desc = ProfileDescription(profile_id=profile_id)
+    for i in range(len(profile_details)):
+        key = list(profile_details.keys())[i]
+        val = profile_details[key]
+        if type(val) == str:
+            if val.lower() == 'not specified':
+                val = None
+        if key == 'Languages':
+            # add new languages
+            for lang in profile_details[key].keys():
+                language = lang
+                level_name = profile_details[key][lang]
+                # check if user not specified languages
+                if language.lower() == 'not specified':
+                    continue
+                elif level_name.lower() == 'not specified':
+                    level_name = None
+
+                new_lang_lvl = ProfileLanguages(
+                        profile_id=profile_id,
+                        language=language,
+                        level_name=level_name)
+                db_session.add(new_lang_lvl)
+                db_session.commit()
+            continue
+
+        # check if key in categories
+        elif db_duplicate_check([Categories],
+                                Categories.category_name == key.lower()):
+            # add new category levels
+            new_category_lvl = ProfileCategories(
+                    category_name=key.lower(),
+                    profile_id=profile_id,
+                    level_name=val)
+            db_session.add(new_category_lvl)
+            db_session.commit()
+            continue
+        setattr(new_pr_desc, key.lower(), val)
+    db_session.close()
+    db_session = Session()
+    db_session.add(new_pr_desc)
+    db_session.commit()
+    logger.info(f'User {current_user} added profile '
+                f'description for profile_id: {profile_id}')
+    db_session.close()
+    return True
+
+
+"""print(db_load_profile_details('1001600532'))"""
 
 """print(db_delete_user('111@gmail.com'))"""
 
