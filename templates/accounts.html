@@ -98,18 +98,22 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for i in range(user_list|length) %}
+                    {% for i in range(profiles|length) %}
                         <tr>
                             <td align="center">{{ i + 1 }}</td>
-                            <input name="csrf_token" type="hidden" value="{{ csrf_token() }}"/>
+                            <input name="csrf_token" type="hidden"
+                                   value="{{ csrf_token() }}"/>
                             <td align="center"><input value="" type="checkbox"
-                                                      class="checkbox" name="mycheckbox"></td>
-                            <td align="center"></td>
-                            <td align="center"></td>
-                            {% if user_list[i]['register_status'] %}
-                                <td align="center">Зарегистрирован</td>
+                                                      class="checkbox"
+                                                      name="mycheckbox"></td>
+                            <td align="center">{{ profiles[i][0] }}</td>
+                            <td align="center">{{ profiles[i][1] }}</td>
+                            <td align="center">{{ profiles[i][2] }}</td>
+                            <td align="center">{{ profiles[i][3] }}</td>
+                            {% if profiles[i][4] %}
+                                <td align="center">Доступен</td>
                             {% else %}
-                                <td align="center">Не зарегистрирован</td>
+                                <td align="center">Не доступен</td>
                             {% endif %}
                             <td class="td-actions" align="center">
                                 <a rel="tooltip"

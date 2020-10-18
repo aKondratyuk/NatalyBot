@@ -844,13 +844,49 @@ def db_load_all_profiles_description() -> bool:
     return True
 
 
+def db_add_profile(profile_id: str,
+                   profile_password: str):
+    """Add profile to DB"""
+
+    from main import logger
+    if profile_deleted(profile_id=profile_id):
+        logger.info(f'User {current_user} tried to add profile info, '
+                    f'for profile_id: {profile_id}, '
+                    f'but this profile deleted on site')
+        return False
+    db_session = Session()
+    if db_duplicate_check([Profiles],
+                          Profiles.profile_id == profile_id):
+        # profile already in DB, update password
+        update_q = update(Profiles). \
+            where(Profiles.profile_id == profile_id). \
+            values(profile_password=profile_password)
+        db_session.execute(update_q)
+        logger.info(f'User {current_user} updated profile info, '
+                    f'for profile_id: {profile_id}')
+    else:
+        # create new profile
+        new_profile = Profiles(profile_id=profile_id,
+                               profile_password=profile_password,
+                               available=True,
+                               can_receive=True)
+        db_session.add(new_profile)
+        logger.info(f'User {current_user} added profile, '
+                    f'with profile_id: {profile_id}')
+    db_session.commit()
+    db_session.close()
+
+    db_load_profile_description(profile_id=profile_id)
+    return True
+
+
 """print(db_load_all_profiles_description())"""
 
 """print(db_load_profile_description('1001716782'))"""
 
 """print(db_delete_user('111@gmail.com'))"""
 
-# print(db_fill_visibility('admin@gmail.com'))
+"""print(db_fill_visibility('admin@gmail.com'))"""
 """print(db_show_dialog('1000868043',
                      '1001716782'))"""
 """print(db_get_users())"""

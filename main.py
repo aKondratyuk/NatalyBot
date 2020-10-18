@@ -99,16 +99,27 @@ def invite_user():
 @login_required
 def profile_dialogue():
     db_session = Session()
-    senders = db_get_rows([
-            Profiles.profile_id,
-            ProfileDescription.name,
-            ProfileDescription.nickname
-            ],
-            Profiles.profile_password,
-            Profiles.available == 1,
-            Visibility.login == current_user.login,
-            Visibility.profile_id == Profiles.profile_id,
-            ProfileDescription.profile_id == Profiles.profile_id)
+    if current_user.privileges['PROFILES_VISIBILITY']:
+        # if user can view all profiles, we doesn't filter by access
+        senders = db_get_rows([
+                Profiles.profile_id,
+                ProfileDescription.name,
+                ProfileDescription.nickname
+                ],
+                Profiles.profile_password,
+                Profiles.available == 1,
+                ProfileDescription.profile_id == Profiles.profile_id)
+    else:
+        senders = db_get_rows([
+                Profiles.profile_id,
+                ProfileDescription.name,
+                ProfileDescription.nickname
+                ],
+                Profiles.profile_password,
+                Profiles.available == 1,
+                Visibility.login == current_user.login,
+                Visibility.profile_id == Profiles.profile_id,
+                ProfileDescription.profile_id == Profiles.profile_id)
     receivers = None
     dialog = None
     sender = None
@@ -438,9 +449,19 @@ def users_accounts():
     if request.method == "POST":
         account_login = request.form.get('account-login')
         account_password = request.form.get('account-password')
-        print(account_login, account_password)
+        error = db_add_profile(profile_id=account_login,
+                               profile_password=account_password)
 
-    return render_template("accounts.html")
+    profiles = db_get_rows([
+            ProfileDescription.profile_id,
+            ProfileDescription.nickname,
+            Profiles.profile_password,
+            ProfileDescription.age,
+            Profiles.available
+            ],
+            ProfileDescription.profile_id == Profiles.profile_id,
+            Profiles.profile_password)
+    return render_template("accounts.html", profiles=profiles)
 
 
 @app.route('/messages', methods=['GET', 'POST'])
@@ -473,3 +494,4 @@ if __name__ == "__main__":
 
     # Run the app until stopped
     app.run()
+

@@ -224,8 +224,8 @@ class Profiles(Base):
     __tablename__ = 'Profiles'
     profile_id = Column(VARCHAR(20), primary_key=True)
     profile_password = Column(VARCHAR(190))
-    available = Column(BOOLEAN)
-    can_receive = Column(BOOLEAN)
+    available = Column(BOOLEAN, default=True)
+    can_receive = Column(BOOLEAN, default=True)
     msg_limit = Column(INTEGER(11))
     profile_type = Column(VARCHAR(20))
 
