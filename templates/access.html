@@ -29,12 +29,7 @@
          aria-labelledby="navbarDropdownMenuLink">
         <a class="dropdown-item"
            href="{{ url_for('access') }}">Доступ к профилям</a>
-        <a class="dropdown-item" href="#">Another
-            action</a>
-        <a class="dropdown-item"
-           href="#">Something</a>
-        <a class="dropdown-item" href="#">Something
-            else here</a>
+        <a class="dropdown-item" href="{{ url_for('users_accounts') }}">Загрузить аккаунты</a>
         <div class="divider"></div>
         <a class="dropdown-item" href="{{ url_for('users') }}">Пользователи</a>
     </div>

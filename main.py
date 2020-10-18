@@ -365,6 +365,17 @@ def users_access_selected_delete():
     return redirect(request.referrer)
 
 
+@app.route('/users/accounts', methods=['GET', 'POST'])
+@login_required
+def users_accounts():
+    if request.method == "POST":
+        account_login = request.form.get('account-login')
+        account_password = request.form.get('account-password')
+        print(account_login, account_password)
+
+    return render_template("accounts.html")
+
+
 @app.route('/messages', methods=['GET', 'POST'])
 @login_required
 def messages():
