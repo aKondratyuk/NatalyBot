@@ -299,9 +299,13 @@ def access():
         user_profiles = db_session.query(Visibility.profile_id)
         user_profiles = user_profiles.filter(Visibility.login == user)
         user_profiles = user_profiles.subquery()
-        new_profiles = db_session.query(Profiles.profile_id)
+        new_profiles = db_session.query(Profiles.profile_id,
+                                        ProfileDescription.name,
+                                        ProfileDescription.profile_id)
         new_profiles = new_profiles.filter(
                 Profiles.profile_id.notin_(user_profiles))
+        new_profiles = new_profiles.filter(
+                Profiles.profile_id == ProfileDescription.profile_id)
         profiles = new_profiles.all()
         db_session.close()
     else:
@@ -341,12 +345,17 @@ def access():
                                       profile_id=profile)
         # load available profiles
         if user:
-            available_profiles = db_get_rows([Visibility.profile_id],
-                                             Visibility.login == user)
+            available_profiles = db_get_rows([
+                    Visibility.profile_id,
+                    ProfileDescription.name,
+                    ProfileDescription.nickname
+                    ],
+                    Visibility.login == user,
+                    Visibility.profile_id == ProfileDescription.profile_id)
 
     return render_template('access.html',
                            available_profiles=available_profiles,
-                           users=users_list,
+                           users=users,
                            selected_user=user,
                            profiles=profiles,
                            error=error)

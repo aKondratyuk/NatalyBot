@@ -16,7 +16,7 @@ from db_models import Categories, CategoryLevel, ChatSessions, Chats, \
     Profiles, RolesOfUsers, SentInvites, Session, Texts, UserRoles, Users, \
     Visibility
 from scraping import collect_info_from_profile, get_parsed_page, send_request
-from verification import login, profile_in_inbox
+from verification import login, profile_deleted, profile_in_inbox
 
 
 def create_invite(creator: User,
@@ -722,13 +722,55 @@ def db_add_category_level(category_name: str,
         db_session.close()
 
 
-def db_load_profile_details(profile_id: str) -> bool:
+def db_profile_available(profile_id: str) -> bool:
+    """Update profile availability info in DB"""
     from main import logger
-    logger.info(f'User {current_user} opened load of profile '
-                f'description for profile_id: {profile_id}')
+    if not db_duplicate_check([Profiles],
+                              Profiles.profile_id == profile_id):
+        # profile not exist in DB
+        return False
+    db_session = Session()
+    if profile_deleted(profile_id=profile_id):
+        # profile deleted on site
+        update_q = update(Profiles).where(
+                Profiles.profile_id == profile_id). \
+            values(available=False)
+        db_session.execute(update_q)
+        db_session.commit()
+        db_session.close()
+        logger.info(f'User {current_user} updated profile_id: {profile_id} '
+                    f'and changed availability to 0,'
+                    f'because profile deleted on site')
+        return False
+    else:
+        # profile not deleted on site
+        update_q = update(Profiles).where(
+                Profiles.profile_id == profile_id). \
+            values(available=True)
+        db_session.execute(update_q)
+        db_session.commit()
+        db_session.close()
+        logger.info(f'User {current_user} updated profile_id: {profile_id} '
+                    f'and changed availability to 1,'
+                    f'because profile not deleted on site')
+        return True
+
+
+def db_load_profile_description(profile_id: str) -> bool:
+    from main import logger
+
+    # check profile delete status
+    if not db_profile_available(profile_id=profile_id):
+        logger.info(f'User {current_user} opened load of profile '
+                    f'description for profile_id: {profile_id},'
+                    f'but this profile deleted on site')
+        return False
+    else:
+        logger.info(f'User {current_user} opened load of profile '
+                    f'description for profile_id: {profile_id}')
+    db_session = Session()
     # collect info from site
     profile_details = collect_info_from_profile(profile_id=profile_id)
-    db_session = Session()
 
     # delete old profile info
     if db_duplicate_check([ProfileDescription],
@@ -772,7 +814,7 @@ def db_load_profile_details(profile_id: str) -> bool:
                 db_session.commit()
             continue
 
-        # check if key in categories
+        # check if key in categories table
         elif db_duplicate_check([Categories],
                                 Categories.category_name == key.lower()):
             # add new category levels
@@ -794,7 +836,17 @@ def db_load_profile_details(profile_id: str) -> bool:
     return True
 
 
-"""print(db_load_profile_details('1001600532'))"""
+def db_load_all_profiles_description() -> bool:
+    """Load profiles description for all profiles"""
+    profiles = db_get_rows([Profiles.profile_id])
+    for profile_id in profiles:
+        db_load_profile_description(profile_id[0])
+    return True
+
+
+"""print(db_load_all_profiles_description())"""
+
+"""print(db_load_profile_description('1001716782'))"""
 
 """print(db_delete_user('111@gmail.com'))"""
 
