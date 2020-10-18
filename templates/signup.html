@@ -45,7 +45,7 @@
 					  style="padding-left: 130px;">
 					<input name="csrf_token" type="hidden"
 						   value="{{ csrf_token() }}"/>
-					<div class="wrap-input100 validate-input m-b-26"
+					<div class="wrap-input100 validate-input m-b-{% if error %}10{% else %}26{% endif %}"
 						 data-validate="Необходимо ввести email">
 						<label class="label-input100" for="email">Email</label>
 						<input class="input100" id="email" name="email"
@@ -53,6 +53,11 @@
 							   required type="email">
 						<span class="focus-input100"></span>
 					</div>
+				{% if error%}
+				<div class="invalid-feedback" style="display: inline;">
+				  Такой пользователь уже зарегестрирован!
+				</div>
+				{% endif %}
 
 					<div class="wrap-input100 validate-input m-b-18"
 						 data-validate="Необходимо ввести пароль">
