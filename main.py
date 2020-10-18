@@ -98,7 +98,17 @@ def invite_user():
 @app.route('/profile_dialogue', methods=['GET', 'POST'])
 @login_required
 def profile_dialogue():
-    senders = db_get_profiles(Profiles.profile_password)
+    db_session = Session()
+    senders = db_get_rows([
+            Profiles.profile_id,
+            ProfileDescription.name,
+            ProfileDescription.nickname
+            ],
+            Profiles.profile_password,
+            Profiles.available == 1,
+            Visibility.login == current_user.login,
+            Visibility.profile_id == Profiles.profile_id,
+            ProfileDescription.profile_id == Profiles.profile_id)
     receivers = None
     dialog = None
     sender = None
@@ -110,7 +120,21 @@ def profile_dialogue():
         else:
             receiver = request.form.get('receiver_id')
         if sender:
-            receivers = db_show_receivers(sender)
+            # subquery for chats with sender
+            sub_query_1 = db_session. \
+                query(ChatSessions.chat_id). \
+                filter(ChatSessions.profile_id == sender).subquery()
+            receivers = db_get_rows([
+                    ChatSessions.profile_id,
+                    ProfileDescription.name,
+                    ProfileDescription.nickname
+                    ],
+                    ChatSessions.chat_id.in_(sub_query_1),
+                    ChatSessions.profile_id != sender,
+                    Profiles.profile_id == ChatSessions.profile_id,
+                    Profiles.available == 1,
+                    Profiles.can_receive == 1,
+                    ProfileDescription.profile_id == ChatSessions.profile_id)
         if receiver:
             if request.form.get('receiver_id_manual'):
                 sender_info_list = db_get_profiles(
@@ -126,9 +150,24 @@ def profile_dialogue():
                         observer_password=sender_info['profile_password'],
                         sender_id=sender_info['profile_id'],
                         receiver_profile_id=receiver)
-                receivers = db_show_receivers(sender)
+                # subquery for chats with sender
+                sub_query_1 = db_session. \
+                    query(ChatSessions.chat_id). \
+                    filter(ChatSessions.profile_id == sender).subquery()
+                receivers = db_get_rows([
+                        ChatSessions.profile_id,
+                        ProfileDescription.name,
+                        ProfileDescription.nickname
+                        ],
+                        ChatSessions.chat_id.in_(sub_query_1),
+                        ChatSessions.profile_id != sender,
+                        Profiles.profile_id == ChatSessions.profile_id,
+                        Profiles.available == 1,
+                        Profiles.can_receive == 1,
+                        ProfileDescription.profile_id == ChatSessions.profile_id)
             dialog = db_show_dialog(sender=sender,
                                     receiver=receiver)
+    db_session.close()
     return render_template('profile_dialogue.html',
                            dialog=dialog,
                            senders=senders,
@@ -300,14 +339,16 @@ def access():
         user_profiles = db_session.query(Visibility.profile_id)
         user_profiles = user_profiles.filter(Visibility.login == user)
         user_profiles = user_profiles.subquery()
-        new_profiles = db_session.query(Profiles.profile_id,
-                                        ProfileDescription.name,
-                                        ProfileDescription.profile_id)
-        new_profiles = new_profiles.filter(
-                Profiles.profile_id.notin_(user_profiles))
-        new_profiles = new_profiles.filter(
-                Profiles.profile_id == ProfileDescription.profile_id)
-        profiles = new_profiles.all()
+        new_profiles = db_get_rows([
+                Profiles.profile_id,
+                ProfileDescription.name,
+                ProfileDescription.nickname
+                ],
+                Profiles.profile_id.notin_(user_profiles),
+                Profiles.profile_id == ProfileDescription.profile_id,
+                Profiles.available == 1,
+                Profiles.profile_id == Visibility.profile_id)
+        profiles = new_profiles
         db_session.close()
     else:
         profiles = []
@@ -352,7 +393,9 @@ def access():
                     ProfileDescription.nickname
                     ],
                     Visibility.login == user,
-                    Visibility.profile_id == ProfileDescription.profile_id)
+                    Visibility.profile_id == ProfileDescription.profile_id,
+                    Profiles.available == 1,
+                    Profiles.profile_id == Visibility.profile_id)
 
     return render_template('access.html',
                            available_profiles=available_profiles,
