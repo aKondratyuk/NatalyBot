@@ -187,6 +187,7 @@ def login():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    error = False
     if request.method == 'POST':
         error = register_user(login=request.form.get('email'),
                               user_password=request.form.get('password'))
@@ -194,7 +195,7 @@ def signup():
             return render_template("confirmation.html")
         else:
             render_template('signup.html', error=error)
-    return render_template('signup.html')
+    return render_template('signup.html', error=error)
 
 
 ###############################################################################
