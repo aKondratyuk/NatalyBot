@@ -116,14 +116,17 @@ class Messages(Base):
     send_time = Column(TIMESTAMP)
     text_id = Column(BINARY(16))
     viewed = Column(BOOLEAN)
+    delay = Column(BOOLEAN)
 
     def __repr__(self):
         return "<Messages(message_token='%s', chat_id='%s', " \
                "profile_id='%s', send_time='%s', " \
-               "text_id='%s', viewed='%s', )>" % (
+               "text_id='%s', viewed='%s', " \
+               "delay='%s')>" % (
                        self.message_token, self.chat_id,
                        self.profile_id, self.send_time,
-                       self.text_id, self.viewed)
+                       self.text_id, self.viewed,
+                       self.delay)
 
 
 class PrivilegesAssigns(Base):
@@ -228,14 +231,17 @@ class Profiles(Base):
     can_receive = Column(BOOLEAN, default=True)
     msg_limit = Column(INTEGER(11))
     profile_type = Column(VARCHAR(20))
+    max_age_delta = Column(INTEGER(2), default=10)
 
     def __repr__(self):
         return "<Profiles(profile_id='%s', profile_password='%s', " \
                "available='%s', can_receive='%s', " \
-               "msg_limit='%s', profile_type='%s')>" % (
+               "msg_limit='%s', profile_type='%s'," \
+               "max_age_delta='%s')>" % (
                        self.profile_id, self.profile_password,
                        self.available, self.can_receive,
-                       self.msg_limit, self.profile_type)
+                       self.msg_limit, self.profile_type,
+                       self.max_age_delta)
 
 
 class Religions(Base):
@@ -278,9 +284,20 @@ class Tagging(Base):
 class Tags(Base):
     __tablename__ = 'Tags'
     tag = Column(VARCHAR(190), primary_key=True)
+    forbidden = Column(BOOLEAN, default=False)
 
     def __repr__(self):
         return "<Tags(tag='%s')>" % self.tag
+
+
+class MessageTemplates(Base):
+    __tablename__ = 'Message_templates'
+    profile_id = Column(VARCHAR(20), primary_key=True)
+    text_id = Column(BINARY(16), primary_key=True)
+
+    def __repr__(self):
+        return "<Roles_of_users(profile_id='%s', text_id='%s')>" % (
+                self.profile_id, self.text_id)
 
 
 class Texts(Base):
