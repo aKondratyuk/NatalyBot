@@ -464,6 +464,45 @@ def users_accounts():
     return render_template("accounts.html", profiles=profiles)
 
 
+@app.route('/mail', methods=['GET', 'POST'])
+@login_required
+def mail():
+    return render_template('mail.html')
+
+
+@app.route('/mail/star', methods=['GET', 'POST'])
+@login_required
+def mail_star():
+    return render_template('mail_star.html')
+
+
+@app.route('/mail/future', methods=['GET', 'POST'])
+@login_required
+def mail_future():
+    return render_template('mail_future.html')
+
+
+@app.route('/mail/outbox', methods=['GET', 'POST'])
+@login_required
+def mail_outbox():
+    return render_template('mail_outbox.html')
+
+
+@app.route('/mail/selected/delete', methods=['POST'])
+@login_required
+def mail_selected_delete():
+    list_login = request.form.getlist('mycheckbox')
+    logger.info(f'User {current_user.login} starting '
+                f'delete users: {list_login}')
+    for login in list_login:
+        if db_delete_user(login):
+            logger.info(f'User {current_user.login} delete: {login}')
+        else:
+            logger.info(f'User {current_user.login} tried to '
+                        f'delete: {login} but something gone wrong!')
+    return redirect(url_for('users'))
+
+
 @app.route('/messages', methods=['GET', 'POST'])
 @login_required
 def messages():
