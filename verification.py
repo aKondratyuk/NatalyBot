@@ -1,7 +1,6 @@
 # coding: utf8
 import requests
 
-from control_panel import db_get_rows
 from db_models import Tags
 from scraping import collect_info_from_profile, get_parsed_page, \
     get_profile_page, send_request
@@ -176,6 +175,7 @@ def forbidden_profile(profile_id):
     Keyword arguments:
     profile_id -- ID профиля которому будет отправлено сообщение
     """
+    from control_panel import db_get_rows
     # Собираем информацию о профиле
     data = collect_info_from_profile(profile_id)
     # Якорные слова которые обозначают профиль как ловушку
