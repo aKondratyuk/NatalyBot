@@ -488,6 +488,14 @@ def mail_outbox():
     return render_template('mail_outbox.html')
 
 
+@app.route('/mail/star/<sender>', methods=['GET', 'POST'])
+@login_required
+def mail_star_it(sender):
+    print(current_user.login + " set star to message with sender name " + sender)
+
+    return render_template("mail.html")
+
+
 @app.route('/mail/selected/delete', methods=['POST'])
 @login_required
 def mail_selected_delete():
@@ -501,6 +509,12 @@ def mail_selected_delete():
             logger.info(f'User {current_user.login} tried to '
                         f'delete: {login} but something gone wrong!')
     return redirect(url_for('users'))
+
+
+@app.route('/mail/dialogue', methods=['GET', 'POST'])
+@login_required
+def dialogue_profile():
+    return render_template('dialogue_profile.html')
 
 
 @app.route('/messages', methods=['GET', 'POST'])

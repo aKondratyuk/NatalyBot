@@ -64,8 +64,6 @@
 								<li style="padding-top: 5px;"><a href="{{ url_for('mail_star') }}" style="color: #9A9A9A;"><i class="fa fa-star"></i> Помеченные</a></li>
 								<li style="padding-top: 5px;"><a href="{{ url_for('mail_future') }}" style="color: #9A9A9A;"><i class="fa fa-clock-o"></i> Будут отправлены</a></li>
 								<li style="padding-top: 5px;"><a href="{{ url_for('mail_outbox') }}" style="color: #9A9A9A;"><i class="fa fa-mail-forward"></i> Отправленые</a></li>
-								<li style="padding-top: 5px;"><a href="#" style="color: #9A9A9A;"><i class="fa fa-pencil-square-o"></i> Черновик</a></li>
-								<li style="padding-top: 5px;"><a href="#" style="color: #9A9A9A;"><i class="fa fa-folder"></i> Спам (217)</a></li>
 							</ul>
 						</div>
 					</div>
@@ -98,6 +96,39 @@
 								</tr>
 								</thead>
 								<tbody>
+								<tr>
+									<td align="center">1</td>
+									<td align="center"><input value="" type="checkbox" class="checkbox" name="mycheckbox"></td>
+									<td align="center">Newyorkguy1</td>
+									<td align="center"><a href="{{ url_for('dialogue_profile') }}">My Julia, You are the only one that holds my he...</a></td>
+									<td align="center">2020-10-21 08:01:01</td>
+									<td class="td-actions" align="center">
+										<a rel="tooltip"
+										   title="Просмотреть профиль"
+										   class="btn-sm table-action view"
+										   style="color: blue;"
+										   href="https://www.natashaclub.com/Newyorkguy1">
+											<i class="fa fa-user"></i>
+										</a>
+										<a rel="tooltip"
+										   title="В помеченные"
+										   class="btn-sm table-action view"
+										   style="color: #f88e2c;"
+										   id="Newyourkguy1"
+										   onclick="Star(id)"
+										   href="javascript:void(0)">
+										   <i class="fa fa-star-o"></i>
+										</a>
+									</td>
+								</tr>
+								<tr>
+									<td align="center">2</td>
+									<td align="center"><input value="" type="checkbox" class="checkbox" name="mycheckbox"></td>
+									<td align="center">male1001679258</td>
+									<td align="center"><a href="google.com">Hi Julia, I am Jim. I like your profile. If you ar... </a></td>
+									<td align="center">2020-10-19 12:56:16 </td>
+									<td></td>
+								</tr>
 								{% for i in range(mail_list|length) %}
 									<tr>
 										<td align="center">{{ i + 1 }}</td>
@@ -270,4 +301,9 @@
             $("[data-toggle=tooltip]").tooltip();
         });
     </script>
+	<script>
+		function Star(id) {
+			console.log(id)
+		}
+	</script>
 {% endblock %}
