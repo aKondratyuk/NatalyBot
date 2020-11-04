@@ -54,10 +54,13 @@ class ChatSessions(Base):
     __tablename__ = 'Chat_sessions'
     chat_id = Column(BINARY(16), primary_key=True)
     profile_id = Column(VARCHAR(190), primary_key=True)
+    email_address = Column(VARCHAR(190), default=None)
 
     def __repr__(self):
-        return "<Categories(chat_id='%s', profile_id='%s')>" % (
-                self.chat_id, self.profile_id)
+        return "<Categories(chat_id='%s', profile_id='%s'," \
+               "email_address='%s')>" % (
+                       self.chat_id, self.profile_id,
+                       self.email_address)
 
 
 class Chats(Base):
@@ -229,7 +232,7 @@ class Profiles(Base):
     profile_password = Column(VARCHAR(190))
     available = Column(BOOLEAN, default=True)
     can_receive = Column(BOOLEAN, default=True)
-    msg_limit = Column(INTEGER(11))
+    msg_limit = Column(INTEGER(11), default=999)
     profile_type = Column(VARCHAR(20))
     max_age_delta = Column(INTEGER(2), default=10)
 

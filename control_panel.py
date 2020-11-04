@@ -422,7 +422,10 @@ def dialog_download(observer_login: str,
 
 
 def db_show_dialog(sender: str,
-                   receiver: str) -> list:
+                   receiver: str = None,
+                   email_filter: bool = False,
+                   inbox_filter: bool = False,
+                   outbox_filter: bool = False) -> list:
     # you can swap sender and receiver
     """Returns list of dicts, with messages in dialogue for admin panel"""
     db_session = Session()
@@ -430,28 +433,50 @@ def db_show_dialog(sender: str,
     # subquery for chats with sender
     sub_query_1 = db_session.query(ChatSessions.chat_id). \
         filter(ChatSessions.profile_id == sender).subquery()
-    # subquery for chats with receiver
-    sub_query_2 = db_session.query(ChatSessions.chat_id). \
-        filter(ChatSessions.profile_id == receiver).subquery()
-    # subquery for chats with this users
+    # subquery for chats with this profiles
     query_chat = db_session.query(ChatSessions.chat_id). \
-        filter(ChatSessions.chat_id.in_(sub_query_1)). \
-        filter(ChatSessions.chat_id.in_(sub_query_2)). \
-        subquery()
+        filter(ChatSessions.chat_id.in_(sub_query_1))
+    if receiver:
+        # subquery for chats with receiver, if we have receiver id
+        sub_query_2 = db_session.query(ChatSessions.chat_id). \
+            filter(ChatSessions.profile_id == receiver).subquery()
+        # subquery for chats with this profiles
+        query_chat = db_session.query(ChatSessions.chat_id). \
+            filter(ChatSessions.chat_id.in_(sub_query_2))
+    # filter only email dialogues
+    if email_filter:
+        query_chat = query_chat.filter(
+                ChatSessions.email_address)
+    query_chat = query_chat.subquery()
+
     # query to show messages and texts
     query = db_session.query(Messages.profile_id,
                              Messages.send_time,
                              Messages.viewed,
-                             Texts.text)
+                             Texts.text,
+                             ProfileDescription.nickname,
+                             Messages.message_token)
     query = query.filter(Messages.chat_id.in_(query_chat))
     query = query.outerjoin(Texts, Messages.text_id == Texts.text_id)
+    query = query.filter(ProfileDescription.profile_id == Messages.profile_id)
+
+    if inbox_filter or not receiver:
+        # show only inbox messages
+        query = query.filter(Messages.profile_id != sender)
+    elif outbox_filter:
+        # show only inbox messages
+        query = query.filter(Messages.profile_id != receiver)
+
     query = query.order_by(Messages.send_time)
     result = query.all()
     db_session.close()
     return [{"profile_id": row[0],
              "send_time": row[1],
              "viewed": row[2],
-             "text": row[3]} for row in result]
+             "text": row[3],
+             "nickname": row[4],
+             "message_token": row[5]
+             } for row in result]
 
 
 def db_download_new_msg(observer_login: str,
@@ -465,13 +490,18 @@ def db_download_new_msg(observer_login: str,
     db_session = Session()
     msg_delete = db_session.query(Messages). \
         filter(Messages.chat_id == chat_id). \
-        filter(Messages.viewed is False)
+        filter(Messages.viewed == False)
     msg_delete.delete()  # return number of deleted msg
     db_session.commit()
     db_session.close()
     dialog_download(observer_login=observer_login,
                     observer_password=observer_password,
                     sender_id=sender_id,
+                    receiver_profile_id=receiver_profile_id,
+                    download_new=True)
+    dialog_download(observer_login=observer_login,
+                    observer_password=observer_password,
+                    sender_id=receiver_profile_id,
                     receiver_profile_id=receiver_profile_id,
                     download_new=True)
     return True
@@ -991,7 +1021,8 @@ def message(session, receiver_profile_id, message_text):
 
 def send_messages(profile_id_list: str,
                   looking_for: str = None,
-                  photos_only: str = "off") -> bool:
+                  photos_only: str = "off",
+                  profiles: list = None) -> bool:
     """Send messages from profiles,
     checks how much messages each profile has already send today,
     calculate max available age with profile max_age_delta and profile age"""
@@ -1042,11 +1073,12 @@ def send_messages(profile_id_list: str,
             while messages_has_sent < msg_need_to_be_sent:
                 if stop:
                     break
-                profiles = search_for_profiles(
-                        my_data["Sex"], looking_for,
-                        my_data["Age"],
-                        date_of_birth_end, page,
-                        photos_only)
+                if not profiles:
+                    profiles = search_for_profiles(
+                            my_data["Sex"], looking_for,
+                            my_data["Age"],
+                            date_of_birth_end, page,
+                            photos_only)
                 profiles_id = get_id_profiles(profiles)
                 profile_try_counter = 0
                 page_try_counter = 0
@@ -1088,6 +1120,11 @@ def send_messages(profile_id_list: str,
                             break
                         message(session, profile_id,
                                 message_text)
+                        dialog_download(
+                                observer_login=profiles_list[i][0],
+                                observer_password=profiles_list[i][1],
+                                sender_id=profiles_list[i][0],
+                                receiver_profile_id=profile_id)
                         messages_has_sent += 1
                         logger.info(
                                 f"Successfully sent message to profile "
@@ -1107,7 +1144,7 @@ def send_messages(profile_id_list: str,
 
 """print(db_load_all_profiles_description())"""
 
-"""print(db_load_profile_description('1001716782'))"""
+"""print(db_load_profile_description('1001721974'))"""
 
 """print(db_delete_user('111@gmail.com'))"""
 

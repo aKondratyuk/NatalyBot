@@ -161,6 +161,8 @@ def profile_dialogue():
                         observer_password=sender_info['profile_password'],
                         sender_id=sender_info['profile_id'],
                         receiver_profile_id=receiver)
+                # load description for profile
+                db_load_profile_description(receiver)
                 # subquery for chats with sender
                 sub_query_1 = db_session. \
                     query(ChatSessions.chat_id). \
@@ -467,7 +469,12 @@ def users_accounts():
 @app.route('/mail', methods=['GET', 'POST'])
 @login_required
 def mail():
-    return render_template('mail.html')
+    sender = '1000868043'
+    dialogue = db_show_dialog(sender=sender)
+    new_count = list(map(lambda x: x['viewed'], dialogue)).count(False)
+    return render_template('mail.html', dialogue=dialogue,
+                           sender=sender,
+                           new_count=new_count)
 
 
 @app.route('/mail/star', methods=['GET', 'POST'])
@@ -511,10 +518,31 @@ def mail_selected_delete():
     return redirect(url_for('users'))
 
 
-@app.route('/mail/dialogue', methods=['GET', 'POST'])
+@app.route('/mail/dialogue:<sender>:<receiver>', methods=['GET', 'POST'])
 @login_required
-def dialogue_profile():
-    return render_template('dialogue_profile.html')
+def dialogue_profile(sender, receiver):
+    sender_password = db_get_rows([Profiles.profile_password],
+                                  Profiles.profile_id == sender)[0][0]
+    db_download_new_msg(sender,
+                        sender_password,
+                        sender,
+                        receiver)
+    # load dialogue
+    dialogue = db_show_dialog(sender=sender,
+                              receiver=receiver)
+    receiver_data = db_get_rows([
+            ProfileDescription.nickname,
+            Profiles.available
+            ],
+            ProfileDescription.profile_id == receiver,
+            ProfileDescription.profile_id == Profiles.profile_id)
+    receiver_nickname = receiver_data[0][0]
+    receiver_availability = receiver_data[0][1]
+    return render_template('dialogue_profile.html',
+                           dialogue=dialogue,
+                           sender=sender,
+                           receiver_nickname=receiver_nickname,
+                           receiver_availability=receiver_availability)
 
 
 @app.route('/messages', methods=['GET', 'POST'])

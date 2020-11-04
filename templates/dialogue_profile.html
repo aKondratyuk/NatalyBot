@@ -129,60 +129,70 @@
                          .form-control::placeholder {
                              color: black;
                          }
-                    </style>
+                     </style>
                     <div class="message_header">
-                        <h3 style="color: #ffffff">Вы переписываетесь с Newyourkguy1</h3>
-                        <p style="color: #f1f1f1">Всего сообщений: 2</p>
+                        <h3 style="color: #ffffff">Вы переписываетесь с
+                            {{ receiver_nickname }}</h3>
+                        <p style="color: #f1f1f1">Всего
+                            сообщений: {{ dialogue|length }}</p>
                     </div>
-                    <div class="container_message light">
-                      <img src="{{ url_for('static', filename='images/people-profile-icon_1.jpg') }}" alt="Avatar">
-                      <p>Hello. How are you today?</p>
-                      <span class="nickname-left">Я</span>
-                      <span class="time-right">11:00</span>
-                    </div>
+                    {% if dialogue %}
+                        {% for i in range(dialogue|length) %}
+                            {% if dialogue[i]['profile_id'] == sender %}
+                                <div class="container_message light">
+                                    <img src="{{ url_for('static', filename='images/people-profile-icon_1.jpg') }}"
+                                         alt="Avatar">
+                                    <p>{{ dialogue[i]['text'] }}</p>
+                                    <span class="nickname-left">{{ dialogue[i]['nickname'] }}</span>
+                                    <span class="time-right">{{ dialogue[i]['send_time'] }}</span>
+                                </div>
 
-                    <div class="container_message darker">
-                      <img src="{{ url_for('static', filename='images/people-profile-icon_2') }}" alt="Avatar" class="right">
-                      <p>Hey! I'm fine. Thanks for asking!</p>
-                      <span class="nickname-right">Newyourkguy1</span>
-                      <span class="time-left">11:01</span>
-                    </div>
+                            {% else %}
+                                <div class="container_message darker">
+                                    <img src="{{ url_for('static',
+                                filename='images/people-profile-icon_2') }}"
+                                         alt="Avatar"
+                                         class="right">
+                                    <p>{{ dialogue[i]['text'] }}</p>
+                                    <span class="nickname-right">
+                                    {{ dialogue[i]['nickname'] }}
+                                </span>
+                                    <span class="time-left">
+                                    {{ dialogue[i]['send_time'] }}
+                                </span>
+                                </div>
 
-                    <div class="container_message light">
-                      <img src="{{ url_for('static', filename='images/people-profile-icon_1.jpg') }}" alt="Avatar">
-                      <p>Sweet! So, what do you wanna do today?</p>
-                      <span class="nickname-left">Я</span>
-                      <span class="time-right">11:02</span>
-                    </div>
-
-                    <div class="container_message darker">
-                      <img src="{{ url_for('static', filename='images/people-profile-icon_2') }}" alt="Avatar" class="right">
-                      <p>Nah, I dunno. Play soccer.. or learn more coding perhaps?</p>
-                      <span class="nickname-right">Newyourkguy1</span>
-                      <span class="time-left">11:05</span>
-                    </div>
-                    <div class="message_template">
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                    {% if receiver_availability %}
+                        <div class="message_template">
                         <div id="toolbar">
                             <button type="button"
                                     id="add"
                                     data-toggle="modal"
-                                    data-target = "#UserModal"
-                                    class="btn btn-fill btn-success">Редактировать
+                                    data-target="#UserModal"
+                                    class="btn btn-fill btn-success">
+                                Редактировать
                             </button>
                             <button type="button"
                                     id="scenario"
                                     data-toggle="modal"
-                                    data-target = "#UserModal"
-                                    class="btn btn-fill btn-primary">Будет отправлено: 05.11.2020 14:30:00
+                                    data-target="#UserModal"
+                                    class="btn btn-fill btn-primary">Будет
+                                отправлено: 05.11.2020 14:30:00
                             </button>
-                        <textarea class="form-control"
-                                  disabled
-                                  style="margin-top: 20px;">Поле с исходным текстом шаблонного пиьсма</textarea>
+                            <textarea class="form-control"
+                                      disabled
+                                      style="margin-top: 20px;">Поле с исходным текстом шаблонного пиьсма</textarea>
+                        </div>
+                    {% else %}
+                        Профиль недоступен
+                    {% endif %}
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 {% endblock %}
 {% block scripts %}
     <!--   Core JS Files   -->
