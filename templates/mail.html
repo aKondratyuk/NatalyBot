@@ -130,11 +130,12 @@
                                             <input name="csrf_token"
                                                    type="hidden"
                                                    value="{{ csrf_token() }}"/>
-                                            <td aliign="center">Имя аккаунта</td>
+                                            <td align="center">
+                                                {{ dialogue[i]['account_nickname'] }}</td>
                                             <td align="center">{{ dialogue[i]['nickname'] }}</td>
                                             <td>
                                                 <a href="{{ url_for('dialogue_profile',
-                                                        sender=sender,
+                                                        sender=dialogue[i]['account_id'],
                                                         receiver=dialogue[i]['profile_id']) }}">
                                                     {{ dialogue[i]['text'][:40] }}
                                                 </a>

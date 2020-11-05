@@ -3,6 +3,7 @@
 import logging
 import os
 from logging import Logger
+from multiprocessing import Process
 from urllib.parse import urljoin, urlparse
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, \
@@ -14,11 +15,13 @@ from flask_login import LoginManager, login_required, \
 from flask_wtf.csrf import CSRFProtect
 
 from authentication import find_user
+from background_worker import worker_msg_updater
 from control_panel import *
 from db_models import Logs, Profiles, SQLAlchemyHandler, Users, Visibility
 from email_service import send_email_instruction
 
 # Creates an app and checks if its the main or imported
+workers_number = 0  # counter for workers
 app = Flask(__name__)
 app.config.update(TESTING=True,
                   SECRET_KEY=os.environ.get('APP_SECRET_KEY'),
@@ -278,9 +281,11 @@ def icons():
 #          Веб-страницы составляющие пользовательскую панель                  #
 #                                                                             #
 ###############################################################################
+
 @app.route('/users', methods=['GET', 'POST'])
 @login_required
 def users():
+
     if request.method == "POST":
         invited_email = request.form.get('recipient-name')
         assigned_role = request.form.get('recipient-role')
@@ -469,12 +474,9 @@ def users_accounts():
 @app.route('/mail', methods=['GET', 'POST'])
 @login_required
 def mail():
-    sender = '1000868043'
-    dialogue = db_show_dialog(sender=sender)
-    new_count = list(map(lambda x: x['viewed'], dialogue)).count(False)
-    return render_template('mail.html', dialogue=dialogue,
-                           sender=sender,
-                           new_count=new_count)
+    dialogue = db_show_dialog(inbox_filter=True,
+                              descending=True)
+    return render_template('mail.html', dialogue=dialogue)
 
 
 @app.route('/mail/star', methods=['GET', 'POST'])
@@ -492,7 +494,9 @@ def mail_future():
 @app.route('/mail/outbox', methods=['GET', 'POST'])
 @login_required
 def mail_outbox():
-    return render_template('mail_outbox.html')
+    dialogue = db_show_dialog(outbox_filter=True,
+                              descending=True)
+    return render_template('mail_outbox.html', dialogue=dialogue)
 
 
 @app.route('/mail/star/<sender>', methods=['GET', 'POST'])
@@ -572,7 +576,8 @@ def logs():
 
 
 if __name__ == "__main__":
-
+    t1 = Process(target=worker_msg_updater)
+    t1.start()
+    workers_number += 1
     # Run the app until stopped
     app.run()
-

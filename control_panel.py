@@ -5,7 +5,7 @@ from math import ceil
 from uuid import uuid4
 
 from flask_login import current_user
-from sqlalchemy import exc, update
+from sqlalchemy import desc, exc, update
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from authentication import User
@@ -421,34 +421,62 @@ def dialog_download(observer_login: str,
     return True
 
 
-def db_show_dialog(sender: str,
+def get_account_nickname_from_dialog(message_token: bytes):
+    """Return account nickname from message token"""
+    result = db_get_rows([ProfileDescription.nickname],
+                         Messages.message_token == message_token,
+                         Messages.chat_id == ChatSessions.chat_id,
+                         ChatSessions.profile_id == Visibility.profile_id,
+                         Visibility.login == current_user.login,
+                         Profiles.profile_id == ChatSessions.profile_id,
+                         ProfileDescription.profile_id == Profiles.profile_id,
+                         Profiles.profile_password)
+    return result[0][0]
+
+
+def db_show_dialog(sender: str = None,
                    receiver: str = None,
                    email_filter: bool = False,
                    inbox_filter: bool = False,
-                   outbox_filter: bool = False) -> list:
+                   outbox_filter: bool = False,
+                   descending: bool = False) -> list:
     # you can swap sender and receiver
     """Returns list of dicts, with messages in dialogue for admin panel"""
     db_session = Session()
 
-    # subquery for chats with sender
-    sub_query_1 = db_session.query(ChatSessions.chat_id). \
-        filter(ChatSessions.profile_id == sender).subquery()
+    # Check visibility of profiles for current user
+    sub_query_0 = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.profile_id == Visibility.profile_id). \
+        filter(Visibility.login == current_user.login)
     # subquery for chats with this profiles
     query_chat = db_session.query(ChatSessions.chat_id). \
-        filter(ChatSessions.chat_id.in_(sub_query_1))
+        filter(ChatSessions.chat_id.in_(sub_query_0))
+    if sender:
+        # subquery for chats with sender
+        sub_query_1 = db_session.query(ChatSessions.chat_id). \
+            filter(ChatSessions.profile_id == sender).subquery()
+        # subquery for chats with this profiles
+        query_chat = db_session.query(ChatSessions.chat_id). \
+            filter(ChatSessions.chat_id.in_(sub_query_1))
     if receiver:
         # subquery for chats with receiver, if we have receiver id
         sub_query_2 = db_session.query(ChatSessions.chat_id). \
             filter(ChatSessions.profile_id == receiver).subquery()
         # subquery for chats with this profiles
-        query_chat = db_session.query(ChatSessions.chat_id). \
+        query_chat = query_chat. \
             filter(ChatSessions.chat_id.in_(sub_query_2))
     # filter only email dialogues
     if email_filter:
         query_chat = query_chat.filter(
                 ChatSessions.email_address)
     query_chat = query_chat.subquery()
+    # query to find accounts which have dialog
+    find_account_query = db_session.query(ChatSessions.profile_id). \
+        filter(ChatSessions.chat_id.in_(sub_query_0)). \
+        filter(Profiles.profile_id == ChatSessions.profile_id). \
+        filter(Profiles.profile_password != '').subquery()
 
+    # QUERY FOR MESSAGES
     # query to show messages and texts
     query = db_session.query(Messages.profile_id,
                              Messages.send_time,
@@ -459,24 +487,62 @@ def db_show_dialog(sender: str,
     query = query.filter(Messages.chat_id.in_(query_chat))
     query = query.outerjoin(Texts, Messages.text_id == Texts.text_id)
     query = query.filter(ProfileDescription.profile_id == Messages.profile_id)
-
-    if inbox_filter or not receiver:
+    if inbox_filter:
         # show only inbox messages
-        query = query.filter(Messages.profile_id != sender)
+        query = query.filter(Messages.profile_id.notin_(find_account_query))
     elif outbox_filter:
         # show only inbox messages
-        query = query.filter(Messages.profile_id != receiver)
+        query = query.filter(Messages.profile_id.in_(find_account_query))
 
-    query = query.order_by(Messages.send_time)
+    # sorting
+    if descending:
+        query = query.order_by(desc(Messages.send_time))
+    else:
+        query = query.order_by(Messages.send_time)
+
+    # QUERY FOR ACCOUNTS
+    # query to show messages and texts
+    query_a = db_session.query(Messages.message_token)
+    query_a = query_a.filter(Messages.chat_id.in_(query_chat))
+    query_a = query_a.outerjoin(Texts, Messages.text_id == Texts.text_id)
+    query_a = query_a.filter(
+            ProfileDescription.profile_id == Messages.profile_id)
+    if inbox_filter:
+        # show only inbox messages
+        query_a = query_a.filter(
+                Messages.profile_id.notin_(find_account_query))
+    elif outbox_filter:
+        # show only inbox messages
+        query_a = query_a.filter(Messages.profile_id.in_(find_account_query))
+    query_a = query_a.order_by(Messages.send_time).subquery()
+    # final query to link messages with accounts
+    accounts = db_session.query(ProfileDescription.nickname,
+                                ProfileDescription.profile_id,
+                                Messages.message_token
+                                )
+    accounts = accounts. \
+        filter(ChatSessions.chat_id == Messages.chat_id). \
+        filter(ChatSessions.profile_id == Profiles.profile_id). \
+        filter(ProfileDescription.profile_id == Profiles.profile_id). \
+        filter(Profiles.profile_password != '')
+    accounts = accounts.join(
+            query_a,
+            Messages.message_token == query_a.c.message_token)
+
+    result_accounts = accounts.all()
     result = query.all()
     db_session.close()
-    return [{"profile_id": row[0],
-             "send_time": row[1],
-             "viewed": row[2],
-             "text": row[3],
-             "nickname": row[4],
-             "message_token": row[5]
-             } for row in result]
+    print(result)
+    print(result_accounts)
+    return [{"profile_id": result[i][0],
+             "send_time": result[i][1],
+             "viewed": result[i][2],
+             "text": result[i][3],
+             "nickname": result[i][4],
+             "message_token": result[i][5],
+             "account_nickname": result_accounts[i][0],
+             "account_id": result_accounts[i][1]
+             } for i in range(len(result))]
 
 
 def db_download_new_msg(observer_login: str,
@@ -764,7 +830,7 @@ def db_add_category_level(category_name: str,
             db_session.add(new_row)
             db_session.commit()
             logger.info(
-                f'Added CategoryLevel: {category_name} with level: {row}')
+                    f'Added CategoryLevel: {category_name} with level: {row}')
         db_session.close()
 
 
@@ -1140,7 +1206,6 @@ def send_messages(profile_id_list: str,
                             break
                 page += 1
     return True
-
 
 """print(db_load_all_profiles_description())"""
 
