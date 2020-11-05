@@ -74,11 +74,6 @@
                                     ({{ dialogue|length }})
                                 </a></li>
                                 <li style="padding-top: 5px;"><a
-                                        href="{{ url_for('mail') }}" style="color:
-                                        #1DC7EA;"><i class="fa
-                                        fa-inbox"></i> Новые ({{ new_count }})
-                                </a></li>
-                                <li style="padding-top: 5px;"><a
                                         href="{{ url_for('mail_star') }}"
                                         style="color: #9A9A9A;"><i
                                         class="fa fa-star"></i> Помеченные</a>
@@ -117,13 +112,7 @@
                                 <thead>
                                 <tr>
                                     <th data-field="num">№</th>
-                                    <th data-field="select"
-                                        data-sortable="false"><input
-                                            type="checkbox" id="checkall"
-                                            class="checkbox"
-                                            style="margin-left: auto; margin-right: auto;"/>
-                                    </th>
-                                    <th data-field="viewed">Просмотрено</th>
+                                    <th data-field="account">Аккаунт</th>
                                     <th data-field="sender">Отправитель</th>
                                     <th data-field="preview">Превью сообщения
                                     </th>
@@ -141,22 +130,8 @@
                                             <input name="csrf_token"
                                                    type="hidden"
                                                    value="{{ csrf_token() }}"/>
-                                            <td align="center"><input
-                                                    value="{{ dialogue[i]['message_token'] }}"
-                                                    type="checkbox"
-                                                    class="checkbox"
-                                                    name="mycheckbox"></td>
-                                            <td align="center">
-
-                                                <input type="checkbox"
-                                                       class="checkbox"
-                                                        {% if dialogue[i]['viewed'] %}
-                                                       checked
-                                                        {% endif %}
-                                                       disabled>
-                                            </td>
+                                            <td aliign="center">Имя аккаунта</td>
                                             <td align="center">{{ dialogue[i]['nickname'] }}</td>
-
                                             <td>
                                                 <a href="{{ url_for('dialogue_profile',
                                                         sender=sender,
@@ -182,8 +157,7 @@
                                 <tfoot>
                                 <tr>
                                     <th>№</th>
-                                    <th>Выбор</th>
-                                    <th>Просмотрено</th>
+                                    <th>Аккаунт</th>
                                     <th>Отправитель</th>
                                     <th>Превью сообщения</th>
                                     <th>Время</th>
