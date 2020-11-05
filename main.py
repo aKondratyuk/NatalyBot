@@ -549,6 +549,12 @@ def dialogue_profile(sender, receiver):
                            receiver_availability=receiver_availability)
 
 
+@app.route('/mail/templates', methods=['GET', 'POST'])
+@login_required
+def message_templates():
+    return render_template('message_templates.html')
+
+
 @app.route('/messages', methods=['GET', 'POST'])
 @login_required
 def messages():

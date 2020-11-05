@@ -38,33 +38,120 @@
     </div>
 {% endblock %}
 {% block content %}
+<style>
+    span.blue {
+      background: #5178D0;
+      border-radius: 40px;
+      -moz-border-radius: 0.8em;
+      -webkit-border-radius: 0.8em;
+      color: #ffffff;
+      display: inline-block;
+      font-weight: bold;
+      line-height: 40px;
+      text-align: center;
+      width: 40px;
+    }
+    .template_header {
+      border: 2px solid #ffffff;
+      background-color: #a748cac9;
+      border-radius: 5px;
+      padding: 10px;
+      margin-bottom: 40px;
+      width: 100%;
+     }
+</style>
 <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
     <div class="content">
         <div class="container-fluid">
             <div class="container mb-3 mt-3">
                 <div class="row">
-                    <div id="toolbar">
+                <div class="template_header">
+                    <h3 style="color: #ffffff">
                         <button type="button"
-                                id="add"
+                            id="add"
+                            data-toggle="modal"
+                            data-target="#FileModal"
+                            style="margin-right: 25px;"
+                            class="btn btn-fill btn-warning">
+                            <i class="fa fa-plus-circle"></i>Добавить
+                        </button>
+                        Шаблонов загружено: 1 из 15
+                    </h3>
+                </div>
+                    <div id="toolbar_1">
+                        <span class="blue" style="border-radius: 40px;">1</span>
+                        <button type="button"
+                                id="edit_1"
                                 data-toggle="modal"
                                 data-target="#UserModal"
                                 class="btn btn-fill btn-success">
                             Редактировать
                         </button>
                         <button type="button"
-                                id="scenario"
+                                id="scenario_1"
                                 data-toggle="modal"
                                 data-target="#UserModal"
-                                class="btn btn-fill btn-primary">Будет
-                            отправлено: 05.11.2020 14:30:00
+                                class="btn btn-fill btn-danger">Удалить
                         </button>
-                        <textarea class="form-control"
-                                  disabled
-                                  style="margin-top: 20px;">Поле с исходным текстом шаблонного пиьсма</textarea>
                     </div>
+
+                    <textarea class="form-control"
+                              id="text_1"
+                              disabled
+                              style="margin-top: 20px; margin-bottom: 40px;">Поле с исходным текстом шаблонного пиьсма</textarea>
+                    <div id="toolbar_2">
+                        <span class="blue" style="border-radius: 40px;">2</span>
+                        <button type="button"
+                                id="edit_2"
+                                data-toggle="modal"
+                                data-target="#UserModal"
+                                class="btn btn-fill btn-success">
+                            Редактировать
+                        </button>
+                        <button type="button"
+                                id="scenario_2"
+                                data-toggle="modal"
+                                data-target="#UserModal"
+                                class="btn btn-fill btn-danger">Удалить
+                        </button>
+                    </div>
+                    <textarea class="form-control"
+                              id="text_2"
+                              disabled
+                              style="margin-top: 20px;">Поле с исходным текстом шаблонного пиьсма</textarea>
+
                 </div>
             </div>
         </div>
+    </div>
+    <div class="modal fade" id="FileModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Присвойте номер шаблона и загрузите его</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true" style="position: fixed; margin-top: -35px; margin-left: 5px; color: #FF4A55;">&times;</span>
+            </button>
+          </div>
+            <form action="{{ url_for('message_templates') }}" method="post">
+          <div class="modal-body">
+              <div class="form-group">
+                <label for="number" class="col-form-label">Номер шаблонного пиьсма:</label>
+                  <input name="csrf_token" type="hidden" value="{{ csrf_token() }}"/>
+                <input type="number" class="form-control" min="1" name="number" id="number">
+              </div>
+               <div class="form-group">
+                <label for="file" class="col-form-label">Загрузить:</label>
+                    <input type="file" class="form-control" id="file" name="file">
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-fill btn-danger" data-dismiss="modal">Закрыть</button>
+            <button type="submit" class="btn btn-fill btn-primary">Отправить</button>
+          </div>
+            </form>
+        </div>
+      </div>
     </div>
 {% endblock %}
 {% block scripts %}
