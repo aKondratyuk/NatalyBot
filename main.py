@@ -548,6 +548,19 @@ def dialogue_profile(sender, receiver):
 @app.route('/mail/templates', methods=['GET', 'POST'])
 @login_required
 def message_templates():
+    if request.method == "POST":
+        # Добавить проверку на расширение файла
+        # Количество знаков в тексте не должно превышать 1500 символов
+        # Полученнй текст занести в базу данных в таблицу шаблонов
+        # Если получаемый номер шаблона совпадает уже с существующим, то переписать файл заново
+        template_number = request.form.get("number")
+        print(request.form.get("number"))
+        file = request.files['file']
+        contents = file.read().decode('UTF-8')
+        # Может пригодится если нужно будет сохранять файлы на сервере
+        #file.save(os.path.join('static/images', file.filename))
+        return redirect(url_for('message_templates'))
+
     return render_template('message_templates.html')
 
 
