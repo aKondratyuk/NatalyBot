@@ -75,7 +75,7 @@
                             class="btn btn-fill btn-warning">
                             <i class="fa fa-plus-circle"></i>Добавить
                         </button>
-                        Шаблонов загружено: 1 из 15
+                        Шаблонов загружено: 2 из 15
                     </h3>
                 </div>
                     <div id="toolbar_1">
@@ -133,16 +133,17 @@
               <span aria-hidden="true" style="position: fixed; margin-top: -35px; margin-left: 5px; color: #FF4A55;">&times;</span>
             </button>
           </div>
-            <form action="{{ url_for('message_templates') }}" method="post">
+            <form action="{{ url_for('message_templates') }}" method="post" enctype="multipart/form-data">
           <div class="modal-body">
               <div class="form-group">
                 <label for="number" class="col-form-label">Номер шаблонного пиьсма:</label>
                   <input name="csrf_token" type="hidden" value="{{ csrf_token() }}"/>
-                <input type="number" class="form-control" min="1" name="number" id="number">
+                <input type="number" class="form-control" min="1" name="number" id="number" required>
               </div>
                <div class="form-group">
                 <label for="file" class="col-form-label">Загрузить:</label>
-                    <input type="file" class="form-control" id="file" name="file">
+                   <input name="csrf_token" type="hidden" value="{{ csrf_token() }}"/>
+                    <input type="file" class="form-control" id="file" name="file" required>
               </div>
           </div>
           <div class="modal-footer">
