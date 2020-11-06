@@ -3,7 +3,6 @@
 import logging
 import os
 from logging import Logger
-from multiprocessing import Process
 from urllib.parse import urljoin, urlparse
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, \
@@ -15,9 +14,9 @@ from flask_login import LoginManager, login_required, \
 from flask_wtf.csrf import CSRFProtect
 
 from authentication import find_user
-from background_worker import worker_msg_updater
 from control_panel import *
-from db_models import Logs, Profiles, SQLAlchemyHandler, Users, Visibility
+from db_models import Logs, Profiles, SQLAlchemyHandler, Tagging, Users, \
+    Visibility
 from email_service import send_email_instruction
 
 # Creates an app and checks if its the main or imported
@@ -356,7 +355,7 @@ def access():
         db_session = Session()
         user_profiles = db_session.query(Visibility.profile_id)
         user_profiles = user_profiles.filter(Visibility.login == user)
-        user_profiles = user_profiles.subquery()
+        user_profiles = user_profiles
         new_profiles = db_get_rows([
                 Profiles.profile_id,
                 ProfileDescription.name,
@@ -364,10 +363,10 @@ def access():
                 ],
                 Profiles.profile_id.notin_(user_profiles),
                 Profiles.profile_id == ProfileDescription.profile_id,
-                Profiles.available == 1,
-                Profiles.profile_id == Visibility.profile_id)
+                Profiles.available)
         profiles = new_profiles
         db_session.close()
+        print(user_profiles)
     else:
         profiles = []
     available_profiles = None
@@ -552,20 +551,150 @@ def dialogue_profile(sender, receiver):
 @app.route('/mail/templates', methods=['GET', 'POST'])
 @login_required
 def message_templates():
+    profile_id = '1000868043'
+
+    if profile_id:
+        templates = db_get_rows([
+                Texts.text_id,
+                Texts.text],
+                Texts.text_id == MessageTemplates.text_id,
+                Profiles.profile_id == MessageTemplates.profile_id,
+                Profiles.profile_password,
+                Profiles.profile_id == profile_id,
+                Visibility.profile_id == profile_id,
+                Visibility.login == current_user.login)
+    else:
+        templates = []
+    print(templates)
     if request.method == "POST":
         # Добавить проверку на расширение файла
         # Количество знаков в тексте не должно превышать 1500 символов
         # Полученнй текст занести в базу данных в таблицу шаблонов
-        # Если получаемый номер шаблона совпадает уже с существующим, то переписать файл заново
+        # Если получаемый номер шаблона совпадает уже с существующим,
+        # то переписать файл заново
         template_number = request.form.get("number")
         print(request.form.get("number"))
         file = request.files['file']
         contents = file.read().decode('UTF-8')
+        text = contents
+
         # Может пригодится если нужно будет сохранять файлы на сервере
-        #file.save(os.path.join('static/images', file.filename))
+        # file.save(os.path.join('static/images', file.filename))
+
+        print('text: ', text)
+        logger.info(f'User {current_user.login} load new template')
+        # If text number already exists
+        if db_duplicate_check([
+                MessageTemplates
+                ],
+                MessageTemplates.text_number == template_number,
+                MessageTemplates.profile_id == profile_id):
+            #
+            # UPDATE SECTION
+            #
+            text_id = db_get_rows([
+                    MessageTemplates.text_id
+                    ],
+                    MessageTemplates.text_number == template_number,
+                    MessageTemplates.profile_id == profile_id)
+
+            update_error = db_template_update(text_id=text_id,
+                                              text=text)
+            logger.info(f'User {current_user.login} updated template'
+                        f'with text_id: {text_id}')
+            if not update_error:
+                return render_template('message_templates.html',
+                                       error='Не удалось обновить шаблон')
+            #
+            # END UPDATE SECTION
+            #
+        create_error = True
+        if not create_error:
+            return render_template('message_templates.html',
+                                   error='Не удалось создать шаблон')
+        #
+        # CREATE SECTION
+        #
+        logger.info(f'User {current_user.login} start load template')
+        text_id = uuid4().bytes
+        db_session = Session()
+        text_row = Texts(text_id=text_id,
+                         text=text)
+        text_to_profile_row = MessageTemplates(text_id=text_id,
+                                               profile_id=profile_id,
+                                               text_number=template_number)
+        tagging_row = Tagging(text_id=text_id,
+                              tag='template')
+        print('start DB')
+        # add text to DB
+        print(db_session.add(text_row))
+        print(db_session.commit())
+
+        # add text assign to profile to DB
+        print(db_session.add(text_to_profile_row))
+        print(db_session.commit())
+        # add tagging to text in DB
+        print(db_session.add(tagging_row))
+        db_session.commit()
+        db_session.close()
+        logger.info(f'User {current_user.login} ended load template'
+                    f'with template_number: {template_number} and'
+                    f' text_id: {text_id}')
+        #
+        # END CREATE SECTION
+        #
+
         return redirect(url_for('message_templates'))
 
-    return render_template('message_templates.html')
+    #
+    # UPDATE SECTION
+    #
+    update = False
+    text = ''
+    text_id = ''
+    if update:
+        update_error = db_template_update(text_id=text_id,
+                                          text=text)
+        if not update_error:
+            return render_template('message_templates.html',
+                                   error='Не удалось обновить шаблон')
+    #
+    # END UPDATE SECTION
+    #
+
+    #
+    # DELETE SECTION
+    #
+    delete = False
+    text_id = ''
+    if delete:
+        delete_templates_count = db_delete_rows([
+                MessageTemplates
+                ],
+                MessageTemplates.text_id == text_id)
+        text_in_msg = db_duplicate_check([Messages],
+                                         Messages.text_id == text_id)
+        if not text_in_msg:
+            deleted_tags = db_delete_rows([
+                    Tagging
+                    ],
+                    Tagging.text_id == text_id)
+            deleted_texts = db_delete_rows([
+                    Texts
+                    ],
+                    Texts.text_id == text_id)
+            if deleted_texts == 0:
+                return render_template('message_templates.html',
+                                       error='Текст уже удален')
+
+        if not update_error:
+            return render_template('message_templates.html',
+                                   error='Не удалось обновить шаблон')
+    #
+    # END DELETE SECTION
+    #
+    return render_template('message_templates.html',
+                           templates=templates)
 
 
 @app.route('/messages', methods=['GET', 'POST'])
@@ -595,8 +724,8 @@ def logs():
 
 
 if __name__ == "__main__":
-    t1 = Process(target=worker_msg_updater)
-    t1.start()
-    workers_number += 1
+    # t1 = Process(target=worker_msg_updater)
+    # t1.start()
+    # workers_number += 1
     # Run the app until stopped
     app.run()

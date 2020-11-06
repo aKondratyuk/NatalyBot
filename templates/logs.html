@@ -10,7 +10,6 @@
                                style="width: 100%">
                             <thead>
                             <tr>
-                                <th data-field="log_id">Log ID</th>
                                 <th data-field="login">Login
                                 <th data-field="category">Category</th>
                                 <th data-field="message">Message</th>
@@ -22,9 +21,6 @@
                             {% if logs %}
                                 {% for i in range(logs|length) %}
                                     <tr>
-                                        <td align="center">
-                                            {{ logs[i]['log_id'] }}
-                                        </td>
                                         <td align="center">
                                             {{ logs[i]['login'] }}
                                         </td>
@@ -46,7 +42,6 @@
                             </tbody>
                             <tfoot>
                             <tr>
-                                <th>Log ID</th>
                                 <th>Login
                                 <th>Category</th>
                                 <th>Message</th>

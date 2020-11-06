@@ -686,6 +686,21 @@ def db_delete_rows(tables: list,
     return rows
 
 
+def db_template_update(text_id: bytes,
+                       text: str) -> bool:
+    if not db_duplicate_check([Texts],
+                              Texts.text_id == text_id):
+        return False
+    db_session = Session()
+    update_q = update(Texts).where(
+            Texts.text_id == text_id). \
+        values(text=text)
+    db_session.execute(update_q)
+    db_session.commit()
+    db_session.close()
+    return True
+
+
 def db_delete_user(user_login: str) -> bool:
     """Delete user by login in database,
     changes user role to 'deleted',

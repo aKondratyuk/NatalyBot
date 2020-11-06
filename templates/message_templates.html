@@ -65,72 +65,59 @@
         <div class="container-fluid">
             <div class="container mb-3 mt-3">
                 <div class="row">
-                <div class="template_header">
-                    <h3 style="color: #ffffff">
-                        <button type="button"
-                            id="add"
-                            data-toggle="modal"
-                            data-target="#FileModal"
-                            style="margin-right: 25px;"
-                            class="btn btn-fill btn-warning">
-                            <i class="fa fa-plus-circle"></i>Добавить
-                        </button>
-                        Шаблонов загружено: 2 из 15
-                    </h3>
-                </div>
-                    <div id="toolbar_1">
-                        <span class="blue" style="border-radius: 40px;">1</span>
-                        <button type="button"
-                                id="edit_1"
-                                data-toggle="modal"
-                                data-target="#UserModal"
-                                class="btn btn-fill btn-success">
-                            Редактировать
-                        </button>
-                        <button type="button"
-                                id="scenario_1"
-                                data-toggle="modal"
-                                data-target="#UserModal"
-                                class="btn btn-fill btn-danger">Удалить
-                        </button>
+                    <div class="template_header">
+                        <h3 style="color: #ffffff">
+                            <button type="button"
+                                    id="add"
+                                    data-toggle="modal"
+                                    data-target="#FileModal"
+                                    style="margin-right: 25px;"
+                                    class="btn btn-fill btn-warning">
+                                <i class="fa fa-plus-circle"></i>Добавить
+                            </button>
+                            Шаблонов загружено: {{ templates|length }} из 15
+                        </h3>
                     </div>
-
-                    <textarea class="form-control"
-                              id="text_1"
-                              disabled
-                              style="margin-top: 20px; margin-bottom: 40px;">Поле с исходным текстом шаблонного пиьсма</textarea>
-                    <div id="toolbar_2">
-                        <span class="blue" style="border-radius: 40px;">2</span>
-                        <button type="button"
-                                id="edit_2"
-                                data-toggle="modal"
-                                data-target="#UserModal"
-                                class="btn btn-fill btn-success">
-                            Редактировать
-                        </button>
-                        <button type="button"
-                                id="scenario_2"
-                                data-toggle="modal"
-                                data-target="#UserModal"
-                                class="btn btn-fill btn-danger">Удалить
-                        </button>
-                    </div>
-                    <textarea class="form-control"
-                              id="text_2"
-                              disabled
-                              style="margin-top: 20px;">Поле с исходным текстом шаблонного пиьсма</textarea>
-
+                    {% for i in range(template|length) %}
+                        <div id="toolbar_{{ i }}">
+                        <span class="blue" style="border-radius: 40px;">
+                            {{ i }}</span>
+                            <button type="button"
+                                    id="edit_1"
+                                    data-toggle="modal"
+                                    data-target="#UserModal"
+                                    class="btn btn-fill btn-success">
+                                Редактировать
+                            </button>
+                            <button type="button"
+                                    id="scenario_1"
+                                    data-toggle="modal"
+                                    data-target="#UserModal"
+                                    class="btn btn-fill btn-danger">Удалить
+                            </button>
+                        </div>
+                        <textarea class="form-control"
+                                  id="{{ templates[i][0] }}"
+                                  disabled
+                                  style="margin-top: 20px;
+                              margin-bottom: 40px">
+                        {{ templates[i][1] }}
+                    </textarea>
+                    {% endfor %}
                 </div>
             </div>
         </div>
-    </div>
-    <div class="modal fade" id="FileModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">Присвойте номер шаблона и загрузите его</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true" style="position: fixed; margin-top: -35px; margin-left: 5px; color: #FF4A55;">&times;</span>
+    <div class="modal fade" id="FileModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Присвойте
+                        номер шаблона и загрузите его</h5>
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close">
+                        <span aria-hidden="true"
+                              style="position: fixed; margin-top: -35px; margin-left: 5px; color: #FF4A55;">&times;</span>
             </button>
           </div>
             <form action="{{ url_for('message_templates') }}" method="post" enctype="multipart/form-data">
