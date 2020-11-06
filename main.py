@@ -697,6 +697,27 @@ def message_templates():
                            templates=templates)
 
 
+@app.route('/mail/templates/edit', methods=['POST'])
+@login_required
+def message_template_edit():
+    print(request.get_json(force=True))
+    return redirect(url_for('message_templates'))
+
+
+@app.route('/mail/templates/delete/<template_id>', methods=['POST'])
+@login_required
+def message_template_delete(template_id):
+    print("Delete", template_id)
+    return redirect(url_for('message_templates'))
+
+
+@app.route('/mail/templates/<account>', methods=['GET', 'POST'])
+@login_required
+def message_template_account(account):
+    print(account)
+    return render_template("message_templates.html")
+
+
 @app.route('/messages', methods=['GET', 'POST'])
 @login_required
 def messages():
