@@ -65,61 +65,80 @@
         <div class="container-fluid">
             <div class="container mb-3 mt-3">
                 <div class="row">
-                <div class="template_header">
-                    <h3 style="color: #ffffff">
-                        <button type="button"
-                            id="add"
-                            data-toggle="modal"
-                            data-target="#FileModal"
-                            style="margin-right: 25px;"
-                            class="btn btn-fill btn-warning">
-                            <i class="fa fa-plus-circle"></i>Добавить
-                        </button>
-                        Шаблонов загружено: 2 из 15
-                    </h3>
-                </div>
-                    <div id="toolbar_1">
-                        <span class="blue" style="border-radius: 40px;">1</span>
-                        <button type="button"
-                                id="edit_1"
+                    <div class="template_header">
+                    <form action="/mail/templates" method="get">
+                        <div class="form-group">
+                            <label style="color: #ffffff" for="sender_id">Выбрерите
+                                профиль для
+                                просмотра шаблонов</label>
+                            <select class="form-control"
+                                    id="sender_id"
+                                    name="sender_id"
+                                    onchange="window.location='/mail/templates/'+this.value;"
+                                    required>
+                                <option disabled selected
+                                        value="disabled">
+                                    Доступные профили
+                                </option>
+                                <option>
+                                    Magnificent_Julia_
+                                </option>
+                                {% if senders %}
+                                    {% for profile in senders %}
+                                        <option value="{{ profile[0] }}"
+                                                {% if
+                                                selected_sender == profile[0] %}
+                                                selected
+                                                {% endif %}>
+                                            {{ profile[0] }}
+                                            {{ profile[1] }}
+                                            {{ profile[2] }}
+                                        </option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                    </form>
+                    {% set account_selected = True %}
+                    {% if account_selected %}
+                        <h3 style="color: #ffffff">
+                            <button type="button"
+                                id="add"
                                 data-toggle="modal"
-                                data-target="#UserModal"
-                                class="btn btn-fill btn-success">
-                            Редактировать
-                        </button>
-                        <button type="button"
-                                id="scenario_1"
-                                data-toggle="modal"
-                                data-target="#UserModal"
-                                class="btn btn-fill btn-danger">Удалить
-                        </button>
+                                data-target="#FileModal"
+                                style="margin-right: 25px;"
+                                class="btn btn-fill btn-warning">
+                                <i class="fa fa-plus-circle"></i>Добавить
+                            </button>
+                            Шаблонов загружено: 2
+                        </h3>
+                    {% endif %}
                     </div>
+                    <div class="template_header" style="color: #000000; background-color: #f1f1f1; text-align: center;">
+                        <h3>Вы просматриваете шаблоны Magnificent_Julia_</h3>
+                    </div>
+                    {% if account_selected %}
+                    <form action="/mail/templates/delete/text_1", method="post">
+                        <div id="toolbar_1">
+                            <span class="blue" style="border-radius: 40px;">1</span>
+                            <button type="button"
+                                    value="text_1"
+                                    id="edit_1"
+                                    onclick="Edit(value, id)"
+                                    class="btn btn-fill btn-success">Редактировать</button>
+                                <input name="csrf_token" type="hidden" value="{{ csrf_token() }}"/>
+                                <button type="submit"
+                                        value="text_1"
+                                        class="btn btn-fill btn-danger">Удалить
+                                </button>
+                        </div>
+                    </form>
 
                     <textarea class="form-control"
                               id="text_1"
                               disabled
                               style="margin-top: 20px; margin-bottom: 40px;">Поле с исходным текстом шаблонного пиьсма</textarea>
-                    <div id="toolbar_2">
-                        <span class="blue" style="border-radius: 40px;">2</span>
-                        <button type="button"
-                                id="edit_2"
-                                data-toggle="modal"
-                                data-target="#UserModal"
-                                class="btn btn-fill btn-success">
-                            Редактировать
-                        </button>
-                        <button type="button"
-                                id="scenario_2"
-                                data-toggle="modal"
-                                data-target="#UserModal"
-                                class="btn btn-fill btn-danger">Удалить
-                        </button>
-                    </div>
-                    <textarea class="form-control"
-                              id="text_2"
-                              disabled
-                              style="margin-top: 20px;">Поле с исходным текстом шаблонного пиьсма</textarea>
-
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -183,4 +202,41 @@
     <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
     <script src="https://unpkg.com/bootstrap-table@1.18.0/dist/bootstrap-table.min.js"></script>
     <script src="{{ url_for('static', filename='js/demo.js') }}"></script>
+    <script>
+        var csrftoken = $('meta[name=csrf-token]').attr('content')
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                }
+            }
+        })
+    </script>
+    <script>
+        function Edit(textarea_id, button_id) {
+            console.log(textarea_id, button_id)
+            const textarea = document.getElementById(textarea_id);
+			textarea.removeAttribute("disabled");
+			textarea.focus()
+            const button = document.getElementById(button_id);
+			console.log(button.innerHTML, button.innerText)
+			if (button.innerText === "Редактировать")
+			{
+			    button.innerText = "Сохранить";
+            }
+			else {
+			    button.innerText = "Редактировать";
+			    textarea.setAttribute("disabled", "true");
+                const text = textarea.value;
+                $.ajax({
+                    url : "{{ url_for('message_template_edit') }}",
+                    type : 'POST',
+                    contentType: "application/json",
+                    data : JSON.stringify({'id': button_id, 'text': text})
+                });
+            }
+
+        }
+    </script>
 {% endblock %}
