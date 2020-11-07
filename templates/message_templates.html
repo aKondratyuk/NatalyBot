@@ -56,122 +56,153 @@
       background-color: #a748cac9;
       border-radius: 5px;
       padding: 10px;
-      margin-bottom: 40px;
-      width: 100%;
-     }
+        margin-bottom: 40px;
+        width: 100%;
+    }
 </style>
-<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"
+          rel="stylesheet">
     <div class="content">
         <div class="container-fluid">
             <div class="container mb-3 mt-3">
                 <div class="row">
                     <div class="template_header">
-                    <form action="/mail/templates" method="get">
-                        <div class="form-group">
-                            <label style="color: #ffffff" for="sender_id">Выбрерите
-                                профиль для
-                                просмотра шаблонов</label>
-                            <select class="form-control"
-                                    id="sender_id"
-                                    name="sender_id"
-                                    onchange="window.location='/mail/templates/'+this.value;"
-                                    required>
-                                <option disabled selected
-                                        value="disabled">
-                                    Доступные профили
-                                </option>
-                                <option>
-                                    Magnificent_Julia_
-                                </option>
-                                {% if senders %}
-                                    {% for profile in senders %}
-                                        <option value="{{ profile[0] }}"
-                                                {% if
-                                                selected_sender == profile[0] %}
-                                                selected
-                                                {% endif %}>
-                                            {{ profile[0] }}
-                                            {{ profile[1] }}
-                                            {{ profile[2] }}
-                                        </option>
-                                    {% endfor %}
+                        <form action="/mail/templates"
+                              id="account_id_form"
+                              name="account_id_form"
+                              method="post">
+                            <input name="csrf_token" type="hidden"
+                                   value="{{ csrf_token() }}"/>
+                            <div class="form-group">
+                                <label style="color: #ffffff" for="sender_id">Выбрерите
+                                    профиль для
+                                    просмотра шаблонов</label>
+                                <select class="form-control"
+                                        id="account_id"
+                                        name="account_id"
+                                        onchange="form.submit()"
+                                        required>
+                                    <option disabled selected
+                                            value="disabled">
+                                        Доступные профили
+                                    </option>
+                                    {% if accounts %}
+                                        {% for profile in accounts %}
+                                            <option value="{{ profile[0] }}"
+                                                    {% if
+                                                selected_account == profile[0] %}
+                                                    selected
+                                                    {% endif %}>
+                                                {{ profile[0] }}
+                                                {{ profile[1] }}
+                                                {{ profile[2] }}
+                                            </option>
+                                        {% endfor %}
                                 {% endif %}
                             </select>
                         </div>
                     </form>
-                    {% set account_selected = True %}
-                    {% if account_selected %}
-                        <h3 style="color: #ffffff">
-                            <button type="button"
-                                id="add"
-                                data-toggle="modal"
-                                data-target="#FileModal"
-                                style="margin-right: 25px;"
-                                class="btn btn-fill btn-warning">
-                                <i class="fa fa-plus-circle"></i>Добавить
-                            </button>
-                            Шаблонов загружено: 2
-                        </h3>
-                    {% endif %}
+                        {% if selected_account %}
+                            <h3 style="color: #ffffff">
+                                <button type="button"
+                                        id="add"
+                                        data-toggle="modal"
+                                        data-target="#FileModal"
+                                        style="margin-right: 25px;"
+                                        class="btn btn-fill btn-warning">
+                                    <i class="fa fa-plus-circle"></i>Добавить
+                                </button>
+                                Шаблонов загружено: {{ templates|length }}
+                                <div id="template_count" hidden></div>
+                            </h3>
+                        {% endif %}
                     </div>
-                    <div class="template_header" style="color: #000000; background-color: #f1f1f1; text-align: center;">
-                        <h3>Вы просматриваете шаблоны Magnificent_Julia_</h3>
+                    <div class="template_header"
+                         style="color: #000000; background-color: #f1f1f1; text-align: center;">
+                        <h3>Вы просматриваете
+                            шаблоны {{ selected_account_nickname }}</h3>
                     </div>
-                    {% if account_selected %}
-                    <form action="/mail/templates/delete/text_1", method="post">
-                        <div id="toolbar_1">
-                            <span class="blue" style="border-radius: 40px;">1</span>
-                            <button type="button"
-                                    value="text_1"
-                                    id="edit_1"
-                                    onclick="Edit(value, id)"
-                                    class="btn btn-fill btn-success">Редактировать</button>
-                                <input name="csrf_token" type="hidden" value="{{ csrf_token() }}"/>
-                                <button type="submit"
-                                        value="text_1"
+                    {% if selected_account %}
+                        {% for template in templates %}
+
+                            <div id="toolbar_{{ template[2] }}">
+                        <span class="blue" style="border-radius: 40px;">
+                            {{ template[2] }}
+                        </span>
+                                <button type="button"
+                                        value="{{ template[2] }}"
+                                        id="edit_{{ template[2] }}"
+                                        onclick="Edit('text_{{ template[2] }}',
+                                                id,
+                                                {{ template[2] }},
+                                                {{ selected_account }})"
+                                        class="btn btn-fill btn-success">
+                                    Редактировать
+                                </button>
+                                <input name="csrf_token" type="hidden"
+                                       value="{{ csrf_token() }}"/>
+                                <button type="button"
+                                        value="{{ template[2] }}"
+                                        onclick="Delete('toolbar_{{ template[2] }}',
+                                                'text_{{ template[2] }}',
+                                                {{ template[2] }})"
                                         class="btn btn-fill btn-danger">Удалить
                                 </button>
-                        </div>
-                    </form>
-
-                    <textarea class="form-control"
-                              id="text_1"
-                              disabled
-                              style="margin-top: 20px; margin-bottom: 40px;">Поле с исходным текстом шаблонного пиьсма</textarea>
+                            </div>
+                            <textarea class="form-control"
+                                      id="text_{{ template[2] }}"
+                                      disabled
+                                      style="margin-top: 20px; margin-bottom: 40px;">{{ template[1] }}</textarea>
+                        {% endfor %}
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
-    <div class="modal fade" id="FileModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">Присвойте номер шаблона и загрузите его</h5>
+    <div class="modal fade" id="FileModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Присвойте
+                        номер шаблона и загрузите его</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true" style="position: fixed; margin-top: -35px; margin-left: 5px; color: #FF4A55;">&times;</span>
             </button>
           </div>
-            <form action="{{ url_for('message_templates') }}" method="post" enctype="multipart/form-data">
-          <div class="modal-body">
-              <div class="form-group">
-                <label for="number" class="col-form-label">Номер шаблонного пиьсма:</label>
-                  <input name="csrf_token" type="hidden" value="{{ csrf_token() }}"/>
-                <input type="number" class="form-control" min="1" name="number" id="number" required>
-              </div>
-               <div class="form-group">
-                <label for="file" class="col-form-label">Загрузить:</label>
-                   <input name="csrf_token" type="hidden" value="{{ csrf_token() }}"/>
-                    <input type="file" class="form-control" id="file" name="file" required>
-              </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-fill btn-danger" data-dismiss="modal">Закрыть</button>
-            <button type="submit" class="btn btn-fill btn-primary">Отправить</button>
-          </div>
-            </form>
+                <form action="{{ url_for('message_templates') }}" method="post"
+                      enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="number" class="col-form-label">Номер
+                                шаблонного пиьсма:</label>
+                            <input name="csrf_token" type="hidden"
+                                   value="{{ csrf_token() }}"/>
+                            <input type="number" class="form-control" min="1"
+                                   name="number" id="number" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="file"
+                                   class="col-form-label">Загрузить:</label>
+                            <input name="csrf_token" type="hidden"
+                                   value="{{ csrf_token() }}"/>
+                            <input name="account_id" type="hidden"
+                                   value="{{ selected_account }}"/>
+                            <input type="file" class="form-control" id="file"
+                                   name="file" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-fill btn-danger"
+                                data-dismiss="modal">Закрыть
+                        </button>
+                        <button type="submit" class="btn btn-fill btn-primary">
+                            Отправить
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-      </div>
     </div>
 {% endblock %}
 {% block scripts %}
@@ -206,7 +237,7 @@
         var csrftoken = $('meta[name=csrf-token]').attr('content')
 
         $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
+            beforeSend: function (xhr, settings) {
                 if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
                     xhr.setRequestHeader("X-CSRFToken", csrftoken)
                 }
@@ -214,29 +245,47 @@
         })
     </script>
     <script>
-        function Edit(textarea_id, button_id) {
-            console.log(textarea_id, button_id)
-            const textarea = document.getElementById(textarea_id);
-			textarea.removeAttribute("disabled");
-			textarea.focus()
-            const button = document.getElementById(button_id);
-			console.log(button.innerHTML, button.innerText)
-			if (button.innerText === "Редактировать")
-			{
-			    button.innerText = "Сохранить";
-            }
+        var templates_num = {{ templates|length }}
+            function Edit(textarea_id, button_id, num, profile_id) {
+                console.log(textarea_id, button_id)
+                const textarea = document.getElementById(textarea_id);
+                textarea.removeAttribute("disabled");
+                textarea.focus()
+                const button = document.getElementById(button_id);
+                console.log(button.innerHTML, button.innerText)
+                if (button.innerText === "Редактировать") {
+                    button.innerText = "Сохранить";
+                }
 			else {
 			    button.innerText = "Редактировать";
 			    textarea.setAttribute("disabled", "true");
                 const text = textarea.value;
-                $.ajax({
-                    url : "{{ url_for('message_template_edit') }}",
-                    type : 'POST',
-                    contentType: "application/json",
-                    data : JSON.stringify({'id': button_id, 'text': text})
-                });
+                    $.ajax({
+                        url: "{{ url_for('message_template_edit') }}",
+                        type: 'POST',
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            'num': num, 'text': text,
+                            'profile_id': profile_id
+                        })
+                    });
+                }
+
             }
 
+        function Delete(div_id, textarea_id, num) {
+            let div = document.getElementById(div_id);
+            let textarea = document.getElementById(textarea_id);
+            let template_count = document.getElementById('template_count');
+            $.ajax({
+                url: "{{ url_for('message_template_delete') }}",
+                type: 'POST',
+                contentType: "application/json",
+                data: JSON.stringify({'num': num})
+            });
+            div.parentNode.removeChild(div)
+            textarea.parentNode.removeChild(textarea)
+            templates_num = templates_num - 1
         }
     </script>
 {% endblock %}

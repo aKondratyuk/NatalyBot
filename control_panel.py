@@ -688,7 +688,7 @@ def db_delete_rows(tables: list,
 
 def db_template_update(text_id: bytes,
                        text: str) -> bool:
-    if not db_duplicate_check([Texts],
+    if not db_duplicate_check([Texts.text_id],
                               Texts.text_id == text_id):
         return False
     db_session = Session()

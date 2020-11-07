@@ -551,28 +551,65 @@ def dialogue_profile(sender, receiver):
 @app.route('/mail/templates', methods=['GET', 'POST'])
 @login_required
 def message_templates():
-    profile_id = '1000868043'
-
-    if profile_id:
-        templates = db_get_rows([
-                Texts.text_id,
-                Texts.text],
-                Texts.text_id == MessageTemplates.text_id,
-                Profiles.profile_id == MessageTemplates.profile_id,
+    if current_user.privileges['PROFILES_VISIBILITY']:
+        # if user can view all profiles, we doesn't filter by access
+        accounts = db_get_rows([
+                Profiles.profile_id,
+                ProfileDescription.name,
+                ProfileDescription.nickname
+                ],
                 Profiles.profile_password,
-                Profiles.profile_id == profile_id,
-                Visibility.profile_id == profile_id,
-                Visibility.login == current_user.login)
+                Profiles.available == 1,
+                ProfileDescription.profile_id == Profiles.profile_id)
     else:
-        templates = []
-    print(templates)
+        accounts = db_get_rows([
+                Profiles.profile_id,
+                ProfileDescription.name,
+                ProfileDescription.nickname
+                ],
+                Profiles.profile_password,
+                Profiles.available == 1,
+                Visibility.login == current_user.login,
+                Visibility.profile_id == Profiles.profile_id,
+                ProfileDescription.profile_id == Profiles.profile_id)
+
     if request.method == "POST":
+        profile_id = request.form.get('account_id')
+        for account in accounts:
+            if account[0] == profile_id:
+                selected_account_nickname = account[2]
+                break
+        if profile_id:
+            templates = db_get_rows([
+                    Texts.text_id,
+                    Texts.text,
+                    MessageTemplates.text_number],
+                    Texts.text_id == MessageTemplates.text_id,
+                    Profiles.profile_id == MessageTemplates.profile_id,
+                    Profiles.profile_password,
+                    Profiles.profile_id == profile_id,
+                    Visibility.profile_id == profile_id,
+                    Visibility.login == current_user.login)
+        else:
+            templates = []
+        templates = sorted(templates,
+                           key=lambda x: x[2])
+        # If this is only accounts select form
+        if not request.files:
+            print(profile_id)
+            return render_template(
+                    'message_templates.html',
+                    templates=templates,
+                    accounts=accounts,
+                    selected_account=profile_id,
+                    selected_account_nickname=selected_account_nickname)
+
         # Добавить проверку на расширение файла
         # Количество знаков в тексте не должно превышать 1500 символов
         # Полученнй текст занести в базу данных в таблицу шаблонов
         # Если получаемый номер шаблона совпадает уже с существующим,
         # то переписать файл заново
-        template_number = request.form.get("number")
+        text_number = request.form.get("number")
         print(request.form.get("number"))
         file = request.files['file']
         contents = file.read().decode('UTF-8')
@@ -587,27 +624,28 @@ def message_templates():
         if db_duplicate_check([
                 MessageTemplates
                 ],
-                MessageTemplates.text_number == template_number,
+                MessageTemplates.text_number == text_number,
                 MessageTemplates.profile_id == profile_id):
             #
             # UPDATE SECTION
             #
-            text_id = db_get_rows([
-                    MessageTemplates.text_id
-                    ],
-                    MessageTemplates.text_number == template_number,
-                    MessageTemplates.profile_id == profile_id)
-
+            text_id = db_get_rows([MessageTemplates.text_id],
+                                  MessageTemplates.text_number == text_number)[
+                0][0]
             update_error = db_template_update(text_id=text_id,
                                               text=text)
-            logger.info(f'User {current_user.login} updated template'
-                        f'with text_id: {text_id}')
             if not update_error:
                 return render_template('message_templates.html',
                                        error='Не удалось обновить шаблон')
             #
             # END UPDATE SECTION
             #
+            return render_template(
+                    'message_templates.html',
+                    templates=templates,
+                    accounts=accounts,
+                    selected_account=profile_id,
+                    selected_account_nickname=selected_account_nickname)
         create_error = True
         if not create_error:
             return render_template('message_templates.html',
@@ -622,37 +660,74 @@ def message_templates():
                          text=text)
         text_to_profile_row = MessageTemplates(text_id=text_id,
                                                profile_id=profile_id,
-                                               text_number=template_number)
+                                               text_number=text_number)
         tagging_row = Tagging(text_id=text_id,
                               tag='template')
         print('start DB')
         # add text to DB
-        print(db_session.add(text_row))
-        print(db_session.commit())
+        db_session.add(text_row)
+        db_session.commit()
 
         # add text assign to profile to DB
-        print(db_session.add(text_to_profile_row))
-        print(db_session.commit())
-        # add tagging to text in DB
-        print(db_session.add(tagging_row))
+        db_session.add(text_to_profile_row)
         db_session.commit()
         db_session.close()
+        db_session = Session()
+        # add tagging to text in DB
+        db_session.add(tagging_row)
+        db_session.commit()
+        db_session.close()
+
         logger.info(f'User {current_user.login} ended load template'
-                    f'with template_number: {template_number} and'
+                    f'with template_number: {text_number} and'
                     f' text_id: {text_id}')
         #
         # END CREATE SECTION
         #
+        templates = db_get_rows([
+                Texts.text_id,
+                Texts.text,
+                MessageTemplates.text_number],
+                Texts.text_id == MessageTemplates.text_id,
+                Profiles.profile_id == MessageTemplates.profile_id,
+                Profiles.profile_password,
+                Profiles.profile_id == profile_id,
+                Visibility.profile_id == profile_id,
+                Visibility.login == current_user.login)
+        templates = sorted(templates,
+                           key=lambda x: x[2])
 
-        return redirect(url_for('message_templates'))
+        return render_template(
+                'message_templates.html',
+                templates=templates,
+                accounts=accounts,
+                selected_account=profile_id,
+                selected_account_nickname=selected_account_nickname)
 
+
+    return render_template('message_templates.html',
+                           accounts=accounts)
+
+
+@app.route('/mail/templates/edit', methods=['POST'])
+@login_required
+def message_template_edit():
+    info = request.get_json(force=True)
     #
     # UPDATE SECTION
     #
-    update = False
-    text = ''
-    text_id = ''
-    if update:
+    text = info['text']
+    profile_id = info['profile_id']
+    text_number = int(info['num'])
+    if db_duplicate_check([
+            MessageTemplates
+            ],
+            MessageTemplates.text_number == text_number,
+            MessageTemplates.profile_id == profile_id):
+        text_id = db_get_rows([MessageTemplates.text_id],
+                              MessageTemplates.text_number == text_number,
+                              MessageTemplates.text_number == text_number)[0][
+            0]
         update_error = db_template_update(text_id=text_id,
                                           text=text)
         if not update_error:
@@ -661,53 +736,47 @@ def message_templates():
     #
     # END UPDATE SECTION
     #
-
-    #
-    # DELETE SECTION
-    #
-    delete = False
-    text_id = ''
-    if delete:
-        delete_templates_count = db_delete_rows([
-                MessageTemplates
-                ],
-                MessageTemplates.text_id == text_id)
-        text_in_msg = db_duplicate_check([Messages],
-                                         Messages.text_id == text_id)
-        if not text_in_msg:
-            deleted_tags = db_delete_rows([
-                    Tagging
-                    ],
-                    Tagging.text_id == text_id)
-            deleted_texts = db_delete_rows([
-                    Texts
-                    ],
-                    Texts.text_id == text_id)
-            if deleted_texts == 0:
-                return render_template('message_templates.html',
-                                       error='Текст уже удален')
-
-        if not update_error:
-            return render_template('message_templates.html',
-                                   error='Не удалось обновить шаблон')
-    #
-    # END DELETE SECTION
-    #
-    return render_template('message_templates.html',
-                           templates=templates)
-
-
-@app.route('/mail/templates/edit', methods=['POST'])
-@login_required
-def message_template_edit():
-    print(request.get_json(force=True))
     return redirect(url_for('message_templates'))
 
 
-@app.route('/mail/templates/delete/<template_id>', methods=['POST'])
+@app.route('/mail/templates/delete', methods=['POST'])
 @login_required
-def message_template_delete(template_id):
-    print("Delete", template_id)
+def message_template_delete():
+    info = request.get_json(force=True)
+    text_number = int(info['num'])
+    print("Delete", text_number)
+    #
+    # DELETE SECTION
+    #
+    text_id = db_get_rows([MessageTemplates.text_id],
+                          MessageTemplates.text_number == text_number)
+    if len(text_id) != 0:
+        text_id = text_id[0][0]
+    else:
+        return render_template('message_templates.html',
+                               error='Текст уже удален')
+    delete_templates_count = db_delete_rows([
+            MessageTemplates
+            ],
+            MessageTemplates.text_id == text_id)
+    text_in_msg = db_duplicate_check([Messages],
+                                     Messages.text_id == text_id)
+    if not text_in_msg:
+        deleted_tags = db_delete_rows([
+                Tagging
+                ],
+                Tagging.text_id == text_id)
+        deleted_texts = db_delete_rows([
+                Texts
+                ],
+                Texts.text_id == text_id)
+        if deleted_texts == 0:
+            return render_template('message_templates.html',
+                                   error='Текст уже удален')
+
+    #
+    # END DELETE SECTION
+    #
     return redirect(url_for('message_templates'))
 
 
