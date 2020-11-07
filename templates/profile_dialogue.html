@@ -33,11 +33,14 @@
                                             </option>
                                             {% if senders %}
                                                 {% for profile in senders %}
-                                                    <option value="{{ profile['profile_id'] }}"
-                                                            {% if selected_sender == profile['profile_id'] %}
+                                                    <option value="{{ profile[0] }}"
+                                                            {% if
+                                                            selected_sender == profile[0] %}
                                                             selected
                                                             {% endif %}>
-                                                        {{ profile['profile_id'] }}
+                                                        {{ profile[0] }}
+                                                        {{ profile[1] }}
+                                                        {{ profile[2] }}
                                                     </option>
                                                 {% endfor %}
                                             {% endif %}
@@ -57,11 +60,14 @@
                                             </option>
                                             {% if receivers %}
                                                 {% for profile in receivers %}
-                                                    <option value="{{ profile['profile_id'] }}"
-                                                            {% if selected_receiver == profile['profile_id'] %}
+                                                    <option value="{{ profile[0] }}"
+                                                            {% if
+                                                            selected_receiver == profile[0] %}
                                                             selected
                                                             {% endif %}>
-                                                        {{ profile['profile_id'] }}
+                                                        {{ profile[0] }}
+                                                        {{ profile[1] }}
+                                                        {{ profile[2] }}
                                                     </option>
                                                 {% endfor %}
                                             {% endif %}
@@ -175,7 +181,6 @@
                         document.getElementById("srt").value = document.getElementById("profileselect").value;
                     }
                 </script>
-
             </div>
         </div>
     </div>

@@ -1,6 +1,7 @@
 # coding: utf8
 import requests
 
+from db_models import Tags
 from scraping import collect_info_from_profile, get_parsed_page, \
     get_profile_page, send_request
 
@@ -38,7 +39,7 @@ def profile_in_inbox(session, profile_id, inbox=True):
            new_messages_in_inbox_from_profile
 
 
-def first_letter_sent(session, profile_id):
+def first_letter_sent(session, profile_id) -> bool:
     """При нажатии на кнопку (отправить письмо), может перейти на страницу
     где написано
     You can write only 1 first letter. И данного профиля может не быть в
@@ -166,3 +167,62 @@ def login(profile_login, password):
         # неправильными
         return False
 
+
+def forbidden_profile(profile_id):
+    """Проверка на то, является ли профиль запрещенным (если отослать на
+    него письмо, то наш аккаунт заблочат)
+
+    Keyword arguments:
+    profile_id -- ID профиля которому будет отправлено сообщение
+    """
+    from control_panel import db_get_rows
+    # Собираем информацию о профиле
+    data = collect_info_from_profile(profile_id)
+    # Якорные слова которые обозначают профиль как ловушку
+    anchor_words = db_get_rows([Tags.tag],
+                               Tags.forbidden)
+    # ищем якоря в DESCRIPTION
+    for anchor in anchor_words:
+        if anchor[0] in data["Description"]:
+            return True
+
+    # Если нету, то False
+    return False
+
+
+def check_for_filter(session, profile_id):
+    from main import logger
+    try:
+        if profile_in_inbox(session, profile_id)[0]:
+            logger.error(f"Неудалось отправить сообщение "
+                         f"от profile_id: {profile_id} INBOX")
+            return "INBOX"
+        elif limit_out(session, profile_id):
+            logger.error(f"Неудалось отправить сообщение "
+                         f"от profile_id: {profile_id} "
+                         f"LIMIT OUT")
+            return "LIMIT OUT"
+        elif profile_deleted(profile_id):
+            logger.error(f"Неудалось отправить сообщение "
+                         f"от profile_id: {profile_id} "
+                         f"PROFILE DELETED")
+            return "PROFILE DELETED"
+        elif forbidden_profile(profile_id):
+            logger.error(f"Неудалось отправить сообщение "
+                         f"от profile_id: {profile_id} "
+                         f"FORBIDDEN")
+            return "FORBIDDEN"
+        elif first_letter_sent(session, profile_id):
+            logger.error(f"Неудалось отправить сообщение "
+                         f"от profile_id: {profile_id} "
+                         f"FIRST LETTER SENT")
+            return "FIRST LETTER SENT"
+        elif profile_country(profile_id):
+            logger.error(f"Неудалось отправить сообщение "
+                         f"от profile_id: {profile_id} "
+                         f"INVALID COUNTRY")
+            return "INVALID COUNTRY"
+    except Exception as ex:
+        print(ex)
+
+    return False
