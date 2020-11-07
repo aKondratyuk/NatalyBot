@@ -797,6 +797,16 @@ def message_template_account(account):
     return render_template("message_templates.html")
 
 
+@app.route('/mail/anchors', methods=['GET', 'POST'])
+@login_required
+def message_anchor():
+    if request.method == "POST":
+        key_name = request.form.get('key_name')
+        key_text = request.form.get('key_text')
+        print(key_name, key_text)
+    return render_template("anchor_templates.html")
+
+
 @app.route('/messages', methods=['GET', 'POST'])
 @login_required
 def messages():
