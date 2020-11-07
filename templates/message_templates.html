@@ -245,7 +245,6 @@
         })
     </script>
     <script>
-        var templates_num = {{ templates|length }}
             function Edit(textarea_id, button_id, num, profile_id) {
                 console.log(textarea_id, button_id)
                 const textarea = document.getElementById(textarea_id);
@@ -274,6 +273,7 @@
             }
 
         function Delete(div_id, textarea_id, num) {
+            const templates_num = document.getElementsByClassName('blue').length
             let div = document.getElementById(div_id);
             let textarea = document.getElementById(textarea_id);
             let template_count = document.getElementById('template_count');
@@ -285,9 +285,11 @@
             });
             div.parentNode.removeChild(div);
             textarea.parentNode.removeChild(textarea);
-            templates_num = templates_num - 1;
-            let template_number = document.getElementById('template_number');
-            template_number.innerText = "Шаблонов загружено " + templates_num
+            let old_templates_num = templates_num;
+            let new_templates_num = templates_num - 1;
+            let template_header = document.getElementById('template_number');
+            let templateHTML= template_header.innerHTML;
+            template_header.innerHTML = templateHTML.replace("Шаблонов загружено: " + old_templates_num, "Шаблонов загружено: " + new_templates_num);
         }
     </script>
 {% endblock %}
