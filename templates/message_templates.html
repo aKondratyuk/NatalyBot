@@ -103,7 +103,7 @@
                         </div>
                     </form>
                         {% if selected_account %}
-                            <h3 style="color: #ffffff">
+                            <h3 id="template_number" style="color: #ffffff">
                                 <button type="button"
                                         id="add"
                                         data-toggle="modal"
@@ -283,9 +283,11 @@
                 contentType: "application/json",
                 data: JSON.stringify({'num': num})
             });
-            div.parentNode.removeChild(div)
-            textarea.parentNode.removeChild(textarea)
-            templates_num = templates_num - 1
+            div.parentNode.removeChild(div);
+            textarea.parentNode.removeChild(textarea);
+            templates_num = templates_num - 1;
+            let template_number = document.getElementById('template_number');
+            template_number.innerText = "Шаблонов загружено " + templates_num
         }
     </script>
 {% endblock %}
