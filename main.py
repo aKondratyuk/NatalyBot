@@ -3,7 +3,7 @@
 import logging
 import os
 from logging import Logger
-from multiprocessing import Process
+from threading import Thread
 from urllib.parse import urljoin, urlparse
 from uuid import UUID
 
@@ -1020,7 +1020,7 @@ def logs():
 
 
 if __name__ == "__main__":
-    t1 = Process(target=worker_profile_and_msg_updater)
+    t1 = Thread(target=worker_profile_and_msg_updater)
     t1.start()
     workers_number += 1
     # Run the app until stopped
