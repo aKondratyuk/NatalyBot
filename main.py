@@ -3,6 +3,7 @@
 import logging
 import os
 from logging import Logger
+from multiprocessing import Process
 from urllib.parse import urljoin, urlparse
 from uuid import UUID
 
@@ -15,6 +16,7 @@ from flask_login import LoginManager, login_required, \
 from flask_wtf.csrf import CSRFProtect
 
 from authentication import find_user
+from background_worker import worker_profile_and_msg_updater
 from control_panel import *
 from db_models import Logs, MessageAnchors, Profiles, SQLAlchemyHandler, \
     Tagging, Tags, Users, Visibility
@@ -367,7 +369,6 @@ def access():
                 Profiles.available)
         profiles = new_profiles
         db_session.close()
-        print(user_profiles)
     else:
         profiles = []
     available_profiles = None
@@ -502,7 +503,8 @@ def mail_outbox():
 @app.route('/mail/star/<sender>', methods=['GET', 'POST'])
 @login_required
 def mail_star_it(sender):
-    print(current_user.login + " set star to message with sender name " + sender)
+    logger.info(current_user.login + " set star to message with sender name " +
+                sender)
 
     return render_template("mail.html")
 
@@ -596,10 +598,8 @@ def message_templates():
         templates = sorted(templates,
                            key=lambda x: x[2])
 
-        print(templates)
         # If this is only accounts select form
         if not request.files:
-            print(profile_id)
             return render_template(
                     'message_templates.html',
                     templates=templates,
@@ -613,7 +613,6 @@ def message_templates():
         # Если получаемый номер шаблона совпадает уже с существующим,
         # то переписать файл заново
         text_number = request.form.get("number")
-        print(request.form.get("number"))
         file = request.files['file']
         contents = file.read().decode('UTF-8')
         text = contents
@@ -621,10 +620,8 @@ def message_templates():
         # Может пригодится если нужно будет сохранять файлы на сервере
         # file.save(os.path.join('static/images', file.filename))
 
-        print('text: ', text)
         logger.info(f'User {current_user.login} load new template')
         # If text number already exists
-        print(templates)
         if db_duplicate_check([
 
                 MessageTemplates
@@ -655,7 +652,6 @@ def message_templates():
                     Profiles.profile_id == profile_id,
                     Visibility.profile_id == profile_id,
                     Visibility.login == current_user.login)
-            print(templates)
             return render_template(
                     'message_templates.html',
                     templates=templates,
@@ -679,7 +675,6 @@ def message_templates():
                                                text_number=text_number)
         tagging_row = Tagging(text_id=text_id,
                               tag='template')
-        print('start DB')
         # add text to DB
         db_session.add(text_row)
         db_session.commit()
@@ -760,7 +755,6 @@ def message_template_edit():
 def message_template_delete():
     info = request.get_json(force=True)
     text_number = int(info['num'])
-    print("Delete", text_number)
     #
     # DELETE SECTION
     #
@@ -799,7 +793,6 @@ def message_template_delete():
 @app.route('/mail/templates/<account>', methods=['GET', 'POST'])
 @login_required
 def message_template_account(account):
-    print(account)
     return render_template("message_templates.html")
 
 
@@ -855,7 +848,7 @@ def message_anchor():
         else:
             anchors = []
 
-        print(anchors)
+
         # If this is only accounts select form
         if not request.form.get('key_text'):
             return render_template(
@@ -971,9 +964,7 @@ def message_anchor_edit():
 @login_required
 def message_anchor_delete():
     info = request.get_json(force=True)
-    print(info['id'])
     text_id = UUID(info['id']).bytes
-    print("Delete", text_id)
     #
     # DELETE SECTION
     #
@@ -1029,8 +1020,8 @@ def logs():
 
 
 if __name__ == "__main__":
-    # t1 = Process(target=worker_msg_updater)
-    # t1.start()
-    # workers_number += 1
+    t1 = Process(target=worker_profile_and_msg_updater)
+    t1.start()
+    workers_number += 1
     # Run the app until stopped
     app.run()
