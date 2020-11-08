@@ -301,6 +301,7 @@ def db_chat_length_check(chat_id: bytes,
     return total_msg - len(messages.all())
 
 
+
 def dialog_page_upload(current_profile_session,
                        data: dict,
                        page: int,
@@ -532,8 +533,6 @@ def db_show_dialog(sender: str = None,
     result_accounts = accounts.all()
     result = query.all()
     db_session.close()
-    print(result)
-    print(result_accounts)
     return [{"profile_id": result[i][0],
              "send_time": result[i][1],
              "viewed": result[i][2],
@@ -1221,6 +1220,67 @@ def send_messages(profile_id_list: str,
                             break
                 page += 1
     return True
+
+
+def profile_dialogs_checker(observed_profile_id: str,
+                            observed_profile_password: str,
+                            max_page: int = None) -> bool:
+    from main import logger
+    current_profile_session, observed_profile_id = login(
+            profile_login=observed_profile_id,
+            password=observed_profile_password)
+
+    profiles = set()
+    page = 1
+    for inbox in [True, False]:
+        while True:
+            if inbox:
+                link = "https://www.natashaclub.com/inbox.php"
+            else:
+                link = "https://www.natashaclub.com/outbox.php"
+            response = send_request(
+                    session=current_profile_session, method="GET",
+                    link=link + f"?page={page}")
+            inbox_page = get_parsed_page(response)
+
+            messages = [tr for tr in
+                        inbox_page.find_all('tr', class_='table')]
+            messages = list(map(lambda x: [td for td in x.find_all('td')],
+                                messages))
+            messages = [col for col in messages if
+                        len(col) == 5 - int(not inbox)]
+            if len(messages) == 0:
+                break
+            for another_profile_id in messages:
+                another_profile_id = another_profile_id[2 - int(not inbox)] \
+                                         .a.attrs['href'][15:]
+                profiles.add(another_profile_id)
+            page += 1
+            if max_page:
+                if max_page <= page:
+                    break
+        page = 1
+
+    for profile_id in profiles:
+        logger.info(f'Start load dialog for profile_id: {profile_id}')
+        dialog_download(
+                observer_login=observed_profile_id,
+                observer_password=observed_profile_password,
+                sender_id=profile_id,
+                receiver_profile_id=profile_id)
+        dialog_download(
+                observer_login=observed_profile_id,
+                observer_password=observed_profile_password,
+                sender_id=observed_profile_id,
+                receiver_profile_id=profile_id)
+        # load description for profile
+        db_load_profile_description(profile_id)
+    return True
+
+
+"""print(profile_dialogs_checker(observed_profile_id='1000868043',
+                              observed_profile_password='SWEETY777',
+                              max_page=3))"""
 
 """print(db_load_all_profiles_description())"""
 
