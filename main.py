@@ -4,6 +4,7 @@ import logging
 import os
 from logging import Logger
 from urllib.parse import urljoin, urlparse
+from uuid import UUID
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, \
     url_for
@@ -15,8 +16,8 @@ from flask_wtf.csrf import CSRFProtect
 
 from authentication import find_user
 from control_panel import *
-from db_models import Logs, Profiles, SQLAlchemyHandler, Tagging, Users, \
-    Visibility
+from db_models import Logs, MessageAnchors, Profiles, SQLAlchemyHandler, \
+    Tagging, Tags, Users, Visibility
 from email_service import send_email_instruction
 
 # Creates an app and checks if its the main or imported
@@ -594,6 +595,8 @@ def message_templates():
             templates = []
         templates = sorted(templates,
                            key=lambda x: x[2])
+
+        print(templates)
         # If this is only accounts select form
         if not request.files:
             print(profile_id)
@@ -621,7 +624,9 @@ def message_templates():
         print('text: ', text)
         logger.info(f'User {current_user.login} load new template')
         # If text number already exists
+        print(templates)
         if db_duplicate_check([
+
                 MessageTemplates
                 ],
                 MessageTemplates.text_number == text_number,
@@ -632,8 +637,8 @@ def message_templates():
             text_id = db_get_rows([MessageTemplates.text_id],
                                   MessageTemplates.text_number == text_number)[
                 0][0]
-            update_error = db_template_update(text_id=text_id,
-                                              text=text)
+            update_error = db_text_update(text_id=text_id,
+                                          text=text)
             if not update_error:
                 return render_template('message_templates.html',
                                        error='Не удалось обновить шаблон')
@@ -650,6 +655,7 @@ def message_templates():
                     Profiles.profile_id == profile_id,
                     Visibility.profile_id == profile_id,
                     Visibility.login == current_user.login)
+            print(templates)
             return render_template(
                     'message_templates.html',
                     templates=templates,
@@ -738,8 +744,8 @@ def message_template_edit():
                               MessageTemplates.text_number == text_number,
                               MessageTemplates.text_number == text_number)[0][
             0]
-        update_error = db_template_update(text_id=text_id,
-                                          text=text)
+        update_error = db_text_update(text_id=text_id,
+                                      text=text)
         if not update_error:
             return render_template('message_templates.html',
                                    error='Не удалось обновить шаблон')
@@ -800,11 +806,202 @@ def message_template_account(account):
 @app.route('/mail/anchors', methods=['GET', 'POST'])
 @login_required
 def message_anchor():
+    if current_user.privileges['PROFILES_VISIBILITY']:
+        # if user can view all profiles, we doesn't filter by access
+        accounts = db_get_rows([
+                Profiles.profile_id,
+                ProfileDescription.name,
+                ProfileDescription.nickname
+                ],
+                Profiles.profile_password,
+                Profiles.available == 1,
+                ProfileDescription.profile_id == Profiles.profile_id)
+    else:
+        accounts = db_get_rows([
+                Profiles.profile_id,
+                ProfileDescription.name,
+                ProfileDescription.nickname
+                ],
+                Profiles.profile_password,
+                Profiles.available == 1,
+                Visibility.login == current_user.login,
+                Visibility.profile_id == Profiles.profile_id,
+                ProfileDescription.profile_id == Profiles.profile_id)
+
     if request.method == "POST":
+        profile_id = request.form.get('account_id')
+        for account in accounts:
+            if account[0] == profile_id:
+                selected_account_nickname = account[2]
+                break
+        if profile_id:
+            anchors = db_get_rows([
+                    Texts.text_id,
+                    Texts.text],
+                    Texts.text_id == MessageAnchors.text_id,
+                    Profiles.profile_id == MessageAnchors.profile_id,
+                    Profiles.profile_password,
+                    Profiles.profile_id == profile_id,
+                    Visibility.profile_id == profile_id,
+                    Visibility.login == current_user.login)
+            anchors = list(anchors)
+            for anchor_i in range(len(anchors)):
+                anchors[anchor_i] = list(anchors[anchor_i])
+                anchors[anchor_i].append(
+                        db_get_rows([Tags.tag],
+                                    Tags.tag == Tagging.tag,
+                                    Tagging.text_id == anchors[anchor_i][0]))
+                anchors[anchor_i][0] = UUID(bytes=anchors[anchor_i][0])
+        else:
+            anchors = []
+
+        print(anchors)
+        # If this is only accounts select form
+        if not request.form.get('key_text'):
+            return render_template(
+                    'anchor_templates.html',
+                    anchors=anchors,
+                    accounts=accounts,
+                    selected_account=profile_id,
+                    selected_account_nickname=selected_account_nickname)
+
+        # Load anchor text
         key_name = request.form.get('key_name')
+        key_names = [key_name]
         key_text = request.form.get('key_text')
-        print(key_name, key_text)
-    return render_template("anchor_templates.html")
+
+        logger.info(f'User {current_user.login} load new anchor')
+        #
+        # CREATE SECTION
+        #
+        logger.info(f'User {current_user.login} start load anchor')
+        text_id = uuid4().bytes
+        db_session = Session()
+        text_row = Texts(text_id=text_id,
+                         text=key_text)
+        text_to_profile_row = MessageAnchors(text_id=text_id,
+                                             profile_id=profile_id)
+        # add text to DB
+        db_session.add(text_row)
+        db_session.commit()
+
+        # add text assign to profile to DB
+        db_session.add(text_to_profile_row)
+        db_session.commit()
+        db_session.close()
+
+        for key_n in key_names:
+            db_session = Session()
+            if not db_duplicate_check([Tags],
+                                      Tags.tag == key_n):
+                # if in DB no such tag, we create new
+                tag = Tags(tag=key_n)
+                db_session.add(tag)
+                db_session.commit()
+
+            tagging_row = Tagging(text_id=text_id,
+                                  tag=key_n)
+            # add tagging to text in DB
+            db_session.add(tagging_row)
+            db_session.commit()
+            db_session.close()
+
+        logger.info(f'User {current_user.login} ended load anchor'
+                    f'with text_id: {text_id}')
+        #
+        # END CREATE SECTION
+        #
+        if profile_id:
+            anchors = db_get_rows([
+                    Texts.text_id,
+                    Texts.text],
+                    Texts.text_id == MessageAnchors.text_id,
+                    Profiles.profile_id == MessageAnchors.profile_id,
+                    Profiles.profile_password,
+                    Profiles.profile_id == profile_id,
+                    Visibility.profile_id == profile_id,
+                    Visibility.login == current_user.login)
+            anchors = list(anchors)
+            for anchor_i in range(len(anchors)):
+                anchors[anchor_i] = list(anchors[anchor_i])
+                anchors[anchor_i].append(
+                        db_get_rows([Tags.tag],
+                                    Tags.tag == Tagging.tag,
+                                    Tagging.text_id == anchors[anchor_i][0]))
+                anchors[anchor_i][0] = UUID(bytes=anchors[anchor_i][0])
+        else:
+            anchors = []
+        return render_template(
+                'anchor_templates.html',
+                anchors=anchors,
+                accounts=accounts,
+                selected_account=profile_id,
+                selected_account_nickname=selected_account_nickname)
+    return render_template(
+            'anchor_templates.html',
+            accounts=accounts)
+
+
+@app.route('/mail/anchors/edit', methods=['POST'])
+@login_required
+def message_anchor_edit():
+    info = request.get_json(force=True)
+    #
+    # UPDATE SECTION
+    #
+    text_id = UUID(info['id']).bytes
+    profile_id = info['profile_id']
+    text = info['text']
+    if db_duplicate_check([
+            MessageAnchors
+            ],
+            MessageAnchors.text_id == text_id,
+            MessageAnchors.profile_id == profile_id):
+
+        update_error = db_text_update(text_id=text_id,
+                                      text=text)
+        if not update_error:
+            return render_template('anchor_templates.html',
+                                   error='Не удалось обновить якорь')
+    #
+    # END UPDATE SECTION
+    #
+    return redirect(url_for('message_anchor'))
+
+
+@app.route('/mail/anchors/delete', methods=['POST'])
+@login_required
+def message_anchor_delete():
+    info = request.get_json(force=True)
+    print(info['id'])
+    text_id = UUID(info['id']).bytes
+    print("Delete", text_id)
+    #
+    # DELETE SECTION
+    #
+    delete_templates_count = db_delete_rows([
+            MessageAnchors
+            ],
+            MessageAnchors.text_id == text_id)
+    text_in_msg = db_duplicate_check([Messages],
+                                     Messages.text_id == text_id)
+    if not text_in_msg:
+        deleted_tags = db_delete_rows([
+                Tagging
+                ],
+                Tagging.text_id == text_id)
+        deleted_texts = db_delete_rows([
+                Texts
+                ],
+                Texts.text_id == text_id)
+        if deleted_texts == 0:
+            return render_template('anchor_templates.html',
+                                   error='Якорь уже удален')
+
+    #
+    # END DELETE SECTION
+    #
+    return redirect(url_for('message_anchor'))
 
 
 @app.route('/messages', methods=['GET', 'POST'])

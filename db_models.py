@@ -306,6 +306,16 @@ class MessageTemplates(Base):
                        self.text_number)
 
 
+class MessageAnchors(Base):
+    __tablename__ = 'Message_anchors'
+    profile_id = Column(VARCHAR(20), primary_key=True)
+    text_id = Column(BINARY(16), primary_key=True)
+
+    def __repr__(self):
+        return "<Roles_of_users(profile_id='%s', text_id='%s')>" % (
+                self.profile_id, self.text_id)
+
+
 class Texts(Base):
     __tablename__ = 'Texts'
     text_id = Column(BINARY(16), primary_key=True)

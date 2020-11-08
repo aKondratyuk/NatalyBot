@@ -60,8 +60,8 @@
       border-radius: 5px;
       padding: 10px;
       margin-bottom: 40px;
-      width: 100%;
-      display: inline-flex;
+        width: 100%;
+        display: inline-flex;
     }
 </style>
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"
@@ -71,43 +71,90 @@
             <div class="container mb-3 mt-3">
                 <div class="row">
                     <div class="template_header">
-                        <button
-                            id="add"
-                            data-toggle="modal"
-                            data-target="#AnchorModal"
-                            style="margin-right: 25px; font-size: 18px; width: 20%;"
-                            class="btn btn-fill btn-warning">
-                            <i class="fa fa-plus-circle"></i>
-                            Добавить
-                        </button>
-                        <h3 style="color: #ffffff">Якорей загружено: 0</h3>
+                        <form action="/mail/anchors"
+                              id="account_id_form"
+                              name="account_id_form"
+                              method="post">
+                            <input name="csrf_token" type="hidden"
+                                   value="{{ csrf_token() }}"/>
+                            <div class="form-group">
+                                <label style="color: #ffffff"
+                                       for="account_id">Выбрерите
+                                    профиль для
+                                    просмотра якорей</label>
+                                <select class="form-control"
+                                        id="account_id"
+                                        name="account_id"
+                                        onchange="form.submit()"
+                                        required>
+                                    <option disabled selected
+                                            value="disabled">
+                                        Доступные профили
+                                    </option>
+                                    {% if accounts %}
+                                        {% for profile in accounts %}
+                                            <option value="{{ profile[0] }}"
+                                                    {% if
+                                                selected_account == profile[0] %}
+                                                    selected
+                                                    {% endif %}>
+                                                {{ profile[0] }}
+                                                {{ profile[1] }}
+                                                {{ profile[2] }}
+                                            </option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+                        </form>
                     </div>
-                    {% set anchors = [["id1001", "key_name", "key_text"]] %}
-                    {% for anchor in anchors %}
-                    <div id="toolbar_{{ anchor[0] }}">
-                        <span class="blue" style="margin-right: 25px;">{{ anchor[1] }}</span>
-                        <button
-                            type="button"
-                            value="{{ anchor[0] }}"
-                            id="edit_{{ anchor[0] }}"
-                            onclick="Edit('text_{{ anchor[0] }}', id, '{{ anchor[0] }}', '{{ selected_account }}')"
-                            class="btn btn-fill btn-success">
-                            Редактировать
-                        </button>
-                        <input name="csrf_token" type="hidden" value="{{ csrf_token() }}"/>
-                        <button
-                            type="button"
-                            value="{{ anchor[0] }}"
-                            onclick="Delete('toolbar_{{ anchor[0] }}', 'text_{{ anchor[0] }}', '{{ anchor[0] }}')"
-                            class="btn btn-fill btn-danger">Удалить
-                        </button>
-                    </div>
-                    <textarea
-                        class="form-control"
-                        id="text_{{ anchor[0] }}"
-                        disabled
-                        style="margin-top: 20px; margin-bottom: 40px;">{{ anchor[2] }}</textarea>
-                    {% endfor %}
+                    {% if selected_account %}
+                        <div class="template_header">
+                            <button
+                                    id="add"
+                                    data-toggle="modal"
+                                    data-target="#AnchorModal"
+                                    style="margin-right: 25px; font-size: 18px; width: 20%;"
+                                    class="btn btn-fill btn-warning">
+                                <i class="fa fa-plus-circle"></i>
+                                Добавить
+                            </button>
+                            <h3 id="anchor_num" style="color: #ffffff">Якорей
+                                загружено:
+                                {{ anchors|length }}</h3>
+                        </div>
+
+                        {% for anchor in anchors %}
+                            <div class="anchor_div"
+                                 id="toolbar_{{ anchor[0] }}">
+                                {% for key in anchor[2] %}
+                                    <span class="blue"
+                                          style="margin-right: 25px;">{{ key[0] }}</span>
+                                {% endfor %}
+                                <button
+                                        type="button"
+                                        value="{{ anchor[0] }}"
+                                        id="edit_{{ anchor[0] }}"
+                                        onclick="Edit('text_{{ anchor[0] }}', id, '{{ anchor[0] }}', '{{ selected_account }}')"
+                                        class="btn btn-fill btn-success">
+                                    Редактировать
+                                </button>
+                                <input name="csrf_token" type="hidden"
+                                       value="{{ csrf_token() }}"/>
+                                <button
+                                        type="button"
+                                        value="{{ anchor[0] }}"
+                                        onclick="Delete('toolbar_{{ anchor[0] }}', 'text_{{ anchor[0] }}', '{{ anchor[0] }}')"
+                                        class="btn btn-fill btn-danger">Удалить
+                                </button>
+                            </div>
+                            <textarea
+                                    class="form-control"
+                                    id="text_{{ anchor[0] }}"
+                                    disabled
+                                    style="margin-top: 20px; margin-bottom: 40px;">{{ anchor[1] }}</textarea>
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -137,7 +184,10 @@
                                    class="col-form-label">Текст:</label>
                             <input name="csrf_token" type="hidden"
                                    value="{{ csrf_token() }}"/>
-                            <textarea style="height: 100px;" class="form-control" id="key_text"
+                            <input name="account_id" type="hidden"
+                                   value="{{ selected_account }}"/>
+                            <textarea style="height: 100px;"
+                                      class="form-control" id="key_text"
                                       name="key_text" required></textarea>
                         </div>
                     </div>
@@ -194,51 +244,51 @@
         })
     </script>
     <script>
-            function Edit(textarea_id, button_id, num, profile_id) {
-                console.log(textarea_id, button_id);
-                const textarea = document.getElementById(textarea_id);
-                textarea.removeAttribute("disabled");
-                textarea.focus();
-                const button = document.getElementById(button_id);
-                console.log(button.innerHTML, button.innerText);
-                if (button.innerText === "Редактировать") {
-                    button.innerText = "Сохранить";
-                }
-			else {
-			    button.innerText = "Редактировать";
-			    textarea.setAttribute("disabled", "true");
+        function Edit(textarea_id, button_id, id, profile_id) {
+            console.log(textarea_id, button_id);
+            const textarea = document.getElementById(textarea_id);
+            textarea.removeAttribute("disabled");
+            textarea.focus();
+            const button = document.getElementById(button_id);
+            console.log(button.innerHTML, button.innerText);
+            if (button.innerText === "Редактировать") {
+                button.innerText = "Сохранить";
+            } else {
+                button.innerText = "Редактировать";
+                textarea.setAttribute("disabled", "true");
                 const text = textarea.value;
-                    $.ajax({
-                        url: "{{ url_for('message_template_edit') }}",
-                        type: 'POST',
-                        contentType: "application/json",
-                        data: JSON.stringify({
-                            'num': num, 'text': text,
-                            'profile_id': profile_id
-                        })
-                    });
-                }
-
+                $.ajax({
+                    url: "{{ url_for('message_anchor_edit') }}",
+                    type: 'POST',
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        'id': id, 'text': text,
+                        'profile_id': profile_id
+                    })
+                });
             }
 
-        function Delete(div_id, textarea_id, num) {
-            const templates_num = document.getElementsByClassName('blue').length;
+        }
+
+        function Delete(div_id, textarea_id, id) {
+            const templates_num = document.getElementsByClassName('anchor_div').length;
+            console.log(templates_num)
             let div = document.getElementById(div_id);
             let textarea = document.getElementById(textarea_id);
             let template_count = document.getElementById('template_count');
             $.ajax({
-                url: "{{ url_for('message_template_delete') }}",
+                url: "{{ url_for('message_anchor_delete') }}",
                 type: 'POST',
                 contentType: "application/json",
-                data: JSON.stringify({'num': num})
+                data: JSON.stringify({'id': id})
             });
             div.parentNode.removeChild(div);
             textarea.parentNode.removeChild(textarea);
             let old_templates_num = templates_num;
             let new_templates_num = templates_num - 1;
-            let template_header = document.getElementById('template_number');
-            let templateHTML= template_header.innerHTML;
-            template_header.innerHTML = templateHTML.replace("Якорей загружено: " + old_templates_num, "Якорей загружено: " + new_templates_num);
+            let template_header = document.getElementById('anchor_num');
+            let templateHTML = template_header.innerHTML;
+            template_header.innerHTML = "Якорей загружено: " + new_templates_num;
         }
     </script>
 {% endblock %}
