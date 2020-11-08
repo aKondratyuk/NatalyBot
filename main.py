@@ -866,10 +866,8 @@ def message_anchor():
                     selected_account_nickname=selected_account_nickname)
 
         # Load anchor text
-        key_name = request.form.get('key_name')
-        key_names = [key_name]
+        key_names = request.form.getlist('key_name')
         key_text = request.form.get('key_text')
-
         logger.info(f'User {current_user.login} load new anchor')
         #
         # CREATE SECTION

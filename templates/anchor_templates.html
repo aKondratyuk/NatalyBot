@@ -53,6 +53,7 @@
       padding-left: 20px;
       padding-right: 20px;
       width: auto;
+      margin-top: 10px;
     }
     .template_header {
       border: 2px solid #ffffff;
@@ -60,8 +61,13 @@
       border-radius: 5px;
       padding: 10px;
       margin-bottom: 40px;
+      width: 100%;
+      display: inline-flex;
+    }
+    .keys {
         width: 100%;
-        display: inline-flex;
+        display: flex;
+        overflow-x: auto;
     }
 </style>
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"
@@ -70,7 +76,7 @@
         <div class="container-fluid">
             <div class="container mb-3 mt-3">
                 <div class="row">
-                    <div class="template_header">
+                    <div class="template_header" style="display: block;">
                         <form action="/mail/anchors"
                               id="account_id_form"
                               name="account_id_form"
@@ -127,10 +133,6 @@
                         {% for anchor in anchors %}
                             <div class="anchor_div"
                                  id="toolbar_{{ anchor[0] }}">
-                                {% for key in anchor[2] %}
-                                    <span class="blue"
-                                          style="margin-right: 25px;">{{ key[0] }}</span>
-                                {% endfor %}
                                 <button
                                         type="button"
                                         value="{{ anchor[0] }}"
@@ -148,6 +150,12 @@
                                         class="btn btn-fill btn-danger">Удалить
                                 </button>
                             </div>
+                            <div class="keys">
+                                <button class="btn btn-fill btn-primary" style="margin-right: 25px; margin-top: 10px;">Якоря:</button>
+                                {% for key in anchor[2] %}
+                                <span class="blue" style="margin-right: 25px;">{{ key[0] }}</span>
+                                {% endfor %}
+                            </div>
                             <textarea
                                     class="form-control"
                                     id="text_{{ anchor[0] }}"
@@ -164,7 +172,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Укажите название ключа и соотвествующий ему абзац</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Укажите якори и соотвествующий им абзац</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true" style="position: fixed; margin-top: -35px; margin-left: 5px; color: #FF4A55;">&times;</span>
             </button>
@@ -172,13 +180,14 @@
                 <form action="{{ url_for('message_anchor') }}" method="post"
                       enctype="multipart/form-data">
                     <div class="modal-body">
-                        <div class="form-group">
-                            <label for="key_name" class="col-form-label">Имя ключа:</label>
+                        <div id="anchors" class="form-group">
+                            <label for="key_name" class="col-form-label">Якори:</label>
                             <input name="csrf_token" type="hidden"
                                    value="{{ csrf_token() }}"/>
                             <input type="text" class="form-control"
                                    name="key_name" id="key_name" required>
                         </div>
+                        <button class="btn btn-fill btn-success" onclick="AddAnchor()">Добавить якорь</button>
                         <div class="form-group">
                             <label for="key_text"
                                    class="col-form-label">Текст:</label>
@@ -289,6 +298,13 @@
             let template_header = document.getElementById('anchor_num');
             let templateHTML = template_header.innerHTML;
             template_header.innerHTML = "Якорей загружено: " + new_templates_num;
+        }
+    </script>
+    <script>
+        function AddAnchor() {
+            let div_anchors = document.getElementById('anchors');
+            let anchor = "<input type='text' class='form-control' name='key_name' style='margin-top: 5px;' required>";
+            $("#anchors").append(anchor);
         }
     </script>
 {% endblock %}
