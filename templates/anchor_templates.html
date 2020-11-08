@@ -150,7 +150,7 @@
                                         class="btn btn-fill btn-danger">Удалить
                                 </button>
                             </div>
-                            <div class="keys">
+                            <div id="keys_{{ anchor[0] }}" class="keys">
                                 <button class="btn btn-fill btn-primary" style="margin-right: 25px; margin-top: 10px;">Якоря:</button>
                                 {% for key in anchor[2] %}
                                 <span class="blue" style="margin-right: 25px;">{{ key[0] }}</span>
@@ -284,6 +284,7 @@
             console.log(templates_num)
             let div = document.getElementById(div_id);
             let textarea = document.getElementById(textarea_id);
+            let keys = document.getElementById('keys_' + id);
             let template_count = document.getElementById('template_count');
             $.ajax({
                 url: "{{ url_for('message_anchor_delete') }}",
@@ -293,6 +294,7 @@
             });
             div.parentNode.removeChild(div);
             textarea.parentNode.removeChild(textarea);
+            keys.parentNode.removeChild(keys);
             let old_templates_num = templates_num;
             let new_templates_num = templates_num - 1;
             let template_header = document.getElementById('anchor_num');
