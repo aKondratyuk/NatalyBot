@@ -3,7 +3,6 @@
 import logging
 import os
 from logging import Logger
-from threading import Thread
 from urllib.parse import urljoin, urlparse
 from uuid import UUID
 
@@ -16,7 +15,6 @@ from flask_login import LoginManager, login_required, \
 from flask_wtf.csrf import CSRFProtect
 
 from authentication import find_user
-from background_worker import worker_profile_and_msg_updater
 from control_panel import *
 from db_models import Logs, MessageAnchors, Profiles, SQLAlchemyHandler, \
     Tagging, Tags, Users, Visibility
@@ -366,7 +364,8 @@ def access():
                 ],
                 Profiles.profile_id.notin_(user_profiles),
                 Profiles.profile_id == ProfileDescription.profile_id,
-                Profiles.available)
+                Profiles.available,
+                Profiles.profile_password)
         profiles = new_profiles
         db_session.close()
     else:
@@ -1020,8 +1019,8 @@ def logs():
 
 
 if __name__ == "__main__":
-    t1 = Thread(target=worker_profile_and_msg_updater)
-    t1.start()
-    workers_number += 1
+    # t1 = Process(target=worker_profile_and_msg_updater)
+    # t1.start()
+    # workers_number += 1
     # Run the app until stopped
     app.run()
