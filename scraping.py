@@ -4,6 +4,31 @@ from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 
+COUNTRIES = ['American Samoa', 'Andorra', 'Anguilla', 'Antarctica', 'Antigua and Barbuda', 'Argentina', 'Armenia',
+             'Aruba', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bahrain', 'Barbados', 'Belarus', 'Belgium',
+             'Belize', 'Benin', 'Bermuda', 'Bhutan', 'Bolivia', 'Bosnia/Herzegowina', 'Botswana', 'Bouvet Island',
+             'Brazil', 'British Ind. Ocean', 'Brunei Darussalam', 'Bulgaria', 'Burkina Faso', 'Cameroon', 'Canada',
+             'Cape Verde', 'Cayman Islands', 'Chad', 'Chile', 'China', 'Christmas Island', 'Cocoa (Keeling) Is.',
+             'Colombia', 'Comoros', 'Costa Rica', 'Cote Divoire', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic',
+             'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'Ecuador', 'Egypt', 'El Salvador',
+             'Equatorial Guinea', 'Estonia', 'Falkland Islands', 'Faroe Islands', 'Fiji', 'Finland', 'France',
+             'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Gibraltar', 'Greece', 'Greenland', 'Grenada',
+             'Guadeloupe', 'Guam', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Honduras', 'Hong Kong',
+             'Hungary', 'Iceland', 'India', 'Iran', 'Ireland', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan',
+             'Kazakhstan', 'Kenya', 'Kiribati', 'Korea', 'Kuwait', 'Kyrgyzstan', 'Latvia', 'Lebanon', 'Lesotho',
+             'Liechtenstein', 'Lithuania', 'Luxembourg', 'Macau', 'Macedonia', 'Madagascar', 'Malawi', 'Malaysia',
+             'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Martinique', 'Mauritania', 'Mauritius', 'Mayotte',
+             'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Montenegro', 'Montserrat', 'Morocco', 'Mozambique',
+             'Namibia', 'Nepal', 'Netherlands', 'New Caledonia', 'New Zealand', 'Nicaragua', 'Niger', 'Niue',
+             'Norfolk Island', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay',
+             'Peru', 'Philippines', 'Pitcairn', 'Poland', 'Portugal', 'Puerto Rico', 'Qatar', 'Reunion', 'Romania',
+             'Russia', 'Saint Lucia', 'Samoa', 'San Marino', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles',
+             'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'Spain', 'Sri Lanka',
+             'St. Helena', 'Swaziland', 'Sweden', 'Switzerland', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand',
+             'Togo', 'Tokelau', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu',
+             'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'Uruguay', 'USA', 'Uzbekistan', 'Vanuatu',
+             'Vatican', 'Venezuela', 'Viet Nam', 'Virgin Islands', 'Western Sahara', 'Yemen', 'Zambia']
+
 
 def specified(iterable, *index):
     try:
@@ -219,6 +244,8 @@ def collect_info_from_profile(profile_id):
         city = specified(second_row, 0)
         # Страна
         country = specified(second_row, 1)
+        if country not in COUNTRIES:
+            country = 'Not specified'
 
         # Знание языков
         languages = {}
