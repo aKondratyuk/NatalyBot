@@ -99,6 +99,7 @@
                                 <thead>
                                 <tr>
                                     <th data-field="num">№</th>
+                                    <th data-field="sender">Аккаунт</th>
                                     <th data-field="sender">Отправитель</th>
                                     <th data-field="preview">Превью сообщения
                                     </th>
@@ -116,6 +117,7 @@
                                             <input name="csrf_token"
                                                    type="hidden"
                                                    value="{{ csrf_token() }}"/>
+                                            <td align="center">{{ dialogue[i]['account_nickname'] }}</td>
                                             <td align="center">{{ dialogue[i]['nickname'] }}</td>
                                             <td>
                                                 <a href="{{ url_for('dialogue_profile',
@@ -142,6 +144,7 @@
                                 <tfoot>
                                 <tr>
                                     <th>№</th>
+                                    <th>Аккаунт</th>
                                     <th>Отправитель</th>
                                     <th>Превью сообщения</th>
                                     <th>Время</th>

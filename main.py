@@ -321,7 +321,7 @@ def users_edit(login):
 @login_required
 def users_delete(login):
     if db_delete_user(login):
-        logger.info(f'User {current_user.login} delete: {login}')
+        logger.info(f'User {current_user.login} deleted: {login}')
     else:
         logger.info(f'User {current_user.login} tryed to '
                     f'delete: {login} but something gone wrong!')
@@ -474,9 +474,30 @@ def users_accounts():
 @app.route('/mail', methods=['GET', 'POST'])
 @login_required
 def mail():
-    dialogue = db_show_dialog(inbox_filter=True,
-                              descending=True)
-    return render_template('mail.html', dialogue=dialogue)
+    # get accounts which this user can see
+    accounts = db_get_rows_2([ProfileDescription.nickname,
+                              Visibility.profile_id],
+                             [
+                                     Visibility.login == current_user.login,
+                                     Visibility.profile_id ==
+                                     Profiles.profile_id,
+                                     Profiles.profile_password,
+                                     Profiles.profile_id ==
+                                     ProfileDescription.profile_id
+                                     ])
+    all_messages = []
+    for account in accounts:
+        # download dialogue for this account, from DB
+        dialogue = db_show_dialog(sender=account[1],
+                                  inbox_filter=True,
+                                  descending=True)
+        for message_i in range(len(dialogue)):
+            # add account nickname and id, in messages
+            dialogue[message_i]['account_nickname'] = account[0]
+            dialogue[message_i]['account_id'] = account[1]
+        all_messages.extend(dialogue)
+    all_messages.sort(key=lambda x: x['send_time'], reverse=True)
+    return render_template('mail.html', dialogue=all_messages)
 
 
 @app.route('/mail/star', methods=['GET', 'POST'])
@@ -494,9 +515,30 @@ def mail_future():
 @app.route('/mail/outbox', methods=['GET', 'POST'])
 @login_required
 def mail_outbox():
-    dialogue = db_show_dialog(outbox_filter=True,
-                              descending=True)
-    return render_template('mail_outbox.html', dialogue=dialogue)
+    # get accounts which this user can see
+    accounts = db_get_rows_2([ProfileDescription.nickname,
+                              Visibility.profile_id],
+                             [
+                                     Visibility.login == current_user.login,
+                                     Visibility.profile_id ==
+                                     Profiles.profile_id,
+                                     Profiles.profile_password,
+                                     Profiles.profile_id ==
+                                     ProfileDescription.profile_id
+                                     ])
+    all_messages = []
+    for account in accounts:
+        # download dialogue for this account, from DB
+        dialogue = db_show_dialog(sender=account[1],
+                                  outbox_filter=True,
+                                  descending=True)
+        for message_i in range(len(dialogue)):
+            # add account nickname and id, in messages
+            dialogue[message_i]['account_nickname'] = account[0]
+            dialogue[message_i]['account_id'] = account[1]
+        all_messages.extend(dialogue)
+    all_messages.sort(key=lambda x: x['send_time'], reverse=True)
+    return render_template('mail_outbox.html', dialogue=all_messages)
 
 
 @app.route('/mail/star/<sender>', methods=['GET', 'POST'])

@@ -17,11 +17,13 @@ def worker_invites() -> None:
 
 def worker_msg_sender() -> None:
     """Send messages with delay,
-    works in background, time delta: 5 min"""
-    time_delta = 300
+    works in background with exists dialogs, time delta: 5 min"""
+    time_delta = 3600
 
     while True:
         # code
+
+        # function()
         sleep(time_delta)
 
 

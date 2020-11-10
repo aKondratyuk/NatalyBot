@@ -2,6 +2,7 @@
 import re
 from datetime import datetime
 from math import ceil
+from time import time
 from uuid import uuid4
 
 from flask_login import current_user
@@ -435,14 +436,14 @@ def get_account_nickname_from_dialog(message_token: bytes):
     return result[0][0]
 
 
-def db_show_dialog(sender: str = None,
+"""def db_show_dialog(sender: str = None,
                    receiver: str = None,
                    email_filter: bool = False,
                    inbox_filter: bool = False,
                    outbox_filter: bool = False,
                    descending: bool = False) -> list:
     # you can swap sender and receiver
-    """Returns list of dicts, with messages in dialogue for admin panel"""
+    Returns list of dicts, with messages in dialogue for admin panel
     db_session = Session()
 
     # Check visibility of profiles for current user
@@ -542,6 +543,96 @@ def db_show_dialog(sender: str = None,
              "account_nickname": result_accounts[i][0],
              "account_id": result_accounts[i][1]
              } for i in range(len(result))]
+
+
+def db_show_dialog_2(sender: str = None,
+                     receiver: str = None) -> list:
+
+    # find chats with receiver and with sender
+    chats_with_sender = db_get_rows_2([ChatSessions.chat_id],
+                                      [ChatSessions.profile_id == sender])
+    chats_with_receiver = db_get_rows_2([ChatSessions.chat_id],
+                                      [ChatSessions.profile_id == receiver])
+    messages = db_get_rows([
+            Messages.profile_id,
+            Messages.send_time,
+            Messages.viewed,
+            Texts.text,
+            ProfileDescription.nickname,
+            Messages.message_token
+            ],
+            [
+            Messages.text_id == Texts.text_id,
+            Messages.chat_id == chats_with_sender,
+            Messages.chat_id == chats_with_receiver,
+            Messages.profile_id == ProfileDescription.profile_id
+            ])
+    return messages"""
+
+
+def db_show_dialog(sender: str,
+                   receiver: str = None,
+                   email_filter: bool = False,
+                   inbox_filter: bool = False,
+                   outbox_filter: bool = False,
+                   descending: bool = False) -> list:
+    # you can swap sender and receiver
+    """Returns list of dicts, with messages in dialogue for admin panel"""
+    db_session = Session()
+
+    # subquery for chats with sender
+    sub_query_1 = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.profile_id == sender)
+    # subquery for chats with this profiles
+    query_chat = db_session.query(ChatSessions.chat_id). \
+        filter(ChatSessions.chat_id.in_(sub_query_1))
+
+    if receiver:
+        # subquery for chats with receiver, if we have receiver id
+        sub_query_2 = db_session.query(ChatSessions.chat_id). \
+            filter(ChatSessions.profile_id == receiver)
+        # subquery for chats with this profiles
+        query_chat = query_chat. \
+            filter(ChatSessions.chat_id.in_(sub_query_2))
+    # filter only email dialogues
+    if email_filter:
+        query_chat = query_chat.filter(
+                ChatSessions.email_address)
+    query_chat = query_chat.subquery()
+
+    # query to show messages and texts
+    query = db_session.query(Messages.profile_id,
+                             Messages.send_time,
+                             Messages.viewed,
+                             Texts.text,
+                             ProfileDescription.nickname,
+                             Messages.message_token)
+    query = query.filter(Messages.chat_id.in_(query_chat))
+    query = query.outerjoin(Texts, Messages.text_id == Texts.text_id)
+    query = query.filter(ProfileDescription.profile_id == Messages.profile_id)
+
+    if inbox_filter or not receiver:
+        # show only inbox messages
+        query = query.filter(Messages.profile_id != sender)
+    elif outbox_filter:
+        # show only inbox messages
+        query = query.filter(Messages.profile_id != receiver)
+    # sorting
+    if descending:
+        query = query.order_by(desc(Messages.send_time))
+    else:
+        query = query.order_by(Messages.send_time)
+
+    query = query.order_by(Messages.send_time)
+    result = query.all()
+    db_session.close()
+    return [{"profile_id": row[0],
+             "send_time": row[1],
+             "viewed": row[2],
+             "text": row[3],
+             "nickname": row[4],
+             "message_token": row[5]
+             } for row in result]
 
 
 def db_download_new_msg(observer_login: str,
@@ -665,6 +756,20 @@ def db_get_rows(tables: list,
     query = db_session.query(*tables)
     for statement in statements:
         query = query.filter(statement != '')
+    result = query.all()
+    db_session.close()
+    return result
+
+
+def db_get_rows_2(tables: list,
+                  statements: list = None) -> list:
+    """Select all rows from tables list,
+    which have been filtered with 'statements'"""
+    db_session = Session()
+    query = db_session.query(*tables)
+    if statements:
+        for statement in statements:
+            query = query.filter(statement != '')
     result = query.all()
     db_session.close()
     return result
@@ -1229,7 +1334,7 @@ def profile_dialogs_checker(observed_profile_id: str,
     current_profile_session, observed_profile_id = login(
             profile_login=observed_profile_id,
             password=observed_profile_password)
-
+    start_time = time()
     profiles = set()
     page = 1
     for inbox in [True, False]:
@@ -1260,9 +1365,13 @@ def profile_dialogs_checker(observed_profile_id: str,
                 if max_page <= page:
                     break
         page = 1
-
+    print(f"Время считывания профилей для аккаунта: {observed_profile_id}, "
+          f"{time() - start_time} sec")
+    start_time = time()
     for profile_id in profiles:
+        start_time_for_profile = time()
         logger.info(f'Start load dialog for profile_id: {profile_id}')
+        start_time_for_profile_dialogue = time()
         dialog_download(
                 observer_login=observed_profile_id,
                 observer_password=observed_profile_password,
@@ -1273,8 +1382,20 @@ def profile_dialogs_checker(observed_profile_id: str,
                 observer_password=observed_profile_password,
                 sender_id=observed_profile_id,
                 receiver_profile_id=profile_id)
+        print(f"Время загрузки диалогов профиля: {profile_id}, "
+              f"{time() - start_time_for_profile_dialogue} sec")
         # load description for profile
+        start_time_for_profile_desc = time()
         db_load_profile_description(profile_id)
+        print(f"Время загрузки описания профиля: {profile_id}, "
+              f"{time() - start_time_for_profile_desc} sec")
+        print(f"Все время загрузки диалогов для аккаунта:"
+              f" {observed_profile_id} и профиля: {profile_id}, "
+              f"{time() - start_time_for_profile} sec")
+
+    print(f"Время загрузки диалогов для аккаунта:"
+          f" {observed_profile_id}, "
+          f"{time() - start_time} sec")
     return True
 
 
