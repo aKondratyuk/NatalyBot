@@ -1,7 +1,9 @@
 from time import sleep
 
-from control_panel import db_get_rows, dialog_download, profile_dialogs_checker
+from control_panel import db_get_rows, db_get_rows_2, dialog_download, \
+    prepare_answer, profile_dialogs_checker
 from db_models import ChatSessions, Profiles
+from verification import login
 
 
 def worker_invites() -> None:
@@ -18,14 +20,47 @@ def worker_invites() -> None:
 def worker_msg_sender() -> None:
     """Send messages with delay,
     works in background with exists dialogs, time delta: 5 min"""
+
     time_delta = 3600
+    sent_delay = 1
 
     while True:
         # code
+        # get accounts from DB
+        accounts = db_get_rows_2([Profiles.profile_id,
+                                  Profiles.profile_password],
+                                 [
+                                         Profiles.profile_password
+                                         ])
+        for account in accounts:
+            chat_id_query = db_get_rows_2([ChatSessions.chat_id],
+                                          [
+                                                  ChatSessions.profile_id ==
+                                                  account[0]
+                                                  ],
+                                          return_query=True)
+            # get profiles which are available and have chat with account
+            profiles = db_get_rows_2([ChatSessions.profile_id,
+                                      ChatSessions.chat_id],
+                                     [
+                                             ChatSessions.profile_id ==
+                                             Profiles.profile_id,
+                                             ChatSessions.chat_id.in_(
+                                                 chat_id_query),
+                                             Profiles.profile_password == None,
+                                             Profiles.available
+                                             ])
+            if len(profiles) != 0:
+                # if account has dialogs with active profiles
+                account_session, account_id = login(profile_login=account[0],
+                                                    password=account[1])
+            for profile in profiles:
+                prepare_answer(account=account,
+                               profile=profile,
+                               account_session=account_session,
+                               sent_delay=sent_delay, )
 
-        # function()
         sleep(time_delta)
-
 
 def worker_msg_updater() -> None:
     """Check inbox for all profiles with password

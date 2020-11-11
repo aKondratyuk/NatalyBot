@@ -1,6 +1,6 @@
 # coding: utf8
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from math import ceil
 from time import time
 from uuid import uuid4
@@ -207,7 +207,8 @@ def db_message_create(chat_id: bytes,
                       send_time,
                       viewed: bool,
                       sender: str,
-                      text: str) -> bool:
+                      text: str,
+                      delay: bool = False) -> bool:
     db_session = Session()
     text_id = uuid4().bytes
     message_id = uuid4().bytes
@@ -220,7 +221,8 @@ def db_message_create(chat_id: bytes,
                            text_id=text_id,
                            send_time=send_time,
                            viewed=viewed,
-                           profile_id=sender)
+                           profile_id=sender,
+                           delay=delay)
     db_session.add(new_message)
     db_session.commit()
     db_session.close()
@@ -606,7 +608,8 @@ def db_show_dialog(sender: str,
                              Messages.viewed,
                              Texts.text,
                              ProfileDescription.nickname,
-                             Messages.message_token)
+                             Messages.message_token,
+                             Messages.delay)
     query = query.filter(Messages.chat_id.in_(query_chat))
     query = query.outerjoin(Texts, Messages.text_id == Texts.text_id)
     query = query.filter(ProfileDescription.profile_id == Messages.profile_id)
@@ -631,7 +634,8 @@ def db_show_dialog(sender: str,
              "viewed": row[2],
              "text": row[3],
              "nickname": row[4],
-             "message_token": row[5]
+             "message_token": row[5],
+             "delay": row[6]
              } for row in result]
 
 
@@ -762,7 +766,11 @@ def db_get_rows(tables: list,
 
 
 def db_get_rows_2(tables: list,
-                  statements: list = None) -> list:
+                  statements: list = None,
+                  order_by: list = None,
+                  descending: bool = False,
+                  limit: int = None,
+                  return_query: bool = False) -> list:
     """Select all rows from tables list,
     which have been filtered with 'statements'"""
     db_session = Session()
@@ -770,6 +778,17 @@ def db_get_rows_2(tables: list,
     if statements:
         for statement in statements:
             query = query.filter(statement != '')
+    if order_by:
+        for sort in order_by:
+            if descending:
+                query = query.order_by(sort.desc())
+            else:
+                query = query.order_by(sort)
+    if limit:
+        query = query.limit(limit)
+    if return_query:
+        db_session.close()
+        return query
     result = query.all()
     db_session.close()
     return result
@@ -1397,6 +1416,62 @@ def profile_dialogs_checker(observed_profile_id: str,
           f" {observed_profile_id}, "
           f"{time() - start_time} sec")
     return True
+
+
+def prepare_answer(account: list,
+                   profile: list,
+                   account_session,
+                   sent_delay: int = 2) -> bool:
+    from main import logger
+    # get dialogue with profile
+    dialogue = db_show_dialog(sender=account[0],
+                              receiver=profile[0])
+    messages = ''
+    # add last messages from profile
+    for message in dialogue:
+        if message['profile_id'] == account:
+            break
+        else:
+            messages += message['text']
+
+    if len(messages) != 0:
+        # PLACE FOR ANDREYCHIK FUNCTION
+        text = 'TEXT'
+        """text = function(session = account_session,
+                        account_id = account[0],
+                        text = messages)"""
+        # create message with delay, in DB
+        db_message_create(
+                chat_id=profile[1],
+                send_time=datetime.now()
+                          + timedelta(hours=sent_delay),
+                viewed=False,
+                sender=account[0],
+                text=text,
+                delay=True)
+    else:
+        if dialogue[0]['delay']:
+            # sent message on site
+            result = False
+            """result = function(session = account_session,
+                         profile_id = profile[0],
+                         text = dialogue[0]['text'])"""
+            if result:
+                # add update for message in DB, to delete from delayed
+                db_session = Session()
+                update_q = update(Messages).where(
+                        Messages.message_token == dialogue[0][
+                            'message_token']). \
+                    values(send_time=datetime.now(),
+                           delay=False)
+                db_session.execute(update_q)
+                db_session.commit()
+                db_session.close()
+                pass
+            else:
+                logger.error(f'Failed to sent message '
+                             f'from account {account[0]} '
+                             f'to profile_id {profile[0]}')
 
 
 """print(profile_dialogs_checker(observed_profile_id='1000868043',
