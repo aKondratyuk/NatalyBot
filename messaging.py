@@ -1,5 +1,6 @@
 from scraping import send_request, collect_info_from_profile
 from control_panel import db_get_rows_2
+from db_models import MessageTemplates, Texts, MessageAnchors
 import re
 
 
@@ -52,24 +53,27 @@ def create_custom_message(messager_profile_id, receiver_profile_id, message_text
     return message_text
 
 
-def create_message_response(session, template_number, receiver_profile_id, message_text):
+def create_message_response(template_number, sender_profile_id, receiver_profile_id, message_text):
     """Формирование шаблонного ответа на входящее письмо
 
     Keyword arguments:
-    session -- сессия залогиненого аккаунта
     template_number -- номер шаблона, который будет использоваться за основу
     receiver_profile_id -- ID профиля которому будет отправлено сообщение
     message_text -- текст входящего письма от профиля
     """
     # Здесь еще нужно будет добавить обработку этого шаблона
-    text_template = "text_template"  # Здесь вызываем функцию для наахождения нужного нам шаблона по template_number
+    text_template = db_get_rows_2([Texts.text], [
+              MessageTemplates.profile_id == receiver_profile_id,
+              MessageTemplates.text_number == template_number,
+              MessageTemplates.text_id == Texts.text_id])  # Здесь вызываем функцию для наахождения нужного нам шаблона по template_number
+    text_template = create_custom_message(sender_profile_id, receiver_profile_id, text_template[0][0])
     anchors = "anchors"  # Здесь необходимо вызвать функцию для вытягивания якорей
     # В тексте шаблона должно находиться {} - это место, где текст делится пополам До Якоре и После.
     # И в первую его часть в самый конец добавляются все тексты якорей
     temp_text_template = text_template.split("{}")
     i = 0
     for anchor in anchors:
-        if anchor in text_template:
+        if anchor in message_text:
             # Указываем индекс, куда помещяется текст якоря в списке. Он будет всегда добавляться перед {}
             i += 1
             # Вставляем текст якора
