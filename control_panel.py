@@ -1466,11 +1466,17 @@ def prepare_answer(account: list,
             messages += message['text']
 
     if len(messages) != 0:
+        # get count of account messages
+        msg_num = 0
+        for message in dialogue[::-1]:
+            if message['profile_id'] == account:
+                msg_num += 1
         # PLACE FOR ANDREYCHIK FUNCTION
         text = 'TEXT'
-        """text = function(session = account_session,
+        """text = analyze(session = account_session,
                         account_id = account[0],
-                        text = messages)"""
+                        text = messages
+                        msg_num=msg_num)"""
         # create message with delay, in DB
         db_message_create(
                 chat_id=profile[1],
@@ -1488,7 +1494,7 @@ def prepare_answer(account: list,
                          <= datetime.time(22)):
                 # sent message on site
                 result = False
-                """result = function(session = account_session,
+                """result = send_msg(session = account_session,
                              profile_id = profile[0],
                              text = dialogue[0]['text'])"""
                 if result:
