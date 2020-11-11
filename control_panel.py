@@ -1451,27 +1451,33 @@ def prepare_answer(account: list,
                 delay=True)
     else:
         if dialogue[0]['delay']:
-            # sent message on site
-            result = False
-            """result = function(session = account_session,
-                         profile_id = profile[0],
-                         text = dialogue[0]['text'])"""
-            if result:
-                # add update for message in DB, to delete from delayed
-                db_session = Session()
-                update_q = update(Messages).where(
-                        Messages.message_token == dialogue[0][
-                            'message_token']). \
-                    values(send_time=datetime.now(),
-                           delay=False)
-                db_session.execute(update_q)
-                db_session.commit()
-                db_session.close()
-                pass
-            else:
-                logger.error(f'Failed to sent message '
-                             f'from account {account[0]} '
-                             f'to profile_id {profile[0]}')
+            if (datetime(dialogue[0]['send_time'] - datetime.now()).hour < 2) \
+                    and (datetime.time(9)
+                         <= dialogue[0]['send_time']
+                         <= datetime.time(22)):
+                # sent message on site
+                result = False
+                """result = function(session = account_session,
+                             profile_id = profile[0],
+                             text = dialogue[0]['text'])"""
+                if result:
+                    # add update for message in DB, to delete from delayed
+                    db_session = Session()
+                    update_q = update(Messages).where(
+                            Messages.message_token == dialogue[0][
+                                'message_token']). \
+                        values(send_time=datetime.now(),
+                               delay=False)
+                    db_session.execute(update_q)
+                    db_session.commit()
+                    db_session.close()
+                    return True
+                else:
+                    logger.error(f'Failed to sent message '
+                                 f'from account {account[0]} '
+                                 f'to profile_id {profile[0]}')
+                    return False
+    return False
 
 
 """print(profile_dialogs_checker(observed_profile_id='1000868043',

@@ -58,7 +58,7 @@ def worker_msg_sender() -> None:
                 prepare_answer(account=account,
                                profile=profile,
                                account_session=account_session,
-                               sent_delay=sent_delay, )
+                               sent_delay=sent_delay)
 
         sleep(time_delta)
 
