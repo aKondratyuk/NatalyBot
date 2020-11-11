@@ -1016,10 +1016,24 @@ def message_anchor_delete():
     text_in_msg = db_duplicate_check([Messages],
                                      Messages.text_id == text_id)
     if not text_in_msg:
-        deleted_tags = db_delete_rows([
+        # find tags which used for template
+        anchor_tags = db_get_rows_2([Tagging.tag],
+                                    [Tagging.text_id == text_id])
+        anchor_tags = set([tag[0] for tag in anchor_tags])
+        # delete_tags_assign
+        deleted_tags_assign = db_delete_rows([
                 Tagging
                 ],
                 Tagging.text_id == text_id)
+        # find similar tags which used for
+        # another templates and this template
+        shared_anchor_tags = db_get_rows_2([Tagging.tag],
+                                           [Tagging.tag.in_(anchor_tags)])
+        shared_anchor_tags = set([tag[0] for tag in shared_anchor_tags])
+        tags_to_delete = anchor_tags - shared_anchor_tags
+        detele_tags = db_delete_rows_2([Tags],
+                                       [Tags.tag.in_(tags_to_delete)],
+                                       synchronize_session='fetch')
         deleted_texts = db_delete_rows([
                 Texts
                 ],

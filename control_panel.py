@@ -794,6 +794,37 @@ def db_get_rows_2(tables: list,
     return result
 
 
+def db_delete_rows_2(tables: list,
+                     statements: list = None,
+                     order_by: list = None,
+                     descending: bool = False,
+                     limit: int = None,
+                     return_query: bool = False,
+                     synchronize_session=None) -> list:
+    """Select all rows from tables list,
+    which have been filtered with 'statements'"""
+    db_session = Session()
+    query = db_session.query(*tables)
+    if statements:
+        for statement in statements:
+            query = query.filter(statement != '')
+    if order_by:
+        for sort in order_by:
+            if descending:
+                query = query.order_by(sort.desc())
+            else:
+                query = query.order_by(sort)
+    if limit:
+        query = query.limit(limit)
+    if synchronize_session != None:
+        rows = query.delete(synchronize_session=synchronize_session)
+    else:
+        rows = query.delete()  # return number of deleted msg
+    db_session.commit()  # return number of deleted msg
+    db_session.close()
+    return rows
+
+
 def db_delete_rows(tables: list,
                    *statements) -> int:
     """Delete all rows from tables list,
