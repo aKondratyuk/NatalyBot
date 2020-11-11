@@ -310,10 +310,13 @@ class MessageAnchors(Base):
     __tablename__ = 'Message_anchors'
     profile_id = Column(VARCHAR(20), primary_key=True)
     text_id = Column(BINARY(16), primary_key=True)
+    used = Column(BOOLEAN, default=0)
 
     def __repr__(self):
-        return "<Roles_of_users(profile_id='%s', text_id='%s')>" % (
-                self.profile_id, self.text_id)
+        return "<Roles_of_users(profile_id='%s', text_id='%s', " \
+               "used='%s')>" % (
+                       self.profile_id, self.text_id,
+                       self.used)
 
 
 class Texts(Base):
