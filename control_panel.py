@@ -2,6 +2,7 @@
 import re
 from datetime import datetime, timedelta
 from math import ceil
+from threading import Thread
 from time import time
 from uuid import uuid4
 
@@ -365,7 +366,8 @@ def dialog_download(observer_login: str,
                     observer_password: str,
                     sender_id: str,
                     receiver_profile_id: str,
-                    download_new: bool = False) -> bool:
+                    download_new: bool = False,
+                    account_session=None) -> bool:
     """Отправка сообщения
     Keyword arguments:
     session -- сессия залогиненого аккаунта
@@ -377,12 +379,13 @@ def dialog_download(observer_login: str,
             "filterID": receiver_profile_id,
             "filterPPage": "20"
             }
+    if not account_session:
+        account_session, profile_id = login(
+                profile_login=observer_login,
+                password=observer_password)
 
-    current_profile_session, profile_id = login(
-            profile_login=observer_login,
-            password=observer_password)
     total_msg, new_msg = profile_in_inbox(
-            session=current_profile_session,
+            session=account_session,
             profile_id=receiver_profile_id,
             inbox=sender_id == receiver_profile_id)
     if total_msg == 0:
@@ -413,7 +416,7 @@ def dialog_download(observer_login: str,
     else:
         return False
     for page in range(1, last_page + 1):
-        dialog_page_upload(current_profile_session=current_profile_session,
+        dialog_page_upload(current_profile_session=account_session,
                            data=data,
                            page=page,
                            open_msg_count=open_msg_count,
@@ -1378,7 +1381,7 @@ def send_messages(profile_id_list: str,
     return True
 
 
-def profile_dialogs_checker(observed_profile_id: str,
+def account_dialogs_checker(observed_profile_id: str,
                             observed_profile_password: str,
                             max_page: int = None) -> bool:
     from main import logger
@@ -1419,40 +1422,62 @@ def profile_dialogs_checker(observed_profile_id: str,
                 if max_page <= page:
                     break
         page = 1
-    print(f"Время считывания профилей для аккаунта: {observed_profile_id}, "
-          f"{time() - start_time} sec")
-    start_time = time()
+    """print(f"Время считывания профилей для аккаунта: {observed_profile_id}, "
+          f"{time() - start_time} sec")"""
+    # start_time = time()
+    profiles_threads = []
     for profile_id in profiles:
-        start_time_for_profile = time()
-        logger.info(f'Start load dialog for profile_id: {profile_id}')
-        start_time_for_profile_dialogue = time()
-        dialog_download(
-                observer_login=observed_profile_id,
-                observer_password=observed_profile_password,
-                sender_id=profile_id,
-                receiver_profile_id=profile_id)
-        dialog_download(
-                observer_login=observed_profile_id,
-                observer_password=observed_profile_password,
-                sender_id=observed_profile_id,
-                receiver_profile_id=profile_id)
-        print(f"Время загрузки диалогов профиля: {profile_id}, "
-              f"{time() - start_time_for_profile_dialogue} sec")
-        # load description for profile
-        start_time_for_profile_desc = time()
-        db_load_profile_description(profile_id)
-        print(f"Время загрузки описания профиля: {profile_id}, "
-              f"{time() - start_time_for_profile_desc} sec")
-        print(f"Все время загрузки диалогов для аккаунта:"
-              f" {observed_profile_id} и профиля: {profile_id}, "
-              f"{time() - start_time_for_profile} sec")
-
-    print(f"Время загрузки диалогов для аккаунта:"
+        t = Thread(target=profile_dialogs_checker,
+                   args=(observed_profile_id,
+                         observed_profile_password,
+                         profile_id,
+                         current_profile_session))
+        t.start()
+        profiles_threads.append(t)
+        """profile_dialogs_checker(
+                observed_profile_id=observed_profile_id,
+                observed_profile_password=observed_profile_password,
+                profile_id=profile_id)"""
+    """print(f"Время загрузки диалогов для аккаунта:"
           f" {observed_profile_id}, "
-          f"{time() - start_time} sec")
+          f"{time() - start_time} sec")"""
+    for i in range(len(profiles_threads)):
+        profiles_threads[i].join()
     logger.info(f'Message update worker finished load dialog from:'
                 f'account: {observed_profile_id}')
     return True
+
+
+def profile_dialogs_checker(observed_profile_id,
+                            observed_profile_password,
+                            profile_id,
+                            account_session):
+    from main import logger
+    # start_time_for_profile = time()
+    logger.info(f'Start load dialog for profile_id: {profile_id}')
+    # start_time_for_profile_dialogue = time()
+    dialog_download(
+            observer_login=observed_profile_id,
+            observer_password=observed_profile_password,
+            sender_id=profile_id,
+            receiver_profile_id=profile_id,
+            account_session=account_session)
+    dialog_download(
+            observer_login=observed_profile_id,
+            observer_password=observed_profile_password,
+            sender_id=observed_profile_id,
+            receiver_profile_id=profile_id,
+            account_session=account_session)
+    """print(f"Время загрузки диалогов профиля: {profile_id}, "
+          f"{time() - start_time_for_profile_dialogue} sec")"""
+    # load description for profile
+    # start_time_for_profile_desc = time()
+    db_load_profile_description(profile_id)
+    """print(f"Время загрузки описания профиля: {profile_id}, "
+          f"{time() - start_time_for_profile_desc} sec")
+    print(f"Все время загрузки диалогов для аккаунта:"
+          f" {observed_profile_id} и профиля: {profile_id}, "
+          f"{time() - start_time_for_profile} sec")"""
 
 
 def prepare_answer(account: list,

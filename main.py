@@ -59,6 +59,10 @@ logger.addHandler(stream_handler)
 logger.addHandler(sql_handler)
 app.logger = logger
 
+# this logger work only with DB
+db_logger = MyLogger("DB_logger")
+db_logger.addHandler(sql_handler)
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -1070,7 +1074,15 @@ def users_list():
 @app.route('/logs', methods=['GET', 'POST'])
 @login_required
 def logs():
-    logs = db_get_rows([Logs])
+    logs = db_get_rows_2([Logs.login,
+                          Logs.category,
+                          Logs.message,
+                          Logs.ip,
+                          Logs.create_time
+                          ],
+                         order_by=[Logs.create_time],
+                         descending=True,
+                         limit=1000)
     return render_template('logs.html', logs=logs)
 
 
@@ -1080,11 +1092,11 @@ if __name__ == "__main__":
     # worker_msg_sender()
 
     # Обновление диалогов с сайта
-    # from background_worker import worker_profile_and_msg_updater
-    # from multiprocessing import Process
+    """from background_worker import worker_profile_and_msg_updater
+    from multiprocessing import Process
 
-    # t1 = Process(target=worker_profile_and_msg_updater)
-    # t1.start()
-    # workers_number += 1
+    t1 = Process(target=worker_profile_and_msg_updater)
+    t1.start()
+    workers_number += 1"""
     # Run the app until stopped
     app.run()

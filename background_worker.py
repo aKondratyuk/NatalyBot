@@ -1,7 +1,9 @@
-from time import sleep
+from threading import Thread
+from time import sleep, time
 
-from control_panel import db_get_rows, db_get_rows_2, dialog_download, \
-    prepare_answer, profile_dialogs_checker
+from control_panel import account_dialogs_checker, db_get_rows, \
+    db_get_rows_2, \
+    dialog_download, prepare_answer
 from db_models import ChatSessions, Profiles
 from verification import login
 
@@ -112,6 +114,8 @@ def worker_profile_and_msg_updater() -> None:
     max_page = 3
     while True:
         # code
+        start_time = time()
+        threads = []
         profiles = db_get_rows([
                 Profiles.profile_id,
                 Profiles.profile_password
@@ -121,12 +125,19 @@ def worker_profile_and_msg_updater() -> None:
             profile_id = profile[0]
             profile_pass = profile[1]
 
-            # t = Thread(target=profile_dialogs_checker,
-            #           args=(profile_id, profile_pass, max_page))
-            # t.start()
-            profile_dialogs_checker(observed_profile_id=profile_id,
+            t = Thread(target=account_dialogs_checker,
+                       args=(profile_id, profile_pass, max_page))
+            t.start()
+
+            threads.append(t)
+            """account_dialogs_checker(observed_profile_id=profile_id,
                                     observed_profile_password=profile_pass,
-                                    max_page=max_page)
+                                    max_page=max_page)"""
+        for i in range(len(threads)):
+            print(f'Waiting thread №{i}')
+            threads[i].join()
+        print(f"Время загрузки всех диалогов для всех аккаунтов, "
+              f"{time() - start_time} sec")
         sleep(time_delta)
 
 
