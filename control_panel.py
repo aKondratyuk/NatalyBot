@@ -20,6 +20,7 @@ from scraping import collect_info_from_profile, get_id_profiles, \
     get_parsed_page, search_for_profiles, send_request
 from verification import check_for_filter, login, profile_deleted, \
     profile_in_inbox
+from messaging import create_message_response
 
 
 def create_invite(creator: User,
@@ -1472,20 +1473,25 @@ def prepare_answer(account: list,
             if message['profile_id'] == account:
                 msg_num += 1
         # PLACE FOR ANDREYCHIK FUNCTION
-        text = 'TEXT'
-        """text = analyze(session = account_session,
-                        account_id = account[0],
-                        text = messages
-                        msg_num=msg_num)"""
-        # create message with delay, in DB
-        db_message_create(
-                chat_id=profile[1],
-                send_time=datetime.now()
-                          + timedelta(hours=sent_delay),
-                viewed=False,
-                sender=account[0],
-                text=text,
-                delay=True)
+        MESSAGE_CREATED = True
+        for i in range(3):
+            try:
+                text = create_message_response(template_number=msg_num, sender_profile_id=account[0],
+                                               receiver_profile_id=profile[0], message_text=messages)
+            except Exception as e:
+                if i == 2:
+                    MESSAGE_CREATED = False
+        if MESSAGE_CREATED:
+            # create message with delay, in DB
+            db_message_create(
+                    chat_id=profile[1],
+                    send_time=datetime.now()
+                              + timedelta(hours=sent_delay),
+                    viewed=False,
+                    sender=account[0],
+                    text=text,
+                    delay=True)
+            return MESSAGE_CREATED
     else:
         if dialogue[0]['delay']:
             if (datetime(dialogue[0]['send_time'] - datetime.now()).hour < 2) \

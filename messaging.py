@@ -1,6 +1,6 @@
 from scraping import send_request, collect_info_from_profile
 from control_panel import db_get_rows_2
-from db_models import MessageTemplates, Texts, MessageAnchors
+from db_models import MessageTemplates, Texts, MessageAnchors, Tagging
 import re
 
 
@@ -13,6 +13,7 @@ def create_custom_message(messager_profile_id, receiver_profile_id, message_text
     receiver_profile_id -- ID того кто отправляет
     path_to_file -- путь к файлу
     """
+    # МОЖНО ЗАМЕНИТЬ НА ФУНКЦИЮ ВЫТЯГИВАНИЯ С БАЗЫ!!!
     receiver_data = collect_info_from_profile(receiver_profile_id)
     sender_data = collect_info_from_profile(messager_profile_id)
 
@@ -61,21 +62,32 @@ def create_message_response(template_number, sender_profile_id, receiver_profile
     receiver_profile_id -- ID профиля которому будет отправлено сообщение
     message_text -- текст входящего письма от профиля
     """
-    # Здесь еще нужно будет добавить обработку этого шаблона
+    # Вытягиваем шаблон по номеру
     text_template = db_get_rows_2([Texts.text], [
               MessageTemplates.profile_id == receiver_profile_id,
               MessageTemplates.text_number == template_number,
-              MessageTemplates.text_id == Texts.text_id])  # Здесь вызываем функцию для наахождения нужного нам шаблона по template_number
+              MessageTemplates.text_id == Texts.text_id])
     text_template = create_custom_message(sender_profile_id, receiver_profile_id, text_template[0][0])
-    anchors = "anchors"  # Здесь необходимо вызвать функцию для вытягивания якорей
+    # Вытягиваем все якоря с базы
+    anchors = db_get_rows_2([Tagging.tag], [
+                MessageAnchors.profile_id == sender_profile_id,
+                MessageAnchors.used == False,
+                MessageAnchors.text_id == Texts.text_id,
+                Texts.text_id == Tagging.text_id])
     # В тексте шаблона должно находиться {} - это место, где текст делится пополам До Якоре и После.
     # И в первую его часть в самый конец добавляются все тексты якорей
     temp_text_template = text_template.split("{}")
     i = 0
     for anchor in anchors:
-        if anchor in message_text:
+        if anchor[0] in message_text:
             # Указываем индекс, куда помещяется текст якоря в списке. Он будет всегда добавляться перед {}
             i += 1
+            anchor_text = db_get_rows_2([Texts.text, Texts.text_id], [
+                 MessageAnchors.profile_id == sender_profile_id,
+                 MessageAnchors.used == False,
+                 MessageAnchors.text_id == Texts.text_id,
+                 Texts.text_id == Tagging.text_id,
+                 Tagging.tag == anchor[0]])
             # Вставляем текст якора
             temp_text_template.insert(i, anchor)
     # Соединяем все элементы списка в единый текст. Если якорей так и не было, то текст будет теперь без {}
