@@ -1,5 +1,4 @@
 from scraping import send_request, collect_info_from_profile
-from control_panel import db_get_rows_2
 from db_models import MessageTemplates, Texts, MessageAnchors, Tagging
 import re
 
@@ -62,6 +61,7 @@ def create_message_response(template_number, sender_profile_id, receiver_profile
     receiver_profile_id -- ID профиля которому будет отправлено сообщение
     message_text -- текст входящего письма от профиля
     """
+    from control_panel import db_get_rows_2
     # Вытягиваем шаблон по номеру
     text_template = db_get_rows_2([Texts.text], [
               MessageTemplates.profile_id == receiver_profile_id,

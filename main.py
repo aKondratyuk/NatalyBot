@@ -1075,8 +1075,8 @@ def logs():
 
 
 if __name__ == "__main__":
-    """from background_worker import worker_msg_sender
-    worker_msg_sender()"""
+    from background_worker import worker_msg_sender
+    worker_msg_sender()
     # t1 = Process(target=worker_profile_and_msg_updater)
     # t1.start()
     # workers_number += 1

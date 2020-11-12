@@ -232,14 +232,30 @@ def collect_info_from_profile(profile_id):
         seventh_row = info[6]
         # Возраст
         age = specified(first_row, 0)
+        numbers_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+        # Безопасное извлечение возраста
         if age != 'Not specified':
-            age = int(age[:-3])
+            numbers_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+            temp_age = ""
+            for symbol in age:
+                if symbol in numbers_list:
+                    temp_age += symbol
+            age = int(temp_age)
         # Пол
         gender = specified(first_row, 2)
         if gender != 'Not specified':
             gender = gender[:-1]
         # Зодиак
-        zodiac = specified(first_row, 3)
+        zodiac_list = ['aries', 'leo', 'sagittarius', 'taurus', 'virgo', 'capricorn', 'gemini', 'libra', 'aquarius',
+                       'cancer', 'scorpio', 'pisces']
+        temp_info = info[0].lower()
+        for zodiac in zodiac_list:
+            if zodiac in temp_info:
+                zodiac = zodiac
+                del temp_info
+                break
+            else:
+                zodiac = "Not specified"
         # Город
         city = specified(second_row, 0)
         # Страна
