@@ -1,12 +1,15 @@
-from scraping import send_request, collect_info_from_profile
-from control_panel import db_get_rows_2
-from db_models import MessageTemplates, Texts, MessageAnchors, Tagging
 import re
 
+from db_models import MessageAnchors, MessageTemplates, Tagging, Texts
+from scraping import collect_info_from_profile, send_request
 
-def create_custom_message(messager_profile_id, receiver_profile_id, message_text):
-    """Функция для создания кастомного сообщения. Есть шаблон письма. В нем есть ключевые места по тиму {name}
-    функция будет заменять эти ключевые слова на собранные данные с получателя и отправителя пиьсма
+
+def create_custom_message(messager_profile_id, receiver_profile_id,
+                          message_text):
+    """Функция для создания кастомного сообщения. Есть шаблон письма. В нем
+    есть ключевые места по тиму {name}
+    функция будет заменять эти ключевые слова на собранные данные с
+    получателя и отправителя пиьсма
 
     Keyword arguments:
     messager_profile_id -- ID того кто отправляет
@@ -62,6 +65,7 @@ def create_message_response(template_number, sender_profile_id, receiver_profile
     receiver_profile_id -- ID профиля которому будет отправлено сообщение
     message_text -- текст входящего письма от профиля
     """
+    from control_panel import db_get_rows_2
     # Вытягиваем шаблон по номеру
     text_template = db_get_rows_2([Texts.text], [
               MessageTemplates.profile_id == receiver_profile_id,

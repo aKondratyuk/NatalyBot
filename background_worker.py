@@ -34,10 +34,8 @@ def worker_msg_sender() -> None:
                                          ])
         for account in accounts:
             chat_id_query = db_get_rows_2([ChatSessions.chat_id],
-                                          [
-                                                  ChatSessions.profile_id ==
-                                                  account[0]
-                                                  ],
+                                          [ChatSessions.profile_id == account[
+                                              0]],
                                           return_query=True)
             # get profiles which are available and have chat with account
             profiles = db_get_rows_2([ChatSessions.profile_id,
@@ -109,7 +107,6 @@ def worker_profile_and_msg_updater() -> None:
     works in background, time delta: 5 min"""
     """Ищет в инбоксе и оутбоксе сообщения, первые 10 страниц, и загружает 
     их, попутно добавляя профиля и диалоги в базу"""
-    from main import logger
     time_delta = 3600
     max_page = 3
     while True:
@@ -122,13 +119,13 @@ def worker_profile_and_msg_updater() -> None:
         for profile in profiles:
             profile_id = profile[0]
             profile_pass = profile[1]
-            logger.info(f'Message update worker start load dialog from:'
-                        f'account: {profile_id}')
+
+            # t = Thread(target=profile_dialogs_checker,
+            #           args=(profile_id, profile_pass, max_page))
+            # t.start()
             profile_dialogs_checker(observed_profile_id=profile_id,
                                     observed_profile_password=profile_pass,
                                     max_page=max_page)
-            logger.info(f'Message update worker finished load dialog from:'
-                        f'account: {profile_id}')
         sleep(time_delta)
 
 

@@ -233,7 +233,10 @@ def collect_info_from_profile(profile_id):
         # Возраст
         age = specified(first_row, 0)
         if age != 'Not specified':
-            age = int(age[:-3])
+            if len(age) >= 3:
+                age = int(age[:-3])
+            else:
+                age = int(age)
         # Пол
         gender = specified(first_row, 2)
         if gender != 'Not specified':
