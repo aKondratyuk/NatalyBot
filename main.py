@@ -1082,6 +1082,7 @@ if __name__ == "__main__":
     # Обновление диалогов с сайта
     # from background_worker import worker_profile_and_msg_updater
     # from multiprocessing import Process
+
     # t1 = Process(target=worker_profile_and_msg_updater)
     # t1.start()
     # workers_number += 1

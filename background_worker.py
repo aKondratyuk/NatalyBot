@@ -22,6 +22,7 @@ def worker_msg_sender() -> None:
     works in background with exists dialogs, time delta: 5 min"""
 
     time_delta = 3600
+    # Sent delay in hours
     sent_delay = 1
 
     while True:
