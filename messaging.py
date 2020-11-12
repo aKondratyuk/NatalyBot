@@ -1,11 +1,15 @@
-from scraping import send_request, collect_info_from_profile
-from db_models import MessageTemplates, Texts, MessageAnchors, Tagging
 import re
 
+from db_models import MessageAnchors, MessageTemplates, Tagging, Texts
+from scraping import collect_info_from_profile, send_request
 
-def create_custom_message(messager_profile_id, receiver_profile_id, message_text):
-    """Функция для создания кастомного сообщения. Есть шаблон письма. В нем есть ключевые места по тиму {name}
-    функция будет заменять эти ключевые слова на собранные данные с получателя и отправителя пиьсма
+
+def create_custom_message(messager_profile_id, receiver_profile_id,
+                          message_text):
+    """Функция для создания кастомного сообщения. Есть шаблон письма. В нем
+    есть ключевые места по тиму {name}
+    функция будет заменять эти ключевые слова на собранные данные с
+    получателя и отправителя пиьсма
 
     Keyword arguments:
     messager_profile_id -- ID того кто отправляет

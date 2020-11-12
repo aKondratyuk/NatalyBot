@@ -16,11 +16,11 @@ from db_models import Categories, CategoryLevel, ChatSessions, Chats, \
     ProfileDescription, \
     ProfileLanguages, Profiles, RolesOfUsers, SentInvites, Session, Texts, \
     UserRoles, Users, Visibility
+from messaging import create_message_response
 from scraping import collect_info_from_profile, get_id_profiles, \
     get_parsed_page, search_for_profiles, send_request
 from verification import check_for_filter, login, profile_deleted, \
     profile_in_inbox
-from messaging import create_message_response
 
 
 def create_invite(creator: User,
@@ -1382,6 +1382,9 @@ def profile_dialogs_checker(observed_profile_id: str,
                             observed_profile_password: str,
                             max_page: int = None) -> bool:
     from main import logger
+    logger.info(f'Message update worker start load dialog from:'
+                f'account: {observed_profile_id}')
+
     current_profile_session, observed_profile_id = login(
             profile_login=observed_profile_id,
             password=observed_profile_password)
@@ -1447,6 +1450,8 @@ def profile_dialogs_checker(observed_profile_id: str,
     print(f"Время загрузки диалогов для аккаунта:"
           f" {observed_profile_id}, "
           f"{time() - start_time} sec")
+    logger.info(f'Message update worker finished load dialog from:'
+                f'account: {observed_profile_id}')
     return True
 
 
@@ -1458,6 +1463,11 @@ def prepare_answer(account: list,
     # get dialogue with profile
     dialogue = db_show_dialog(sender=account[0],
                               receiver=profile[0])
+    if len(dialogue) == 0:
+        logger.error(f'Account {account[0]} '
+                     f'and profile {profile[0]} have chat, '
+                     f'but this chat without messages')
+        return False
     messages = ''
     # add last messages from profile
     for message in dialogue:
@@ -1493,6 +1503,7 @@ def prepare_answer(account: list,
                     delay=True)
             return MESSAGE_CREATED
     else:
+
         if dialogue[0]['delay']:
             if (datetime(dialogue[0]['send_time'] - datetime.now()).hour < 2) \
                     and (datetime.time(9)
