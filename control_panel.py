@@ -2,6 +2,7 @@
 import re
 from datetime import datetime, timedelta
 from math import ceil
+from random import randint
 from threading import Thread
 from time import time
 from uuid import UUID, uuid4
@@ -1496,6 +1497,10 @@ def prepare_answer(account: list,
                    text_templates: list,
                    sent_delay: int = 2) -> bool:
     from main import logger
+
+    min_hour = 9
+    max_hour = 21
+
     # get dialogue with profile
     dialogue = db_show_dialog(sender=account[0],
                               receiver=profile[0],
@@ -1512,7 +1517,35 @@ def prepare_answer(account: list,
             break
         else:
             messages += message['text']
-
+    if dialogue[0]['delay']:
+        time_after_send = datetime.now() - dialogue[0]['send_time']
+        test = ''
+        if (time_after_send > timedelta(hours=2)) \
+                and (min_hour <= datetime.now().hour <= max_hour) \
+                and (
+                randint(1, 30) <= datetime.now().minute <= randint(30, 58)):
+            # sent message on site
+            result = False
+            """result = send_msg(session = account_session,
+                         profile_id = profile[0],
+                         text = dialogue[0]['text'])"""
+            if result:
+                # add update for message in DB, to delete from delayed
+                db_session = Session()
+                update_q = update(Messages).where(
+                        Messages.message_token == dialogue[0][
+                            'message_token']). \
+                    values(send_time=datetime.now(),
+                           delay=False)
+                db_session.execute(update_q)
+                db_session.commit()
+                db_session.close()
+                return True
+            else:
+                logger.error(f'Failed to sent message '
+                             f'from account {account[0]} '
+                             f'to profile_id {profile[0]}')
+                return False
     if len(messages) != 0:
         # get count of account messages
         msg_num = 0
@@ -1583,35 +1616,7 @@ def prepare_answer(account: list,
                 logger.info(f'Account {account[0]} created answer for '
                             f'profile: {profile[0]}')
             return MESSAGE_CREATED
-    else:
 
-        if dialogue[0]['delay']:
-            if (datetime(dialogue[0]['send_time'] - datetime.now()).hour < 2) \
-                    and (datetime.time(9)
-                         <= dialogue[0]['send_time']
-                         <= datetime.time(22)):
-                # sent message on site
-                result = False
-                """result = send_msg(session = account_session,
-                             profile_id = profile[0],
-                             text = dialogue[0]['text'])"""
-                if result:
-                    # add update for message in DB, to delete from delayed
-                    db_session = Session()
-                    update_q = update(Messages).where(
-                            Messages.message_token == dialogue[0][
-                                'message_token']). \
-                        values(send_time=datetime.now(),
-                               delay=False)
-                    db_session.execute(update_q)
-                    db_session.commit()
-                    db_session.close()
-                    return True
-                else:
-                    logger.error(f'Failed to sent message '
-                                 f'from account {account[0]} '
-                                 f'to profile_id {profile[0]}')
-                    return False
     return False
 
 
