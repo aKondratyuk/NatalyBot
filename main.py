@@ -4,7 +4,6 @@ import logging
 import os
 from logging import Logger
 from urllib.parse import urljoin, urlparse
-from uuid import UUID
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, \
     url_for
@@ -1088,8 +1087,9 @@ def logs():
 
 if __name__ == "__main__":
     # Обработка сообщений и подготовка шаблонов с якорями
-    # from background_worker import worker_msg_sender
-    # worker_msg_sender()
+    from background_worker import worker_msg_sender
+
+    worker_msg_sender()
 
     # Обновление диалогов с сайта
     """from background_worker import worker_profile_and_msg_updater

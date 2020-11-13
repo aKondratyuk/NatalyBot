@@ -1,6 +1,6 @@
 import re
 
-from db_models import MessageAnchors, MessageTemplates, Tagging, Texts
+from db_models import MessageAnchors, Tagging, Texts, UsedAnchors
 from scraping import collect_info_from_profile, send_request
 
 
@@ -57,7 +57,11 @@ def create_custom_message(messager_profile_id, receiver_profile_id,
     return message_text
 
 
-def create_message_response(template_number, sender_profile_id, receiver_profile_id, message_text):
+def create_message_response(template_number,
+                            sender_profile_id,
+                            receiver_profile_id,
+                            message_text,
+                            text_templates):
     """Формирование шаблонного ответа на входящее письмо
 
     Keyword arguments:
@@ -66,38 +70,53 @@ def create_message_response(template_number, sender_profile_id, receiver_profile
     message_text -- текст входящего письма от профиля
     """
     from control_panel import db_get_rows_2
-    # Вытягиваем шаблон по номеру
-    text_template = db_get_rows_2([Texts.text], [
-              MessageTemplates.profile_id == receiver_profile_id,
-              MessageTemplates.text_number == template_number,
-              MessageTemplates.text_id == Texts.text_id])
-    text_template = create_custom_message(sender_profile_id, receiver_profile_id, text_template[0][0])
+
+    template_text = ''
+    for template in text_templates:
+        # one template represents as (template number: int, text: str)
+        if template[0] == template_number:
+            template_text = template[1]
+            break
+    if len(template_text) == 0:
+        return False, False
+    text_template = create_custom_message(sender_profile_id,
+                                          receiver_profile_id,
+                                          template_text)
     # Вытягиваем все якоря с базы
+    used_anchors = db_get_rows_2([UsedAnchors.text_id], [
+            UsedAnchors.profile_id == receiver_profile_id
+            ],
+                                 return_query=True)
     anchors = db_get_rows_2([Tagging.tag], [
-                MessageAnchors.profile_id == sender_profile_id,
-                MessageAnchors.used == False,
-                MessageAnchors.text_id == Texts.text_id,
-                Texts.text_id == Tagging.text_id])
-    # В тексте шаблона должно находиться {} - это место, где текст делится пополам До Якоре и После.
+            MessageAnchors.profile_id == sender_profile_id,
+            MessageAnchors.text_id == Texts.text_id,
+            MessageAnchors.text_id.notin_(used_anchors),
+            Texts.text_id == Tagging.text_id])
+
+    # В тексте шаблона должно находиться {} - это место, где текст делится
+    # пополам До Якоре и После.
     # И в первую его часть в самый конец добавляются все тексты якорей
     temp_text_template = text_template.split("{}")
     i = 0
+    used_texts = []
     for anchor in anchors:
         if anchor[0] in message_text:
-            # Указываем индекс, куда помещяется текст якоря в списке. Он будет всегда добавляться перед {}
+            # Указываем индекс, куда помещяется текст якоря в списке. Он
+            # будет всегда добавляться перед {}
             i += 1
             anchor_text = db_get_rows_2([Texts.text, Texts.text_id], [
-                 MessageAnchors.profile_id == sender_profile_id,
-                 MessageAnchors.used == False,
-                 MessageAnchors.text_id == Texts.text_id,
-                 Texts.text_id == Tagging.text_id,
-                 Tagging.tag == anchor[0]])
+                    MessageAnchors.profile_id == sender_profile_id,
+                    MessageAnchors.text_id.notin_(used_anchors),
+                    MessageAnchors.text_id == Texts.text_id,
+                    Texts.text_id == Tagging.text_id,
+                    Tagging.tag == anchor[0]])
             # Вставляем текст якора
-            temp_text_template.insert(i, anchor)
+            temp_text_template.insert(i, anchor_text[0])
+            used_texts.append(anchor_text[1])
     # Соединяем все элементы списка в единый текст. Если якорей так и не было, то текст будет теперь без {}
     text_template = "".join(temp_text_template)
 
-    return text_template
+    return text_template, used_texts
 
 
 def message(session, receiver_profile_id, message_text):

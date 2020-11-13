@@ -4,7 +4,7 @@ from time import sleep, time
 from control_panel import account_dialogs_checker, db_get_rows, \
     db_get_rows_2, \
     dialog_download, prepare_answer
-from db_models import ChatSessions, Profiles
+from db_models import ChatSessions, MessageTemplates, Profiles, Texts
 from verification import login
 
 
@@ -22,6 +22,7 @@ def worker_invites() -> None:
 def worker_msg_sender() -> None:
     """Send messages with delay,
     works in background with exists dialogs, time delta: 5 min"""
+    from main import logger
 
     time_delta = 3600
     # Sent delay in hours
@@ -47,7 +48,7 @@ def worker_msg_sender() -> None:
                                              ChatSessions.profile_id ==
                                              Profiles.profile_id,
                                              ChatSessions.chat_id.in_(
-                                                 chat_id_query),
+                                                     chat_id_query),
                                              Profiles.profile_password == None,
                                              Profiles.available
                                              ])
@@ -55,11 +56,30 @@ def worker_msg_sender() -> None:
                 # if account has dialogs with active profiles
                 account_session, account_id = login(profile_login=account[0],
                                                     password=account[1])
+            # Вытягиваем шаблон по номеру
+            text_templates = db_get_rows_2([MessageTemplates.text_number,
+                                            Texts.text],
+                                           [
+                                                   MessageTemplates.profile_id ==
+                                                   account[0],
+                                                   MessageTemplates.text_id
+                                                   == Texts.text_id
+                                                   ],
+                                           order_by=[
+                                                   MessageTemplates.text_number])
+            if len(text_templates) == 0:
+                # we can't find any template
+                logger.info(f'Account {account[0]} tried to create '
+                            f'answer for profile: {profile[0]}, '
+                            f"but it hasn't templates")
+                continue
+
             for profile in profiles:
                 prepare_answer(account=account,
                                profile=profile,
                                account_session=account_session,
-                               sent_delay=sent_delay)
+                               sent_delay=sent_delay,
+                               text_templates=text_templates)
 
         sleep(time_delta)
 

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from math import ceil
 from threading import Thread
 from time import time
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from flask_login import current_user
 from sqlalchemy import desc, exc, update
@@ -13,10 +13,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from authentication import User
 from db_models import Categories, CategoryLevel, ChatSessions, Chats, \
     Invites, \
-    Levels, MessageTemplates, Messages, ProfileCategories, \
-    ProfileDescription, \
-    ProfileLanguages, Profiles, RolesOfUsers, SentInvites, Session, Texts, \
-    UserRoles, Users, Visibility
+    Levels, MessageAnchors, MessageTemplates, Messages, ProfileCategories, \
+    ProfileDescription, ProfileLanguages, Profiles, RolesOfUsers, \
+    SentInvites, \
+    Session, Tagging, Texts, UsedAnchors, UserRoles, Users, Visibility
 from messaging import create_message_response
 from scraping import collect_info_from_profile, get_id_profiles, \
     get_parsed_page, search_for_profiles, send_request
@@ -898,6 +898,16 @@ def db_duplicate_check(tables: list,
         return False
 
 
+def db_duplicate_check_2(tables: list,
+                         statements: list) -> bool:
+    """Use SELECT statement to find row of table in database"""
+    result_rows = db_get_rows_2(tables, statements)
+    if len(result_rows) > 0:
+        return True
+    else:
+        return False
+
+
 def db_fill_visibility(login: str) -> bool:
     """Adds visibility status of all profiles for user by login value,
     in database"""
@@ -1483,11 +1493,13 @@ def profile_dialogs_checker(observed_profile_id,
 def prepare_answer(account: list,
                    profile: list,
                    account_session,
+                   text_templates: list,
                    sent_delay: int = 2) -> bool:
     from main import logger
     # get dialogue with profile
     dialogue = db_show_dialog(sender=account[0],
-                              receiver=profile[0])
+                              receiver=profile[0],
+                              descending=True)
     if len(dialogue) == 0:
         logger.error(f'Account {account[0]} '
                      f'and profile {profile[0]} have chat, '
@@ -1505,17 +1517,36 @@ def prepare_answer(account: list,
         # get count of account messages
         msg_num = 0
         for message in dialogue[::-1]:
-            if message['profile_id'] == account:
+            if message['profile_id'] == account[0]:
                 msg_num += 1
         # PLACE FOR ANDREYCHIK FUNCTION
         MESSAGE_CREATED = True
+        if msg_num == 0:
+            logger.info(f'In dialogue with account {account[0]} and '
+                        f'profile: {profile[0]} we not send any message,'
+                        f"so we stop prepare answer")
+            return False
+        logger.info(f'Account {account[0]} tried to create answer for '
+                    f'profile: {profile[0]}')
         for i in range(3):
+            text, used_texts = create_message_response(
+                    template_number=msg_num,
+                    sender_profile_id=account[0],
+                    receiver_profile_id=profile[0],
+                    message_text=messages,
+                    text_templates=text_templates)
+            if text is False:
+                logger.info(f'Account {account[0]} tried to create '
+                            f'answer for profile: {profile[0]},'
+                            f"but it hasn't template with num {msg_num}")
+                return False
             try:
-                text = create_message_response(template_number=msg_num, sender_profile_id=account[0],
-                                               receiver_profile_id=profile[0], message_text=messages)
+                pass
             except Exception as e:
                 if i == 2:
                     MESSAGE_CREATED = False
+            if len(text) != 0:
+                break
         if MESSAGE_CREATED:
             # create message with delay, in DB
             db_message_create(
@@ -1526,6 +1557,31 @@ def prepare_answer(account: list,
                     sender=account[0],
                     text=text,
                     delay=True)
+            for text_id in used_texts:
+                db_session = Session()
+                if db_duplicate_check_2([UsedAnchors],
+                                        [UsedAnchors.profile_id == profile[0],
+                                         UsedAnchors.text_id == text_id]):
+                    logger.error('Worker_sender tried to add used anchor '
+                                 f'for profile: {profile[0]} '
+                                 f'and with text_id: '
+                                 f'{UUID(bytes=text_id)}')
+                    continue
+                used_anchor = UsedAnchors(profile_id=profile[0],
+                                          text_id=text_id)
+                db_session.add(used_anchor)
+                db_session.commit()
+                db_session.close()
+                logger.error('Worker_sender added used anchor '
+                             f'for profile: {profile[0]} '
+                             f'and with text_id: '
+                             f'{UUID(bytes=text_id)}')
+            if len(used_texts) == 0:
+                logger.info(f'Account {account[0]} created answer for '
+                            f'profile: {profile[0]} without any key words')
+            else:
+                logger.info(f'Account {account[0]} created answer for '
+                            f'profile: {profile[0]}')
             return MESSAGE_CREATED
     else:
 
@@ -1558,6 +1614,79 @@ def prepare_answer(account: list,
                     return False
     return False
 
+
+def db_error_check(empty_chats=False,
+                   profiles_without_chats=False):
+    from main import logger
+    if empty_chats:
+        # find empty chats and delete them
+        logger.info('Start empty chats searching')
+        chats = db_get_rows_2([Chats.chat_id])
+        for chat_id in chats:
+            messages = db_get_rows_2([Messages.message_token],
+                                     [Messages.chat_id == chat_id[0]])
+            if len(messages) == 0:
+                logger.info(f'Found empty chat: '
+                            f'{UUID(bytes=chat_id[0])}')
+                db_delete_rows_2([ChatSessions],
+                                 [ChatSessions.chat_id == chat_id[0]])
+                db_delete_rows_2([Chats],
+                                 [Chats.chat_id == chat_id[0]])
+        logger.info('Error check in database complete, empty chats deleted')
+    if profiles_without_chats:
+        # find empty chats and delete them
+        logger.info('Start profiles without chats searching')
+        profiles = db_get_rows_2([Profiles.profile_id],
+                                 [Profiles.profile_password == None])
+        for profile_id in profiles:
+            chats = db_get_rows_2([ChatSessions.chat_id],
+                                  [ChatSessions.profile_id == profile_id[0]])
+            if len(chats) == 0:
+                logger.info(f'Found profile without chat: '
+                            f'{profile_id[0]}')
+                db_delete_rows_2([ProfileDescription],
+                                 [ProfileDescription.profile_id == profile_id[
+                                     0]])
+                db_delete_rows_2([ProfileCategories],
+                                 [ProfileCategories.profile_id == profile_id[
+                                     0]])
+                db_delete_rows_2([ProfileLanguages],
+                                 [ProfileLanguages.profile_id == profile_id[
+                                     0]])
+                db_delete_rows_2([Visibility],
+                                 [Visibility.profile_id == profile_id[0]])
+                db_delete_rows_2([ProfileCategories],
+                                 [ProfileCategories.profile_id == profile_id[
+                                     0]])
+                templates = db_get_rows_2([Texts.text_id],
+                                          [MessageTemplates.profile_id ==
+                                           profile_id[0],
+                                           MessageTemplates.text_id ==
+                                           Texts.text_id])
+                anchors = db_get_rows_2([Texts.text_id],
+                                        [MessageAnchors.profile_id ==
+                                         profile_id[0],
+                                         MessageAnchors.text_id ==
+                                         Texts.text_id])
+                texts = templates + anchors
+                for text_id in texts:
+                    db_delete_rows_2([Tagging],
+                                     [Tagging.text_id == text_id[0]])
+                    db_delete_rows_2([MessageTemplates],
+                                     [MessageTemplates.text_id == text_id[0]])
+                    db_delete_rows_2([MessageAnchors],
+                                     [MessageAnchors.text_id == text_id[0]])
+                    db_delete_rows_2([Texts],
+                                     [Texts.text_id == text_id[0]])
+
+        logger.info('Error check in database complete, '
+                    'profiles without chats')
+
+    return True
+
+
+"""db_error_check(empty_chats=True,
+               profiles_without_chats=True)"""
 
 """print(profile_dialogs_checker(observed_profile_id='1000868043',
                               observed_profile_password='SWEETY777',
