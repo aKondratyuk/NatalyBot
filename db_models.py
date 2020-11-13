@@ -118,8 +118,8 @@ class Messages(Base):
     profile_id = Column(VARCHAR(20))
     send_time = Column(TIMESTAMP)
     text_id = Column(BINARY(16))
-    viewed = Column(BOOLEAN)
-    delay = Column(BOOLEAN)
+    viewed = Column(BOOLEAN, default=0)
+    delay = Column(BOOLEAN, default=0)
 
     def __repr__(self):
         return "<Messages(message_token='%s', chat_id='%s', " \
