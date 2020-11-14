@@ -1737,6 +1737,13 @@ messages = db_delete_rows_2([Messages.message_token],
 print(messages)"""
 """db_error_check(empty_chats=True,
                profiles_without_chats=True)"""
+"""current_profile_session, observed_profile_id = login(
+        profile_login="1000868043",
+        password="SWEETY777")
+print(profile_dialogs_checker("1000868043",
+                        "SWEETY777",
+                        "1001659287",
+                              account_session=current_profile_session))"""
 """print(dialog_download("1000868043",
                       "SWEETY777",
                       "1001659287",
