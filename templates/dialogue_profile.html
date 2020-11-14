@@ -109,6 +109,22 @@
                             float: left;
                             color: #00c273;
                         }
+                        .message-viewed-right {
+                            float: right;
+                            margin-right: 15px;
+                        }
+                        .message-viewed-left {
+                            float: left;
+                            margin-left: 15px;
+                        }
+
+                        .true {
+                            color: #6dc030;
+                        }
+
+                        .false {
+                            color: #c21d17;
+                        }
 
                         /* Style time text */
                         .time-right {
@@ -139,6 +155,7 @@
                             сообщений: {{ dialogue|length }}</p>
                     </div>
                     {% if dialogue %}
+                        {% set viewed = True  %}
                         {% for i in range(dialogue|length) %}
                             {% if dialogue[i]['profile_id'] == sender %}
                                 <div class="container_message light">
@@ -146,6 +163,7 @@
                                          alt="Avatar">
                                     <p>{{ dialogue[i]['text'] }}</p>
                                     <span class="nickname-left">{{ dialogue[i]['nickname'] }}</span>
+                                    <span class="message-viewed-left {% if viewed%}true{% else %}false{% endif %}"></span>
                                     <span class="time-right">{{ dialogue[i]['send_time'] }}</span>
                                 </div>
 
@@ -156,9 +174,8 @@
                                          alt="Avatar"
                                          class="right">
                                     <p>{{ dialogue[i]['text'] }}</p>
-                                    <span class="nickname-right">
-                                    {{ dialogue[i]['nickname'] }}
-                                </span>
+                                    <span class="nickname-right">{{ dialogue[i]['nickname'] }}</span>
+                                    <span class="message-viewed-right {% if viewed%}true{% else %}false{% endif %}"></span>
                                     <span class="time-left">
                                     {{ dialogue[i]['send_time'] }}
                                 </span>
@@ -195,6 +212,7 @@
                 </div>
             </div>
         </div>
+    </div>
 {% endblock %}
 {% block scripts %}
     <!--   Core JS Files   -->
@@ -224,4 +242,15 @@
     <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
     <script src="https://unpkg.com/bootstrap-table@1.18.0/dist/bootstrap-table.min.js"></script>
     <script src="{{ url_for('static', filename='js/demo.js') }}"></script>
+    <script>
+        let viewed = document.getElementsByClassName('true');
+        viewed.forEach(function(item) {
+            (item.innerHTML = "Прочитано <i class='fa fa-check'></i>");
+        });
+
+        let notViewed = document.getElementsByClassName('false');
+        notViewed.forEach(function(item) {
+            (item.innerHTML = "Не прочитано <i class='fa fa-times'></i>");
+        });
+    </script>
 {% endblock %}
