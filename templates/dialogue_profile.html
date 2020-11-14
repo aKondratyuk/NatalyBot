@@ -155,7 +155,8 @@
                             сообщений: {{ dialogue|length }}</p>
                     </div>
                     {% if dialogue %}
-                        {% for i in range(dialogue|length) %}
+                        {% for i in range(dialogue|length) if not dialogue[i]['delay'] %}
+
                             {% if dialogue[i]['profile_id'] == sender %}
                                 <div class="container_message light">
                                     <img src="{{ url_for('static', filename='images/people-profile-icon_1.jpg') }}"
@@ -164,6 +165,7 @@
                                     <span class="nickname-left">{{ dialogue[i]['nickname'] }}</span>
                                     <span class="message-viewed-left {% if dialogue[i]['viewed'] %}true{% else %}false{% endif %}"></span>
                                     <span class="time-right">{{ dialogue[i]['send_time'] }}</span>
+
                                 </div>
 
                             {% else %}
@@ -200,9 +202,16 @@
                                     class="btn btn-fill btn-primary">Будет
                                 отправлено: 05.11.2020 14:30:00
                             </button>
-                            <textarea class="form-control"
-                                      disabled
-                                      style="margin-top: 20px;">Поле с исходным текстом шаблонного пиьсма</textarea>
+                            {% if dialogue|length > 0 %}
+                                {% if dialogue[-1]['delay'] %}
+                                    <textarea class="form-control"
+                                              style="margin-top: 20px;">{{ dialogue[-1]['text'] }}</textarea>
+                                {% else %}
+                                    <textarea class="form-control"
+                                              disabled
+                                              style="margin-top: 20px;">Поле с исходным текстом шаблонного пиьсма</textarea>
+                                {% endif %}
+                            {% endif %}
                         </div>
                     {% else %}
                         Профиль недоступен

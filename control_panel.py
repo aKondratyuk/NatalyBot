@@ -1723,7 +1723,31 @@ def db_error_check(empty_chats=False,
                           "SWEETY777",
                           "1001485714",
                           "1001485714"))"""
+
+"""chat_id_sender = db_get_rows_2([ChatSessions.chat_id],
+                               [ChatSessions.profile_id == "1000868043"])
+chat_id_receiver = db_get_rows_2([ChatSessions.chat_id],
+                               [ChatSessions.profile_id == "1001659287"])
+set_chats_sender = set([chat_id[0] for chat_id in chat_id_sender])
+set_chats_receiver = set([chat_id[0] for chat_id in chat_id_receiver])
+chats = set(set_chats_sender and set_chats_receiver)
+messages = db_delete_rows_2([Messages.message_token],
+                            [Messages.chat_id.in_(chats)],
+                            synchronize_session='fetch')
+print(messages)"""
+"""db_error_check(empty_chats=True,
+               profiles_without_chats=True)"""
 """print(dialog_download("1000868043",
                       "SWEETY777",
-                      "1001485714",
-                      "1001485714"))"""
+                      "1001659287",
+                      "1001659287"))"""
+
+"""messages_delay = db_get_rows_2([Messages.chat_id, Texts.text],
+                                [Messages.delay,
+                                 Messages.text_id == Texts.text_id])
+for message in messages_delay:
+    print("Text: ", message[1][:200])
+    profiles = db_get_rows_2([ChatSessions.profile_id],
+                             [ChatSessions.chat_id == message[0]])
+    print(profiles)
+    print()"""

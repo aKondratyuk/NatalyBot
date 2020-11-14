@@ -573,10 +573,10 @@ def mail_selected_delete():
 def dialogue_profile(sender, receiver):
     sender_password = db_get_rows([Profiles.profile_password],
                                   Profiles.profile_id == sender)[0][0]
-    db_download_new_msg(sender,
+    """db_download_new_msg(sender,
                         sender_password,
                         sender,
-                        receiver)
+                        receiver)"""
     # load dialogue
     dialogue = db_show_dialog(sender=sender,
                               receiver=receiver)
@@ -1087,7 +1087,6 @@ def logs():
 
 if __name__ == "__main__":
     # Обработка сообщений и подготовка шаблонов с якорями
-    from background_worker import worker_msg_sender
 
     #print(worker_msg_sender())
 
