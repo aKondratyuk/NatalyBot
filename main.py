@@ -512,7 +512,35 @@ def mail_star():
 @app.route('/mail/future', methods=['GET', 'POST'])
 @login_required
 def mail_future():
-    return render_template('mail_future.html')
+    future_messages = db_get_rows_2([Messages.profile_id, ChatSessions.profile_id, Texts.text, Messages.send_time], [
+        Messages.text_id == Texts.text_id,
+        Messages.delay == 1,
+        ChatSessions.chat_id == Messages.chat_id,
+        Messages.profile_id != ChatSessions.profile_id
+    ], [
+        Messages.profile_id
+    ])
+
+    nickname_of_sender = db_get_rows_2([ProfileDescription.nickname], [
+        Messages.delay == 1,
+        ChatSessions.chat_id == Messages.chat_id,
+        Messages.profile_id != ChatSessions.profile_id,
+        ProfileDescription.profile_id == Messages.profile_id
+    ], [
+        Messages.profile_id
+    ])
+
+    nickname_of_receiver = db_get_rows_2([ProfileDescription.nickname], [
+        Messages.delay == 1,
+        ChatSessions.chat_id == Messages.chat_id,
+        Messages.profile_id != ChatSessions.profile_id,
+        ProfileDescription.profile_id == ChatSessions.profile_id
+    ], [
+        Messages.profile_id
+    ])
+    return render_template('mail_future.html', future_messages=future_messages,
+                           nickname_of_sender=nickname_of_sender,
+                           nickname_of_receiver=nickname_of_receiver)
 
 
 @app.route('/mail/outbox', methods=['GET', 'POST'])

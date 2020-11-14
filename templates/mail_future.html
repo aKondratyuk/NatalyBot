@@ -94,27 +94,34 @@
 									<th data-field="num">ID</th>
 									<th data-field="select" data-sortable="false"><input type="checkbox" id="checkall" class="checkbox" style="margin-left: auto; margin-right: auto;" /></th>
 									<th data-field="sender">Отправитель</th>
+									<th data-field="receiver">Получатель</th>
 									<th data-field="preview">Превью сообщения</th>
 									<th data-field="time">Будет отправлено в</th>
 									<th data-field="action" data-sortable="false">Действия</th>
 								</tr>
 								</thead>
 								<tbody>
-								{% for i in range(mail_list|length) %}
+								{% for i in range(future_messages|length) %}
 									<tr>
 										<td align="center">{{ i + 1 }}</td>
 										<input name="csrf_token" type="hidden" value="{{ csrf_token() }}"/>
-										<td align="center"><input value="{{ user_list[i]['login'] }}" type="checkbox"
+										<td align="center"><input value="{{ future_messages[i][0] }}" type="checkbox"
 																  class="checkbox" name="mycheckbox"></td>
-										<td align="center">{{ mail_list[i]['sender'] }}</td>
-										<td align="center">{{ mail_list[i]['preview'] }}</td>
-										<td align="center">{{ mail_list[i]['future_time'] }}</td>
+										<td align="center">{{ nickname_of_sender[i][0] }}</td>
+										<td align="center">{{ nickname_of_receiver[i][0] }}</td>
+										<td align="center"><a href="{{ url_for('dialogue_profile',
+															  sender=future_messages[i][0],
+                                                        	  receiver=future_messages[i][1]) }}">
+															  {{ future_messages[i][2][:40] }}
+															</a>
+										</td>
+										<td align="center">{{ future_messages[i][3] }}</td>
 										<td class="td-actions" align="center">
 											<a rel="tooltip"
 											   title="Просмотреть профиль"
 											   class="btn-sm table-action view"
 											   style="color: blue;"
-											   href="https://www.natashaclub.com/{{ mail_list[i]['sender'] }}">
+											   href="https://www.natashaclub.com/{{ future_messages[i][1] }}">
 												<i class="fa fa-user"></i>
 											</a>
 										</td>
@@ -126,6 +133,7 @@
 									<th>ID</th>
 									<th>Выбор</th>
 									<th>Отправитель</th>
+									<th>Получатель</th>
 									<th>Превью сообщения</th>
 									<th>Будет отправлено в</th>
 									<th>Действия</th>
