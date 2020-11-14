@@ -1089,7 +1089,7 @@ if __name__ == "__main__":
     # Обработка сообщений и подготовка шаблонов с якорями
     from background_worker import worker_msg_sender
 
-    worker_msg_sender()
+    print(worker_msg_sender())
 
     # Обновление диалогов с сайта
     """from background_worker import worker_profile_and_msg_updater

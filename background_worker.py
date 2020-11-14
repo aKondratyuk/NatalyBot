@@ -52,6 +52,8 @@ def worker_msg_sender() -> None:
                                              Profiles.profile_password == None,
                                              Profiles.available
                                              ])
+            logger.error(f"Worker_sender start process Account {account[0]} "
+                         f'with {len(profiles)} profiles')
             if len(profiles) != 0:
                 # if account has dialogs with active profiles
                 account_session, account_id = login(profile_login=account[0],
@@ -69,9 +71,7 @@ def worker_msg_sender() -> None:
                                                    MessageTemplates.text_number])
             if len(text_templates) == 0:
                 # we can't find any template
-                logger.info(f'Account {account[0]} tried to create '
-                            f'answer for profile: {profile[0]}, '
-                            f"but it hasn't templates")
+                logger.error(f"Account {account[0]} without templates, passed")
                 continue
 
             for profile in profiles:
@@ -80,7 +80,7 @@ def worker_msg_sender() -> None:
                                account_session=account_session,
                                sent_delay=sent_delay,
                                text_templates=text_templates)
-
+        logger.error('Worker_sender end prepare answers and go to sleep')
         sleep(time_delta)
 
 def worker_msg_updater() -> None:

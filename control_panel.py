@@ -1517,7 +1517,7 @@ def prepare_answer(account: list,
             break
         else:
             messages += message['text']
-    if dialogue[0]['delay']:
+    if dialogue[0]['delay'] and dialogue[0]['profile_id'] == account[0]:
         time_after_send = datetime.now() - dialogue[0]['send_time']
         test = ''
         if (time_after_send > timedelta(hours=2)) \
@@ -1546,6 +1546,15 @@ def prepare_answer(account: list,
                              f'from account {account[0]} '
                              f'to profile_id {profile[0]}')
                 return False
+        else:
+            logger.error(f"Account {account[0]} can't send answer to "
+                         f'profile {profile[0]} on site because now too late,'
+                         f'or not enough time have passed')
+            return False
+    elif not dialogue[0]['delay'] and dialogue[0]['profile_id'] == account[0]:
+        logger.error(f'Account {account[0]} already answered to '
+                     f'profile {profile[0]}')
+        return False
     if len(messages) != 0:
         # get count of account messages
         msg_num = 0
