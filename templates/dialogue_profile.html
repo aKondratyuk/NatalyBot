@@ -155,7 +155,6 @@
                             сообщений: {{ dialogue|length }}</p>
                     </div>
                     {% if dialogue %}
-                        {% set viewed = True  %}
                         {% for i in range(dialogue|length) %}
                             {% if dialogue[i]['profile_id'] == sender %}
                                 <div class="container_message light">
@@ -163,7 +162,7 @@
                                          alt="Avatar">
                                     <p>{{ dialogue[i]['text'] }}</p>
                                     <span class="nickname-left">{{ dialogue[i]['nickname'] }}</span>
-                                    <span class="message-viewed-left {% if viewed%}true{% else %}false{% endif %}"></span>
+                                    <span class="message-viewed-left {% if dialogue[i]['viewed'] %}true{% else %}false{% endif %}"></span>
                                     <span class="time-right">{{ dialogue[i]['send_time'] }}</span>
                                 </div>
 
@@ -175,7 +174,7 @@
                                          class="right">
                                     <p>{{ dialogue[i]['text'] }}</p>
                                     <span class="nickname-right">{{ dialogue[i]['nickname'] }}</span>
-                                    <span class="message-viewed-right {% if viewed%}true{% else %}false{% endif %}"></span>
+                                    <span class="message-viewed-right {% if dialogue[i]['viewed'] %}true{% else %}false{% endif %}"></span>
                                     <span class="time-left">
                                     {{ dialogue[i]['send_time'] }}
                                 </span>
