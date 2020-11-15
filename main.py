@@ -517,6 +517,7 @@ def mail_test():
                                          ChatSessions.profile_id != account[
                                              1]])
         for profile in profiles:
+            print(profile[0])
             message = db_get_rows_2([Texts.text,
                                      Messages.send_time,
                                      Messages.profile_id,
@@ -747,16 +748,27 @@ def message_templates():
                 selected_account_nickname = account[2]
                 break
         if profile_id:
-            templates = db_get_rows([
-                    Texts.text_id,
-                    Texts.text,
-                    MessageTemplates.text_number],
-                    Texts.text_id == MessageTemplates.text_id,
-                    Profiles.profile_id == MessageTemplates.profile_id,
-                    Profiles.profile_password,
-                    Profiles.profile_id == profile_id,
-                    Visibility.profile_id == profile_id,
-                    Visibility.login == current_user.login)
+
+            if current_user.privileges['PROFILES_VISIBILITY']:
+                templates = db_get_rows([
+                        Texts.text_id,
+                        Texts.text,
+                        MessageTemplates.text_number],
+                        Texts.text_id == MessageTemplates.text_id,
+                        Profiles.profile_id == MessageTemplates.profile_id,
+                        Profiles.profile_password,
+                        Profiles.profile_id == profile_id)
+            else:
+                templates = db_get_rows([
+                        Texts.text_id,
+                        Texts.text,
+                        MessageTemplates.text_number],
+                        Texts.text_id == MessageTemplates.text_id,
+                        Profiles.profile_id == MessageTemplates.profile_id,
+                        Profiles.profile_password,
+                        Profiles.profile_id == profile_id,
+                        Visibility.profile_id == profile_id,
+                        Visibility.login == current_user.login)
         else:
             templates = []
         templates = sorted(templates,
@@ -992,15 +1004,25 @@ def message_anchor():
                 selected_account_nickname = account[2]
                 break
         if profile_id:
-            anchors = db_get_rows([
-                    Texts.text_id,
-                    Texts.text],
-                    Texts.text_id == MessageAnchors.text_id,
-                    Profiles.profile_id == MessageAnchors.profile_id,
-                    Profiles.profile_password,
-                    Profiles.profile_id == profile_id,
-                    Visibility.profile_id == profile_id,
-                    Visibility.login == current_user.login)
+
+            if current_user.privileges['PROFILES_VISIBILITY']:
+                anchors = db_get_rows([
+                        Texts.text_id,
+                        Texts.text],
+                        Texts.text_id == MessageAnchors.text_id,
+                        Profiles.profile_id == MessageAnchors.profile_id,
+                        Profiles.profile_password,
+                        Profiles.profile_id == profile_id)
+            else:
+                anchors = db_get_rows([
+                        Texts.text_id,
+                        Texts.text],
+                        Texts.text_id == MessageAnchors.text_id,
+                        Profiles.profile_id == MessageAnchors.profile_id,
+                        Profiles.profile_password,
+                        Profiles.profile_id == profile_id,
+                        Visibility.profile_id == profile_id,
+                        Visibility.login == current_user.login)
             anchors = list(anchors)
             for anchor_i in range(len(anchors)):
                 anchors[anchor_i] = list(anchors[anchor_i])
