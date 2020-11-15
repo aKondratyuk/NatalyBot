@@ -144,9 +144,68 @@
                             height: 400px;
                         }
 
+                        .form-control {
+                            background-color: #ffffff;
+                            height: 400px;
+                        }
+
                          .form-control::placeholder {
                              color: black;
                          }
+                         #dark-mode {
+                             display: none;
+                             position: absolute;
+                             width:100%;
+                             height:100%;
+                             background:#000;
+                             opacity:0.5;
+                             z-index: 100;
+                         }
+                         /* Center the loader */
+                            #loader {
+                              display: none;
+                              position: absolute;
+                              left: 50%;
+                              top: 50%;
+                              z-index: 101;
+                              width: 150px;
+                              height: 150px;
+                              margin: -75px 0 0 -75px;
+                              border: 16px solid #f3f3f3;
+                              border-radius: 50%;
+                              border-top: 16px solid #3498db;
+                              -webkit-animation: spin 2s linear infinite;
+                              animation: spin 2s linear infinite;
+                            }
+
+                            @-webkit-keyframes spin {
+                              0% { -webkit-transform: rotate(0deg); }
+                              100% { -webkit-transform: rotate(360deg); }
+                            }
+
+                            @keyframes spin {
+                              0% { transform: rotate(0deg); }
+                              100% { transform: rotate(360deg); }
+                            }
+
+                            /* Add animation to "page content" */
+                            .animate-bottom {
+                              position: relative;
+                              -webkit-animation-name: animatebottom;
+                              -webkit-animation-duration: 1s;
+                              animation-name: animatebottom;
+                              animation-duration: 1s
+                            }
+
+                            @-webkit-keyframes animatebottom {
+                              from { bottom:-100px; opacity:0 }
+                              to { bottom:0px; opacity:1 }
+                            }
+
+                            @keyframes animatebottom {
+                              from{ bottom:-100px; opacity:0 }
+                              to{ bottom:0; opacity:1 }
+                            }
                      </style>
                     <div class="message_header">
                         <h3 style="color: #ffffff">Вы переписываетесь с
@@ -188,28 +247,41 @@
                     {% if receiver_availability %}
                         <div class="message_template">
                         <div id="toolbar">
-                            <button type="button"
-                                    id="add"
-                                    data-toggle="modal"
-                                    data-target="#UserModal"
-                                    class="btn btn-fill btn-success">
-                                Редактировать
-                            </button>
-                            <button type="button"
-                                    id="scenario"
-                                    data-toggle="modal"
-                                    data-target="#UserModal"
-                                    class="btn btn-fill btn-primary">Будет
-                                отправлено: 05.11.2020 14:30:00
-                            </button>
                             {% if dialogue|length > 0 %}
                                 {% if dialogue[-1]['delay'] %}
+                                    <button type="button"
+                                        id="send_template_button"
+                                        onclick="SendMessage(id)"
+                                        class="btn btn-fill btn-warning">
+                                        Отправить
+                                    </button>
+                                    <button type="button"
+                                            value="{{ dialogue[-1]['message_token'] }}"
+                                            id="edit_button"
+                                            onclick="Edit('text_template', id, value)"
+                                            class="btn btn-fill btn-success">
+                                        Редактировать
+                                    </button>
+                                    <button type="button"
+                                            id="scenario"
+                                            data-toggle="modal"
+                                            data-target="#UserModal"
+                                            class="btn btn-fill btn-primary">Будет отправлено в {{ dialogue[-1]['send_time'] }}
+                                    </button>
                                     <textarea class="form-control"
+                                              id = "text_template"
+                                              disabled
                                               style="margin-top: 20px;">{{ dialogue[-1]['text'] }}</textarea>
                                 {% else %}
+                                    <button type="button"
+                                        id="send_no_template_button"
+                                        onclick="SendMessage(id)"
+                                        class="btn btn-fill btn-warning">
+                                        Отправить
+                                    </button>
                                     <textarea class="form-control"
-                                              disabled
-                                              style="margin-top: 20px;">Поле с исходным текстом шаблонного пиьсма</textarea>
+                                              id = "text_no_template"
+                                              style="margin-top: 20px;">Поле с исходным текстом шаблонного письма.</textarea>
                                 {% endif %}
                             {% endif %}
                         </div>
@@ -251,6 +323,17 @@
     <script src="https://unpkg.com/bootstrap-table@1.18.0/dist/bootstrap-table.min.js"></script>
     <script src="{{ url_for('static', filename='js/demo.js') }}"></script>
     <script>
+        var csrftoken = $('meta[name=csrf-token]').attr('content')
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                }
+            }
+        })
+    </script>
+    <script>
         let viewed = document.getElementsByClassName('true');
         viewed.forEach(function(item) {
             (item.innerHTML = "Прочитано <i class='fa fa-check'></i>");
@@ -260,5 +343,99 @@
         notViewed.forEach(function(item) {
             (item.innerHTML = "Не прочитано <i class='fa fa-times'></i>");
         });
+    </script>
+    <script>
+        function Edit(textarea_id, button_id, message_token) {
+            const textarea = document.getElementById(textarea_id);
+            textarea.removeAttribute("disabled");
+            textarea.focus();
+            const button = document.getElementById(button_id);
+            if (button.innerText === "Редактировать") {
+                button.innerText = "Сохранить";
+            }
+            else {
+                button.innerText = "Редактировать";
+                textarea.setAttribute("disabled", "true");
+                const text = textarea.value;
+                $.ajax({
+                    url: "{{ url_for('dialogue_profile', sender=sender, receiver=receiver) }}",
+                    type: 'POST',
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        'method': 'edit_template',
+                        'message_token': message_token,
+                        'text': text
+                    })
+                });
+            }
+
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/quantumalert.js') }}"></script>
+    <script>
+        function showError() {
+            document.getElementById("loader").style.display = "none";
+            var Qual = new notify();
+            Qual.warning('Ошибка!', 'Сообщение не удалось отправить');
+        }
+        function showSuccess() {
+            document.getElementById("loader").style.display = "none";
+            var Qual = new notify();
+            Qual.success('Успех!', 'Сообщение было отправлено');
+        }
+
+        function send_request(method, text) {
+            $.ajax({
+                url: "{{ url_for('dialogue_profile', sender=sender, receiver=receiver) }}",
+                type: 'POST',
+                contentType: "application/json",
+                data: JSON.stringify({
+                    'method': method,
+                    'text': text
+                }),
+                success: function (data, textStatus, request) {
+                    console.log(data);
+                    let status = data['status'];
+                    if (status === "message_send") {
+                        showSuccess();
+                        location.reload();
+                    }
+                    else if (status === "message_not_send") {
+                        showError();
+                    }
+                }
+            });
+        }
+
+        let myVar;
+
+        function myFunction() {
+          document.getElementById("dark-mode").style.display = "block";
+          document.getElementById("loader").style.display = "block";
+          myVar = setTimeout(unlockPage, 6000);
+        }
+
+        function unlockPage() {
+          document.getElementById("loader").style.display = "none";
+          document.getElementById("dark-mode").style.display = "none";
+        }
+
+        function SendMessage(button_id) {
+            if (button_id === "send_template_button") {
+                const textarea = document.getElementById('text_template');
+                const method = 'send_template_message';
+                const text = textarea.value;
+                myFunction();
+                send_request(method, text);
+            }
+            else {
+                const textarea = document.getElementById('text_no_template');
+                const method = 'send_no_template_message';
+                const text = textarea.value;
+                myFunction();
+                send_request(method, text);
+            }
+
+        }
     </script>
 {% endblock %}

@@ -653,7 +653,7 @@ def db_show_dialog(sender: str,
              "viewed": row[2],
              "text": row[3],
              "nickname": row[4],
-             "message_token": row[5],
+             "message_token": UUID(bytes=row[5]),
              "delay": row[6]
              } for row in result]
 

@@ -247,12 +247,10 @@
     </script>
     <script>
             function Edit(textarea_id, button_id, num, profile_id) {
-                console.log(textarea_id, button_id)
                 const textarea = document.getElementById(textarea_id);
                 textarea.removeAttribute("disabled");
                 textarea.focus()
                 const button = document.getElementById(button_id);
-                console.log(button.innerHTML, button.innerText)
                 if (button.innerText === "Редактировать") {
                     button.innerText = "Сохранить";
                 }
