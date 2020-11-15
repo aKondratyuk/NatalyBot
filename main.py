@@ -851,18 +851,26 @@ def dialogue_profile(sender, receiver):
         request_data = request.get_json()
         if 'method' in request_data.keys():
             if request_data['method'] == 'send_template_message':
-                print(request.get_json())
-                result = False
-                """result = send_msg(session = account_session,
-                         profile_id = profile[0],
-                         text = dialogue[0]['text'])"""
+                account = db_get_rows_2([Profiles.profile_id,
+                                         Profiles.profile_password],
+                                        [Profiles.profile_id == sender],
+                                        one=True)
+                account_session, account_id = site_login(account[0],
+                                                         account[1])
+                result = message(session=account_session,
+                                 receiver_profile_id=receiver,
+                                 message_text=request_data['text'])
                 if result:
                     # add update for message in DB, to delete from delayed
                     db_session = Session()
+                    text_id = db_get_rows_2([Texts.text_id],
+                                            [Texts.text_id == Messages.text_id,
+                                             Messages.message_token == UUID(
+                                                     request_data[
+                                                         'message_token']).bytes],
+                                            return_query=True)
                     update_q = update(Texts).where(
-                            Texts.text_id == Messages.text_id,
-                            Messages.message_token == UUID(
-                                    request_data['message_token']).bytes). \
+                            Texts.text_id.in_(text_id)). \
                         values(text=request_data['text'])
                     db_session.execute(update_q)
                     db_session.commit()
@@ -874,8 +882,15 @@ def dialogue_profile(sender, receiver):
                     db_session.execute(update_q)
                     db_session.commit()
                     db_session.close()
+                    logger.info(f'User {current_user.login} changed template '
+                                f'for account {sender} in dialogue with '
+                                f'profile {receiver}')
+
+                    logger.info(f'User {current_user.login} sended template '
+                                f'from account {sender} to '
+                                f'profile {receiver}')
                     response = make_response(
-                        jsonify({'status': 'message_send'}))
+                            jsonify({'status': 'message_send'}))
                 else:
                     response = make_response(
                         jsonify({'status': 'message_not_send'}))
@@ -887,14 +902,21 @@ def dialogue_profile(sender, receiver):
             elif request_data['method'] == 'edit_template':
                 # Здесь обновляем в базе темлпейт
                 db_session = Session()
+                text_id = db_get_rows_2([Texts.text_id],
+                                        [Texts.text_id == Messages.text_id,
+                                         Messages.message_token == UUID(
+                                                 request_data[
+                                                     'message_token']).bytes],
+                                        return_query=True)
                 update_q = update(Texts).where(
-                        Texts.text_id == Messages.text_id,
-                        Messages.message_token == UUID(
-                                request_data['message_token']).bytes). \
+                        Texts.text_id.in_(text_id)). \
                     values(text=request_data['text'])
                 db_session.execute(update_q)
                 db_session.commit()
                 db_session.close()
+                logger.info(f'User {current_user.login} changed template '
+                            f'for account {sender} in dialogue with '
+                            f'profile {receiver}')
 
     sender_password = db_get_rows([Profiles.profile_password],
                                   Profiles.profile_id == sender)[0][0]

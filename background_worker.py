@@ -5,7 +5,7 @@ from control_panel import account_dialogs_checker, db_get_rows, \
     db_get_rows_2, \
     dialog_download, prepare_answer
 from db_models import ChatSessions, MessageTemplates, Profiles, Texts
-from verification import login
+from verification import site_login
 
 
 def worker_invites() -> None:
@@ -56,8 +56,9 @@ def worker_msg_sender() -> None:
                          f'with {len(profiles)} profiles')
             if len(profiles) != 0:
                 # if account has dialogs with active profiles
-                account_session, account_id = login(profile_login=account[0],
-                                                    password=account[1])
+                account_session, account_id = site_login(
+                    profile_login=account[0],
+                    password=account[1])
             # Вытягиваем шаблон по номеру
             text_templates = db_get_rows_2([MessageTemplates.text_number,
                                             Texts.text],

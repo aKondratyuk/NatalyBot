@@ -129,7 +129,7 @@ def not_in_age_bounds(messager_age, receiver_profile_id):
     return False
 
 
-def login(profile_login, password):
+def site_login(profile_login, password):
     """Функция для входа на сайт
 
     Keyword arguments:

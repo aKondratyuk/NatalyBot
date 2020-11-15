@@ -22,8 +22,8 @@ from db_models import Categories, CategoryLevel, ChatSessions, Chats, \
 from messaging import create_message_response
 from scraping import collect_info_from_profile, get_id_profiles, \
     get_parsed_page, search_for_profiles, send_request
-from verification import check_for_filter, login, profile_deleted, \
-    profile_in_inbox
+from verification import check_for_filter, profile_deleted, profile_in_inbox, \
+    site_login
 
 
 def create_invite(creator: User,
@@ -389,7 +389,7 @@ def dialog_download(observer_login: str,
             "filterPPage": "20"
             }
     if not account_session:
-        account_session, profile_id = login(
+        account_session, profile_id = site_login(
                 profile_login=observer_login,
                 password=observer_password)
 
@@ -805,7 +805,7 @@ def db_get_rows_2(tables: list,
                   one: bool = False,
                   return_to: list = False,
                   add_columns: list = False,
-                  distinct: list = False) -> list:
+                  distinct: list = False):
     """Select all rows from tables list,
     which have been filtered with 'statements'"""
     db_session = Session()
@@ -1354,7 +1354,7 @@ def send_messages(profile_id_list: str,
 
         profile_login, password = str(profiles_list[i][0]), \
                                   profiles_list[i][1]
-        values = login(profile_login, password)
+        values = site_login(profile_login, password)
         # start page in site for search
         page = 1
         if not looking_for:
@@ -1450,7 +1450,7 @@ def account_dialogs_checker(observed_profile_id: str,
     logger.info(f'Message update worker start load dialog from:'
                 f'account: {observed_profile_id}')
 
-    current_profile_session, observed_profile_id = login(
+    current_profile_session, observed_profile_id = site_login(
             profile_login=observed_profile_id,
             password=observed_profile_password)
     start_time = time()
