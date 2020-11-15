@@ -353,19 +353,19 @@ def access():
                         Users.login != 'server',
                         Users.login != 'anonymous',
                         Users.login == RolesOfUsers.login,
-                        RolesOfUsers.user_role != 'deleted')
+                        RolesOfUsers.user_role != 'deleted',
+                        RolesOfUsers.user_role != 'admin')
     if request.form.get('user_login'):
         user = request.form.get('user_login')
         db_session = Session()
-        user_profiles = db_session.query(Visibility.profile_id)
-        user_profiles = user_profiles.filter(Visibility.login == user)
-        user_profiles = user_profiles
+        other_profiles = db_get_rows_2([Visibility.profile_id],
+                                       return_query=True)
         new_profiles = db_get_rows([
                 Profiles.profile_id,
                 ProfileDescription.name,
                 ProfileDescription.nickname
                 ],
-                Profiles.profile_id.notin_(user_profiles),
+                Profiles.profile_id.notin_(other_profiles),
                 Profiles.profile_id == ProfileDescription.profile_id,
                 Profiles.available,
                 Profiles.profile_password)
@@ -387,7 +387,8 @@ def access():
                     Users.login != 'server',
                     Users.login != 'anonymous',
                     Users.login == RolesOfUsers.login,
-                    RolesOfUsers.user_role != 'deleted')
+                    RolesOfUsers.user_role != 'deleted',
+                    RolesOfUsers.user_role != 'admin')
             if not user_in_db:
                 logger.info(
                         f'User {current_user.login} tried to add profiles for '
@@ -478,16 +479,27 @@ def users_accounts():
 @login_required
 def mail():
     # get accounts which this user can see
-    accounts = db_get_rows_2([ProfileDescription.nickname,
-                              Visibility.profile_id],
-                             [
-                                     Visibility.login == current_user.login,
-                                     Visibility.profile_id ==
-                                     Profiles.profile_id,
-                                     Profiles.profile_password,
-                                     Profiles.profile_id ==
-                                     ProfileDescription.profile_id
-                                     ])
+    if current_user.privileges['PROFILES_VISIBILITY']:
+
+        accounts = db_get_rows_2([ProfileDescription.nickname,
+                                  Profiles.profile_id],
+                                 [
+                                         Profiles.profile_password,
+                                         Profiles.profile_id ==
+                                         ProfileDescription.profile_id
+                                         ])
+    else:
+        accounts = db_get_rows_2([ProfileDescription.nickname,
+                                  Visibility.profile_id],
+                                 [
+                                         Visibility.login ==
+                                         current_user.login,
+                                         Visibility.profile_id ==
+                                         Profiles.profile_id,
+                                         Profiles.profile_password,
+                                         Profiles.profile_id ==
+                                         ProfileDescription.profile_id
+                                         ])
     all_messages = []
     for account in accounts:
         # download dialogue for this account, from DB
@@ -547,16 +559,26 @@ def mail_future():
 @login_required
 def mail_outbox():
     # get accounts which this user can see
-    accounts = db_get_rows_2([ProfileDescription.nickname,
-                              Visibility.profile_id],
-                             [
-                                     Visibility.login == current_user.login,
-                                     Visibility.profile_id ==
-                                     Profiles.profile_id,
-                                     Profiles.profile_password,
-                                     Profiles.profile_id ==
-                                     ProfileDescription.profile_id
-                                     ])
+    if current_user.privileges['PROFILES_VISIBILITY']:
+
+        accounts = db_get_rows_2([ProfileDescription.nickname,
+                                  Profiles.profile_id],
+                                 [
+                                         Profiles.profile_password,
+                                         Profiles.profile_id ==
+                                         ProfileDescription.profile_id
+                                         ])
+    else:
+        accounts = db_get_rows_2([ProfileDescription.nickname,
+                                  Visibility.profile_id],
+                                 [
+                                         Visibility.login == current_user.login,
+                                         Visibility.profile_id ==
+                                         Profiles.profile_id,
+                                         Profiles.profile_password,
+                                         Profiles.profile_id ==
+                                         ProfileDescription.profile_id
+                                         ])
     all_messages = []
     for account in accounts:
         # download dialogue for this account, from DB
@@ -1133,9 +1155,14 @@ def logs():
 
 
 if __name__ == "__main__":
-    # Обработка сообщений и подготовка шаблонов с якорями
+    # Проверка базы данных на ошибки
+    """db_error_check(empty_chats=True,
+                   profiles_without_chats=True,
+                   unused_texts=True)"""
 
-    #print(worker_msg_sender())
+    # Обработка сообщений и подготовка шаблонов с якорями
+    """from background_worker import worker_msg_sender
+    print(worker_msg_sender())"""
 
     # Обновление диалогов с сайта
     """from background_worker import worker_profile_and_msg_updater

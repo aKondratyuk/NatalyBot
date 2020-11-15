@@ -1,5 +1,6 @@
 # coding: utf8
 import re
+import traceback
 from datetime import datetime, timedelta
 from math import ceil
 from random import randint
@@ -8,7 +9,7 @@ from time import time
 from uuid import UUID, uuid4
 
 from flask_login import current_user
-from sqlalchemy import desc, exc, update
+from sqlalchemy import desc, exc, or_, update
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from authentication import User
@@ -1087,8 +1088,13 @@ def db_load_profile_description(profile_id: str) -> bool:
                     f'description for profile_id: {profile_id}')
     db_session = Session()
     # collect info from site
-    profile_details = collect_info_from_profile(profile_id=profile_id)
-
+    try:
+        profile_details = collect_info_from_profile(profile_id=profile_id)
+    except Exception as e:
+        logger.error(f'Error while collect info from profile {profile_id}')
+        trace = traceback.format_exc()
+        logger.error(trace[:9999])
+        return False
     # delete old profile info
     if db_duplicate_check([ProfileDescription],
                           ProfileDescription.profile_id == profile_id):
@@ -1657,79 +1663,121 @@ def db_error_check(empty_chats=False,
     if empty_chats:
         # find empty chats and delete them
         logger.info('Start empty chats searching')
-        chats = db_get_rows_2([Chats.chat_id])
-        for chat_id in chats:
-            messages = db_get_rows_2([Messages.message_token],
-                                     [Messages.chat_id == chat_id[0]])
-            if len(messages) == 0:
-                logger.info(f'Found empty chat: '
-                            f'{UUID(bytes=chat_id[0])}')
-                db_delete_rows_2([ChatSessions],
-                                 [ChatSessions.chat_id == chat_id[0]])
-                db_delete_rows_2([Chats],
-                                 [Chats.chat_id == chat_id[0]])
-        logger.info('Error check in database complete, empty chats deleted')
+        messages = db_get_rows_2([Messages.chat_id],
+                                 return_query=True)
+        sessions = db_delete_rows_2([ChatSessions],
+                                    [ChatSessions.chat_id.notin_(messages)],
+                                    synchronize_session='fetch')
+
+        logger.info(f'Deleted sessions {sessions}')
+
+        chats = db_delete_rows_2([Chats],
+                                 [Chats.chat_id.notin_(messages)],
+                                 synchronize_session='fetch')
+
+        logger.info(f'Error check in database complete, '
+                    f'{chats} empty chats deleted')
     if profiles_without_chats:
         # find empty chats and delete them
         logger.info('Start profiles without chats searching')
+        chats = db_get_rows_2([ChatSessions.profile_id],
+                              return_query=True)
         profiles = db_get_rows_2([Profiles.profile_id],
-                                 [Profiles.profile_password == None])
-        for profile_id in profiles:
-            chats = db_get_rows_2([ChatSessions.chat_id],
-                                  [ChatSessions.profile_id == profile_id[0]])
-            if len(chats) == 0:
-                logger.info(f'Found profile without chat: '
-                            f'{profile_id[0]}')
-                db_delete_rows_2([ProfileDescription],
-                                 [ProfileDescription.profile_id == profile_id[
-                                     0]])
-                db_delete_rows_2([ProfileCategories],
-                                 [ProfileCategories.profile_id == profile_id[
-                                     0]])
-                db_delete_rows_2([ProfileLanguages],
-                                 [ProfileLanguages.profile_id == profile_id[
-                                     0]])
-                db_delete_rows_2([Visibility],
-                                 [Visibility.profile_id == profile_id[0]])
-                db_delete_rows_2([ProfileCategories],
-                                 [ProfileCategories.profile_id == profile_id[
-                                     0]])
-                templates = db_get_rows_2([Texts.text_id],
-                                          [MessageTemplates.profile_id ==
-                                           profile_id[0],
-                                           MessageTemplates.text_id ==
-                                           Texts.text_id])
-                anchors = db_get_rows_2([Texts.text_id],
-                                        [MessageAnchors.profile_id ==
-                                         profile_id[0],
-                                         MessageAnchors.text_id ==
-                                         Texts.text_id])
-                texts = templates + anchors
-                for text_id in texts:
-                    db_delete_rows_2([Tagging],
-                                     [Tagging.text_id == text_id[0]])
-                    db_delete_rows_2([MessageTemplates],
-                                     [MessageTemplates.text_id == text_id[0]])
-                    db_delete_rows_2([MessageAnchors],
-                                     [MessageAnchors.text_id == text_id[0]])
-                    db_delete_rows_2([Texts],
-                                     [Texts.text_id == text_id[0]])
+                                 [Profiles.profile_password == None,
+                                  Profiles.profile_id.notin_(chats)])
+        profiles = set([profile[0] for profile in profiles])
+        del_pr_desc = db_delete_rows_2([ProfileDescription],
+                                       [ProfileDescription.profile_id.in_(
+                                           profiles)],
+                                       synchronize_session='fetch')
+        logger.info(f'Deleted profile descriptions {del_pr_desc}')
 
-        logger.info('Error check in database complete, '
-                    'profiles without chats')
+        del_pr_cat = db_delete_rows_2([ProfileCategories],
+                                      [ProfileCategories.profile_id.in_(
+                                          profiles)],
+                                      synchronize_session='fetch')
+        logger.info(f'Deleted profile categories {del_pr_cat}')
+
+        del_pr_lang = db_delete_rows_2([ProfileLanguages],
+                                       [ProfileLanguages.profile_id.in_(
+                                           profiles)],
+                                       synchronize_session='fetch')
+        logger.info(f'Deleted profile languages {del_pr_lang}')
+
+        del_vis = db_delete_rows_2([Visibility],
+                                   [Visibility.profile_id.in_(profiles)],
+                                   synchronize_session='fetch')
+        logger.info(f'Deleted visibility for {del_vis} users')
+
+        templates = db_get_rows_2([Texts.text_id],
+                                  [MessageTemplates.profile_id.in_(profiles),
+                                   MessageTemplates.text_id == Texts.text_id],
+                                  return_query=True)
+        anchors = db_get_rows_2([Texts.text_id],
+                                [MessageAnchors.profile_id.in_(profiles),
+                                 MessageAnchors.text_id == Texts.text_id],
+                                return_query=True)
+        del_tagging = db_delete_rows_2([Tagging],
+                                       [or_(Tagging.text_id.in_(templates),
+                                            Tagging.text_id.in_(anchors))],
+                                       synchronize_session='fetch')
+        logger.info(f'Deleted tags from texts {del_tagging}')
+        del_templates = db_delete_rows_2([MessageTemplates],
+                                         [or_(Tagging.text_id.in_(templates),
+                                              Tagging.text_id.in_(anchors))],
+                                         synchronize_session='fetch')
+        logger.info(f'Deleted templates {del_templates}')
+        del_anchors = db_delete_rows_2([MessageAnchors],
+                                       [or_(Tagging.text_id.in_(templates),
+                                            Tagging.text_id.in_(anchors))],
+                                       synchronize_session='fetch')
+        logger.info(f'Deleted anchors {del_anchors}')
+        texts = db_delete_rows_2([Texts],
+                                 [or_(Tagging.text_id.in_(templates),
+                                      Tagging.text_id.in_(anchors))],
+                                 synchronize_session='fetch')
+        logger.info(f'Deleted texts {texts}')
+        del_profiles = db_delete_rows_2([Profiles],
+                                        [Profiles.profile_id.in_(profiles)],
+                                        synchronize_session='fetch')
+        logger.info(f'Error check in database complete, '
+                    f'profiles {del_profiles} without chats')
     if unused_texts:
-        texts = db_get_rows_2([Texts.text_id])
-        for text_id in texts:
-            try:
-                db_delete_rows_2([Texts],
-                                 [Texts.text_id == text_id[0]])
-            except Exception:
-                continue
+        logger.info('Start delete unused texts in database deleted')
+        texts_in_tags = db_get_rows_2([Texts.text_id],
+                                      [Texts.text_id == Tagging.text_id],
+                                      return_query=True)
+        texts_in_messages = db_get_rows_2([Texts.text_id],
+                                          [Texts.text_id == Messages.text_id],
+                                          return_query=True)
+        texts_in_anchors = db_get_rows_2([Texts.text_id],
+                                         [
+                                                 Texts.text_id ==
+                                                 MessageAnchors.text_id],
+                                         return_query=True)
+        texts_in_anchors = db_get_rows_2([Texts.text_id],
+                                         [
+                                                 Texts.text_id == MessageTemplates.text_id],
+                                         return_query=True)
+
+        try:
+            deleted_texts = db_delete_rows_2([Texts.text_id],
+                                             [Texts.text_id.notin_(
+                                                 texts_in_tags),
+                                              Texts.text_id.notin_(
+                                                  texts_in_messages),
+                                              Texts.text_id.notin_(
+                                                  texts_in_anchors),
+                                              Texts.text_id.notin_(
+                                                  texts_in_anchors)],
+                                             synchronize_session='fetch')
+
+            logger.info(f'Unused texts {deleted_texts} in database deleted')
+        except Exception as e:
+            logger.info('Unused texts in database not deleted')
+
     return True
 
-
-"""db_error_check(empty_chats=True,
-               profiles_without_chats=True)"""
 
 """print(profile_dialogs_checker(observed_profile_id='1000868043',
                               observed_profile_password='SWEETY777',
