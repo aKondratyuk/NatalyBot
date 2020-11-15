@@ -1152,11 +1152,11 @@ if __name__ == "__main__":
     print(worker_msg_sender())"""
 
     # Обновление диалогов с сайта
-    from background_worker import worker_profile_and_msg_updater
+    """from background_worker import worker_profile_and_msg_updater
     from multiprocessing import Process
 
     t1 = Process(target=worker_profile_and_msg_updater)
     t1.start()
-    workers_number += 1
+    workers_number += 1"""
     # Run the app until stopped
     app.run()
