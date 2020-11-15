@@ -662,6 +662,7 @@ def db_download_new_msg(observer_login: str,
                         observer_password: str,
                         sender_id: str,
                         receiver_profile_id: str,
+                        account_session=None,
                         delete_chat: bool = False) -> bool:
     # find chat in db to delete new messages
     chat_id = db_chat_create(observer_login=observer_login,
@@ -684,12 +685,14 @@ def db_download_new_msg(observer_login: str,
                     observer_password=observer_password,
                     sender_id=sender_id,
                     receiver_profile_id=receiver_profile_id,
+                    account_session=account_session,
                     download_new=True)
     # download dialog in inbox
     dialog_download(observer_login=observer_login,
                     observer_password=observer_password,
                     sender_id=receiver_profile_id,
                     receiver_profile_id=receiver_profile_id,
+                    account_session=account_session,
                     download_new=True)
     return True
 
@@ -1493,19 +1496,25 @@ def profile_dialogs_checker(observed_profile_id,
     from main import logger
     # start_time_for_profile = time()
     logger.info(f'Start load dialog for profile_id: {profile_id}')
+    # load dialogue
+    dialogue = db_show_dialog(sender=observed_profile_id,
+                              receiver=profile_id)
+    error_in_chat = db_dialogue_checker(dialogue=dialogue)
     # start_time_for_profile_dialogue = time()
-    dialog_download(
+    db_download_new_msg(
             observer_login=observed_profile_id,
             observer_password=observed_profile_password,
             sender_id=profile_id,
             receiver_profile_id=profile_id,
-            account_session=account_session)
-    dialog_download(
+            account_session=account_session,
+            delete_chat=error_in_chat)
+    db_download_new_msg(
             observer_login=observed_profile_id,
             observer_password=observed_profile_password,
             sender_id=observed_profile_id,
             receiver_profile_id=profile_id,
-            account_session=account_session)
+            account_session=account_session,
+            delete_chat=error_in_chat)
     """print(f"Время загрузки диалогов профиля: {profile_id}, "
           f"{time() - start_time_for_profile_dialogue} sec")"""
     # load description for profile
@@ -1652,6 +1661,19 @@ def prepare_answer(account: list,
                 logger.info(f'Account {account[0]} created answer for '
                             f'profile: {profile[0]}')
             return MESSAGE_CREATED
+
+    return False
+
+
+def db_dialogue_checker(dialogue: list) -> bool:
+    """checks dialogue, and return True if new messages are viewed,
+    but old not"""
+    dialogue_length = len(dialogue)
+    for i in range(dialogue_length):
+        if i < dialogue_length - 1:
+            if dialogue[i]['viewed'] == False \
+                    and dialogue[i + 1]['viewed'] == True:
+                return True
 
     return False
 

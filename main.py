@@ -651,19 +651,6 @@ def dialogue_profile(sender, receiver):
                            receiver_availability=receiver_availability)
 
 
-def db_dialogue_checker(dialogue: list) -> bool:
-    """checks dialogue, and return True if new messages are viewed,
-    but old not"""
-    dialogue_length = len(dialogue)
-    for i in range(dialogue_length):
-        if i < dialogue_length - 1:
-            if dialogue[i]['viewed'] == False \
-                    and dialogue[i + 1]['viewed'] == True:
-                return True
-
-    return False
-
-
 @app.route('/mail/templates', methods=['GET', 'POST'])
 @login_required
 def message_templates():
@@ -1165,11 +1152,11 @@ if __name__ == "__main__":
     print(worker_msg_sender())"""
 
     # Обновление диалогов с сайта
-    """from background_worker import worker_profile_and_msg_updater
+    from background_worker import worker_profile_and_msg_updater
     from multiprocessing import Process
 
     t1 = Process(target=worker_profile_and_msg_updater)
     t1.start()
-    workers_number += 1"""
+    workers_number += 1
     # Run the app until stopped
     app.run()
