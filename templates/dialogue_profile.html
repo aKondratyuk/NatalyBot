@@ -375,13 +375,13 @@
     <script>
         function showError() {
             document.getElementById("loader").style.display = "none";
-            var Qual = new notify();
             Qual.warning('Ошибка!', 'Сообщение не удалось отправить');
+            unlockPage();
         }
         function showSuccess() {
             document.getElementById("loader").style.display = "none";
-            var Qual = new notify();
             Qual.success('Успех!', 'Сообщение было отправлено');
+            document.getElementById('closepopup').style.display = 'none';
         }
 
         function send_request(method, text) {
