@@ -601,13 +601,19 @@ def mail_selected_delete():
 def dialogue_profile(sender, receiver):
     sender_password = db_get_rows([Profiles.profile_password],
                                   Profiles.profile_id == sender)[0][0]
-    """db_download_new_msg(sender,
-                        sender_password,
-                        sender,
-                        receiver)"""
     # load dialogue
     dialogue = db_show_dialog(sender=sender,
                               receiver=receiver)
+    error_in_chat = db_dialogue_checker(dialogue=dialogue)
+    db_download_new_msg(sender,
+                        sender_password,
+                        sender,
+                        receiver,
+                        delete_chat=error_in_chat)
+    # load dialogue
+    dialogue = db_show_dialog(sender=sender,
+                              receiver=receiver)
+
     receiver_data = db_get_rows([
             ProfileDescription.nickname,
             Profiles.available
@@ -621,6 +627,19 @@ def dialogue_profile(sender, receiver):
                            sender=sender,
                            receiver_nickname=receiver_nickname,
                            receiver_availability=receiver_availability)
+
+
+def db_dialogue_checker(dialogue: list) -> bool:
+    """checks dialogue, and return True if new messages are viewed,
+    but old not"""
+    dialogue_length = len(dialogue)
+    for i in range(dialogue_length):
+        if i < dialogue_length - 1:
+            if dialogue[i]['viewed'] == False \
+                    and dialogue[i + 1]['viewed'] == True:
+                return True
+
+    return False
 
 
 @app.route('/mail/templates', methods=['GET', 'POST'])

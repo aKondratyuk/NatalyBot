@@ -316,6 +316,7 @@ def dialog_page_upload(current_profile_session,
                        sender_id: str,
                        inbox: bool,
                        download_new: bool = False):
+    """download_new works only for inbox"""
     data['page'] = page
 
     if inbox:
@@ -343,19 +344,25 @@ def dialog_page_upload(current_profile_session,
         time = datetime.strptime(text_time, " %Y-%m-%d %H:%M:%S ")
         text_preview = messages[i][4 - int(not inbox)].text
         message_url = messages[i][4 - int(not inbox)].find('a')["href"]
+
+        # message in inbox check
         if inbox:
             viewed = not messages[i][1 - int(not inbox)].contents[1]['src'] \
                          == '/templates/tmpl_nc/images_nc/new.gif'
-        elif download_new:
-            viewed = True
         else:
             viewed = not messages[i][1 - int(not inbox)].text == '\nNot read'
 
-        if viewed or download_new:
+        # check want we download without preview or not
+        if inbox and download_new:
+            viewed = True
+            text = get_message_text(session=current_profile_session,
+                                    message_url=message_url)
+        elif not inbox:
             text = get_message_text(session=current_profile_session,
                                     message_url=message_url)
         else:
             text = text_preview
+
         db_message_create(chat_id=chat_id,
                           send_time=time,
                           viewed=viewed,
@@ -398,9 +405,13 @@ def dialog_download(observer_login: str,
                             observer_pass=observer_password,
                             target_profile_id=receiver_profile_id))))
 
-    db_new_msg_count = db_chat_length_check(chat_id=chat_id,
-                                            total_msg=total_msg,
-                                            sender_id=sender_id)
+    # return count of new messages, which not presented in database
+    msg_in_db = db_get_rows_2([Messages],
+                              [Messages.chat_id == chat_id,
+                               Messages.profile_id == sender_id,
+                               Messages.delay == False])
+    db_new_msg_count = total_msg - len(msg_in_db)
+
     if db_new_msg_count <= 0:
         # when database have messages that have been deleted in site
         pass
@@ -408,7 +419,9 @@ def dialog_download(observer_login: str,
         # when database already has this dialog with all messages
         return False
 
+    # calculate last site page for dialogue
     last_page = ceil(db_new_msg_count / int(data['filterPPage']))
+    # create counter for messages
     open_msg_count = db_new_msg_count
     if sender_id == receiver_profile_id:
         inbox = True
@@ -647,23 +660,31 @@ def db_show_dialog(sender: str,
 def db_download_new_msg(observer_login: str,
                         observer_password: str,
                         sender_id: str,
-                        receiver_profile_id: str) -> bool:
+                        receiver_profile_id: str,
+                        delete_chat: bool = False) -> bool:
     # find chat in db to delete new messages
     chat_id = db_chat_create(observer_login=observer_login,
                              observer_pass=observer_password,
                              target_profile_id=receiver_profile_id)
     db_session = Session()
-    msg_delete = db_session.query(Messages). \
-        filter(Messages.chat_id == chat_id). \
-        filter(Messages.viewed == False)
+    if delete_chat:
+        msg_delete = db_session.query(Messages). \
+            filter(Messages.chat_id == chat_id)
+    else:
+        msg_delete = db_session.query(Messages). \
+            filter(Messages.chat_id == chat_id). \
+            filter(Messages.viewed == False). \
+            filter(Messages.delay == False)
     msg_delete.delete()  # return number of deleted msg
     db_session.commit()
     db_session.close()
+    # download dialog in outbox
     dialog_download(observer_login=observer_login,
                     observer_password=observer_password,
                     sender_id=sender_id,
                     receiver_profile_id=receiver_profile_id,
                     download_new=True)
+    # download dialog in inbox
     dialog_download(observer_login=observer_login,
                     observer_password=observer_password,
                     sender_id=receiver_profile_id,
@@ -1630,7 +1651,8 @@ def prepare_answer(account: list,
 
 
 def db_error_check(empty_chats=False,
-                   profiles_without_chats=False):
+                   profiles_without_chats=False,
+                   unused_texts=False):
     from main import logger
     if empty_chats:
         # find empty chats and delete them
@@ -1695,7 +1717,14 @@ def db_error_check(empty_chats=False,
 
         logger.info('Error check in database complete, '
                     'profiles without chats')
-
+    if unused_texts:
+        texts = db_get_rows_2([Texts.text_id])
+        for text_id in texts:
+            try:
+                db_delete_rows_2([Texts],
+                                 [Texts.text_id == text_id[0]])
+            except Exception:
+                continue
     return True
 
 
