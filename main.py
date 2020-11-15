@@ -852,8 +852,33 @@ def dialogue_profile(sender, receiver):
         if 'method' in request_data.keys():
             if request_data['method'] == 'send_template_message':
                 print(request.get_json())
-                response = make_response(jsonify({'status': 'message_send'}))
-                # response = make_response(jsonify({'status': 'message_not_send'}))
+                result = False
+                """result = send_msg(session = account_session,
+                         profile_id = profile[0],
+                         text = dialogue[0]['text'])"""
+                if result:
+                    # add update for message in DB, to delete from delayed
+                    db_session = Session()
+                    update_q = update(Texts).where(
+                            Texts.text_id == Messages.text_id,
+                            Messages.message_token == UUID(
+                                    request_data['message_token']).bytes). \
+                        values(text=request_data['text'])
+                    db_session.execute(update_q)
+                    db_session.commit()
+                    update_q = update(Messages).where(
+                            Messages.message_token == UUID(request_data[
+                                                               'message_token']).bytes). \
+                        values(delay=False,
+                               send_time=datetime.now())
+                    db_session.execute(update_q)
+                    db_session.commit()
+                    db_session.close()
+                    response = make_response(
+                        jsonify({'status': 'message_send'}))
+                else:
+                    response = make_response(
+                        jsonify({'status': 'message_not_send'}))
                 return response
             elif request_data['method'] == 'send_no_template_message':
                 # response = make_response(jsonify({'status': 'message_send'}))
@@ -861,7 +886,15 @@ def dialogue_profile(sender, receiver):
                 return response
             elif request_data['method'] == 'edit_template':
                 # Здесь обновляем в базе темлпейт
-                pass
+                db_session = Session()
+                update_q = update(Texts).where(
+                        Texts.text_id == Messages.text_id,
+                        Messages.message_token == UUID(
+                                request_data['message_token']).bytes). \
+                    values(text=request_data['text'])
+                db_session.execute(update_q)
+                db_session.commit()
+                db_session.close()
 
     sender_password = db_get_rows([Profiles.profile_password],
                                   Profiles.profile_id == sender)[0][0]
