@@ -475,6 +475,70 @@ def users_accounts():
     return render_template("accounts.html", profiles=profiles)
 
 
+@app.route('/mail_test', methods=['GET', 'POST'])
+@login_required
+def mail_test():
+    # get accounts which this user can see
+    if current_user.privileges['PROFILES_VISIBILITY']:
+
+        accounts = db_get_rows_2([ProfileDescription.nickname,
+                                  Profiles.profile_id],
+                                 [
+                                         Profiles.profile_password,
+                                         Profiles.profile_id ==
+                                         ProfileDescription.profile_id
+                                         ])
+    else:
+        accounts = db_get_rows_2([ProfileDescription.nickname,
+                                  Visibility.profile_id],
+                                 [
+                                         Visibility.login ==
+                                         current_user.login,
+                                         Visibility.profile_id ==
+                                         Profiles.profile_id,
+                                         Profiles.profile_password,
+                                         Profiles.profile_id ==
+                                         ProfileDescription.profile_id
+                                         ])
+
+    all_messages = []
+    for account in accounts:
+        # load profiles which have chat with this account
+        account_chats = db_get_rows_2([ChatSessions.chat_id],
+                                      [ChatSessions.profile_id == account[1]],
+                                      return_query=True)
+        profiles = db_get_rows_2([ChatSessions.profile_id,
+                                  ChatSessions.chat_id],
+                                 [
+                                         ChatSessions.profile_id ==
+                                         Profiles.profile_id,
+                                         ChatSessions.chat_id.in_(
+                                             account_chats),
+                                         ChatSessions.profile_id != account[
+                                             1]])
+        for profile in profiles:
+            message = db_get_rows_2([Texts.text,
+                                     Messages.send_time,
+                                     Messages.profile_id,
+                                     Messages.viewed,
+                                     Messages.delay],
+                                    [Messages.chat_id == profile[1],
+                                     Texts.text_id == Messages.text_id],
+                                    order_by=[Messages.send_time],
+                                    limit=1,
+                                    one=True)
+            all_messages.append({'profile_id': profile[0],
+                                 'text': message[0],
+                                 'send_time': message[1],
+                                 'last_from': message[2],
+                                 'viewed': message[3],
+                                 'delay': message[4],
+                                 'account_nickname': account[0],
+                                 'account_id': account[1]})
+    all_messages.sort(key=lambda x: x['send_time'], reverse=True)
+    return render_template('mail.html', dialogue=all_messages)
+
+
 @app.route('/mail', methods=['GET', 'POST'])
 @login_required
 def mail():

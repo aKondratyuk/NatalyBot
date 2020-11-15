@@ -653,7 +653,7 @@ def db_show_dialog(sender: str,
              "viewed": row[2],
              "text": row[3],
              "nickname": row[4],
-             "message_token": row[5],
+             "message_token": UUID(bytes=row[5]),
              "delay": row[6]
              } for row in result]
 
@@ -800,7 +800,8 @@ def db_get_rows_2(tables: list,
                   order_by: list = None,
                   descending: bool = False,
                   limit: int = None,
-                  return_query: bool = False) -> list:
+                  return_query: bool = False,
+                  one: bool = False) -> list:
     """Select all rows from tables list,
     which have been filtered with 'statements'"""
     db_session = Session()
@@ -819,7 +820,10 @@ def db_get_rows_2(tables: list,
     if return_query:
         db_session.close()
         return query
-    result = query.all()
+    if one:
+        result = query.one()
+    else:
+        result = query.all()
     db_session.close()
     return result
 
