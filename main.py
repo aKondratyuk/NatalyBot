@@ -818,16 +818,26 @@ def message_templates():
             #
             # END UPDATE SECTION
             #
-            templates = db_get_rows([
-                    Texts.text_id,
-                    Texts.text,
-                    MessageTemplates.text_number],
-                    Texts.text_id == MessageTemplates.text_id,
-                    Profiles.profile_id == MessageTemplates.profile_id,
-                    Profiles.profile_password,
-                    Profiles.profile_id == profile_id,
-                    Visibility.profile_id == profile_id,
-                    Visibility.login == current_user.login)
+            if current_user.privileges['PROFILES_VISIBILITY']:
+                templates = db_get_rows([
+                        Texts.text_id,
+                        Texts.text,
+                        MessageTemplates.text_number],
+                        Texts.text_id == MessageTemplates.text_id,
+                        Profiles.profile_id == MessageTemplates.profile_id,
+                        Profiles.profile_password,
+                        Profiles.profile_id == profile_id)
+            else:
+                templates = db_get_rows([
+                        Texts.text_id,
+                        Texts.text,
+                        MessageTemplates.text_number],
+                        Texts.text_id == MessageTemplates.text_id,
+                        Profiles.profile_id == MessageTemplates.profile_id,
+                        Profiles.profile_password,
+                        Profiles.profile_id == profile_id,
+                        Visibility.profile_id == profile_id,
+                        Visibility.login == current_user.login)
             return render_template(
                     'message_templates.html',
                     templates=templates,
@@ -871,16 +881,26 @@ def message_templates():
         #
         # END CREATE SECTION
         #
-        templates = db_get_rows([
-                Texts.text_id,
-                Texts.text,
-                MessageTemplates.text_number],
-                Texts.text_id == MessageTemplates.text_id,
-                Profiles.profile_id == MessageTemplates.profile_id,
-                Profiles.profile_password,
-                Profiles.profile_id == profile_id,
-                Visibility.profile_id == profile_id,
-                Visibility.login == current_user.login)
+        if current_user.privileges['PROFILES_VISIBILITY']:
+            templates = db_get_rows([
+                    Texts.text_id,
+                    Texts.text,
+                    MessageTemplates.text_number],
+                    Texts.text_id == MessageTemplates.text_id,
+                    Profiles.profile_id == MessageTemplates.profile_id,
+                    Profiles.profile_password,
+                    Profiles.profile_id == profile_id)
+        else:
+            templates = db_get_rows([
+                    Texts.text_id,
+                    Texts.text,
+                    MessageTemplates.text_number],
+                    Texts.text_id == MessageTemplates.text_id,
+                    Profiles.profile_id == MessageTemplates.profile_id,
+                    Profiles.profile_password,
+                    Profiles.profile_id == profile_id,
+                    Visibility.profile_id == profile_id,
+                    Visibility.login == current_user.login)
         templates = sorted(templates,
                            key=lambda x: x[2])
 
@@ -1089,15 +1109,24 @@ def message_anchor():
         # END CREATE SECTION
         #
         if profile_id:
-            anchors = db_get_rows([
-                    Texts.text_id,
-                    Texts.text],
-                    Texts.text_id == MessageAnchors.text_id,
-                    Profiles.profile_id == MessageAnchors.profile_id,
-                    Profiles.profile_password,
-                    Profiles.profile_id == profile_id,
-                    Visibility.profile_id == profile_id,
-                    Visibility.login == current_user.login)
+            if current_user.privileges['PROFILES_VISIBILITY']:
+                anchors = db_get_rows([
+                        Texts.text_id,
+                        Texts.text],
+                        Texts.text_id == MessageAnchors.text_id,
+                        Profiles.profile_id == MessageAnchors.profile_id,
+                        Profiles.profile_password,
+                        Profiles.profile_id == profile_id)
+            else:
+                anchors = db_get_rows([
+                        Texts.text_id,
+                        Texts.text],
+                        Texts.text_id == MessageAnchors.text_id,
+                        Profiles.profile_id == MessageAnchors.profile_id,
+                        Profiles.profile_password,
+                        Profiles.profile_id == profile_id,
+                        Visibility.profile_id == profile_id,
+                        Visibility.login == current_user.login)
             anchors = list(anchors)
             for anchor_i in range(len(anchors)):
                 anchors[anchor_i] = list(anchors[anchor_i])
