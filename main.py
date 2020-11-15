@@ -6,7 +6,7 @@ from logging import Logger
 from urllib.parse import urljoin, urlparse
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, \
-    url_for
+    url_for, make_response
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, login_required, \
     login_user, \
@@ -802,6 +802,23 @@ def mail_selected_delete():
 @app.route('/mail/dialogue:<sender>:<receiver>', methods=['GET', 'POST'])
 @login_required
 def dialogue_profile(sender, receiver):
+    if request.method == "POST":
+        print(request.get_json())
+        request_data = request.get_json()
+        if 'method' in request_data.keys():
+            if request_data['method'] == 'send_template_message':
+                print(request.get_json())
+                response = make_response(jsonify({'status': 'message_send'}))
+                # response = make_response(jsonify({'status': 'message_not_send'}))
+                return response
+            elif request_data['method'] == 'send_no_template_message':
+                # response = make_response(jsonify({'status': 'message_send'}))
+                response = make_response(jsonify({'status': 'message_not_send'}))
+                return response
+            elif request_data['method'] == 'edit_template':
+                # Здесь обновляем в базе темлпейт
+                pass
+
     sender_password = db_get_rows([Profiles.profile_password],
                                   Profiles.profile_id == sender)[0][0]
     # load dialogue
@@ -828,6 +845,7 @@ def dialogue_profile(sender, receiver):
     return render_template('dialogue_profile.html',
                            dialogue=dialogue,
                            sender=sender,
+                           receiver=receiver,
                            receiver_nickname=receiver_nickname,
                            receiver_availability=receiver_availability)
 

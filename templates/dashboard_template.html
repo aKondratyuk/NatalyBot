@@ -30,12 +30,15 @@
               rel="stylesheet"/>
         <link href="{{ url_for('static', filename='css/dataTables.bootstrap4.css') }}"
               rel="stylesheet"/>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/quantumalert.css') }}" />
     {% endblock %}
     <title>Light Bootstrap Dashboard - Free Bootstrap 4 Admin Dashboard by
         Creative Tim</title>
 </head>
 
 <body>
+<div id="dark-mode"></div>
+<div id="loader"></div>
 <div class="wrapper">
     {% block side_menu %}
         <div class="sidebar"
@@ -324,6 +327,7 @@
             type="text/javascript"></script>
     <!-- Light Bootstrap Dashboard DEMO methods, don't include it in your project! -->
     <script src="{{ url_for('static', filename='js/demo.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/quantumalert.js') }}"></script>
     {% block notification_script %}
     <script type="text/javascript">
         $(document).ready(function () {
