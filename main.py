@@ -5,8 +5,8 @@ import os
 from logging import Logger
 from urllib.parse import urljoin, urlparse
 
-from flask import Flask, abort, jsonify, redirect, render_template, request, \
-    url_for, make_response
+from flask import Flask, abort, jsonify, make_response, redirect, \
+    render_template, request, url_for
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, login_required, \
     login_user, \
@@ -475,85 +475,6 @@ def users_accounts():
     return render_template("accounts.html", profiles=profiles)
 
 
-@app.route('/mail_test', methods=['GET', 'POST'])
-@login_required
-def mail_test():
-    # get accounts which this user can see
-    if current_user.privileges['PROFILES_VISIBILITY']:
-
-        accounts = db_get_rows_2([ProfileDescription.nickname,
-                                  Profiles.profile_id],
-                                 [
-                                         Profiles.profile_password,
-                                         Profiles.profile_id ==
-                                         ProfileDescription.profile_id
-                                         ])
-    else:
-        accounts = db_get_rows_2([ProfileDescription.nickname,
-                                  Visibility.profile_id],
-                                 [
-                                         Visibility.login ==
-                                         current_user.login,
-                                         Visibility.profile_id ==
-                                         Profiles.profile_id,
-                                         Profiles.profile_password,
-                                         Profiles.profile_id ==
-                                         ProfileDescription.profile_id
-                                         ])
-
-    all_messages = []
-    for account in accounts:
-        # load profiles which have chat with this account
-        account_chats = db_get_rows_2([ChatSessions.chat_id],
-                                      [ChatSessions.profile_id == account[1]],
-                                      return_query=True)
-        profiles = db_get_rows_2([ChatSessions.profile_id,
-                                  ChatSessions.chat_id],
-                                 [
-                                         ChatSessions.profile_id ==
-                                         Profiles.profile_id,
-                                         ChatSessions.chat_id.in_(
-                                             account_chats),
-                                         ChatSessions.profile_id != account[
-                                             1]])
-        """for profile in profiles:
-            message = db_get_rows_2([Texts.text,
-                                     Messages.send_time,
-                                     Messages.profile_id,
-                                     Messages.viewed,
-                                     Messages.delay],
-                                    [Messages.chat_id == profile[1],
-                                     Texts.text_id == Messages.text_id],
-                                    order_by=[Messages.send_time],
-                                    limit=1,
-                                    one=True)
-            msg_t = Thread(target=db_get_rows_2,
-                           args=([Texts.text,
-                                                Messages.send_time,
-                                                Messages.profile_id,
-                                                Messages.viewed,
-                                                Messages.delay],
-                                 [Messages.chat_id == profile[1],
-                                  Texts.text_id == Messages.text_id]),
-                           kwargs = {'order_by': [Messages.send_time],
-                                     'limit':1,
-                                     'one':True,
-                                     'return_to': all_messages})
-            msg_t.start()
-    while threading.active_count() >= 4:
-        continue"""
-    all_messages = [{'profile_id': profile[0],
-                     'text': message[0],
-                     'send_time': message[1],
-                     'last_from': message[2],
-                     'viewed': message[3],
-                     'delay': message[4],
-                     'account_nickname': account[0],
-                     'account_id': account[1]}
-                    for message in all_messages]
-    all_messages.sort(key=lambda x: x['send_time'], reverse=True)
-    return render_template('mail.html', dialogue=all_messages)
-
 
 @app.route('/dialogue', methods=['GET', 'POST'])
 @login_required
@@ -658,42 +579,99 @@ def dialogue():
 @login_required
 def mail():
     # get accounts which this user can see
-    start_time = time()
     if current_user.privileges['PROFILES_VISIBILITY']:
 
-        accounts = db_get_rows_2([ProfileDescription.nickname,
-                                  Profiles.profile_id],
-                                 [
-                                         Profiles.profile_password,
-                                         Profiles.profile_id ==
-                                         ProfileDescription.profile_id
-                                         ])
+        accounts = db_get_rows_2([Profiles.profile_id],
+                                 [Profiles.profile_password
+                                  ],
+                                 return_query=True)
     else:
-        accounts = db_get_rows_2([ProfileDescription.nickname,
-                                  Visibility.profile_id],
+        accounts = db_get_rows_2([Visibility.profile_id],
                                  [
                                          Visibility.login ==
                                          current_user.login,
                                          Visibility.profile_id ==
                                          Profiles.profile_id,
-                                         Profiles.profile_password,
-                                         Profiles.profile_id ==
-                                         ProfileDescription.profile_id
-                                         ])
-    all_messages = []
-    for account in accounts:
-        # download dialogue for this account, from DB
-        dialogue = db_show_dialog(sender=account[1],
-                                  inbox_filter=True,
-                                  descending=True)
-        for message_i in range(len(dialogue)):
-            # add account nickname and id, in messages
-            dialogue[message_i]['account_nickname'] = account[0]
-            dialogue[message_i]['account_id'] = account[1]
-        all_messages.extend(dialogue)
+                                         Profiles.profile_password],
+                                 return_query=True)
+    if current_user.privileges['PROFILES_VISIBILITY']:
+
+        accounts_subq = db_get_rows_2([ProfileDescription.nickname,
+                                       Profiles.profile_id,
+                                       ChatSessions.chat_id],
+                                      [ChatSessions.profile_id ==
+                                       Profiles.profile_id,
+                                       Profiles.profile_password,
+                                       Profiles.profile_id ==
+                                       ProfileDescription.profile_id
+                                       ],
+                                      return_query=True).subquery()
+    else:
+        accounts_subq = db_get_rows_2([ProfileDescription.nickname,
+                                       Visibility.profile_id,
+                                       ChatSessions.chat_id],
+                                      [ChatSessions.profile_id ==
+                                       Visibility.profile_id,
+                                       Visibility.login ==
+                                       current_user.login,
+                                       Visibility.profile_id ==
+                                       Profiles.profile_id,
+                                       Profiles.profile_password,
+                                       Profiles.profile_id ==
+                                       ProfileDescription.profile_id
+                                       ],
+                                      return_query=True).subquery()
+    # load profiles which have chat with this account
+    account_chats = db_get_rows_2([ChatSessions.chat_id],
+                                  [ChatSessions.profile_id.in_(accounts)],
+                                  return_query=True)
+    profiles = db_get_rows_2([ChatSessions.profile_id,
+                              ChatSessions.chat_id,
+                              ProfileDescription.nickname],
+                             [
+                                     ChatSessions.chat_id.in_(account_chats),
+                                     ChatSessions.profile_id.notin_(accounts),
+                                     ProfileDescription.profile_id ==
+                                     ChatSessions.profile_id],
+                             return_query=True).subquery()
+    chats = db_get_rows_2([ChatSessions.chat_id],
+                          [ChatSessions.chat_id.in_(account_chats),
+                           ChatSessions.profile_id.notin_(accounts)],
+                          return_query=True)
+    start_time = time()
+    last_messages = db_get_rows_2([Texts.text,
+                                   Messages.send_time,
+                                   Messages.profile_id,
+                                   Messages.viewed,
+                                   Messages.delay,
+                                   Messages.chat_id],
+                                  [Messages.chat_id.in_(chats),
+                                   Texts.text_id == Messages.text_id],
+                                  group_by=[Messages.chat_id],
+                                  order_by=[Messages.send_time],
+                                  return_query=True).subquery()
+    messages = db_get_rows_2([last_messages, profiles, accounts_subq],
+                             [last_messages.c.chat_id == profiles.c.chat_id,
+                              last_messages.c.chat_id ==
+                              accounts_subq.c.chat_id],
+                             group_by=[profiles.c.chat_id],
+                             order_by=[last_messages.c.send_time])
     print("TIME", time() - start_time)
-    all_messages.sort(key=lambda x: x['send_time'], reverse=True)
-    return render_template('mail.html', dialogue=all_messages)
+    start_time = time()
+    last_messages = [{'text': message[0],
+                      'send_time': message[1],
+                      'last_from': message[2],
+                      'viewed': message[3],
+                      'delay': message[4],
+                      'profile_id': message[6],
+                      'nickname': message[8],
+                      'account_nickname': message[9],
+                      'account_id': message[10]}
+                     for message in messages]
+    # all_messages.extend(last_messages)
+    last_messages.sort(key=lambda x: x['send_time'], reverse=True)
+    print("SORT", time() - start_time)
+    return render_template('mail.html', dialogue=last_messages)
 
 
 @app.route('/mail/star', methods=['GET', 'POST'])
@@ -705,35 +683,101 @@ def mail_star():
 @app.route('/mail/future', methods=['GET', 'POST'])
 @login_required
 def mail_future():
-    future_messages = db_get_rows_2([Messages.profile_id, ChatSessions.profile_id, Texts.text, Messages.send_time], [
-        Messages.text_id == Texts.text_id,
-        Messages.delay == 1,
-        ChatSessions.chat_id == Messages.chat_id,
-        Messages.profile_id != ChatSessions.profile_id
-    ], [
-        Messages.profile_id
-    ])
+    # get accounts which this user can see
+    if current_user.privileges['PROFILES_VISIBILITY']:
 
-    nickname_of_sender = db_get_rows_2([ProfileDescription.nickname], [
-        Messages.delay == 1,
-        ChatSessions.chat_id == Messages.chat_id,
-        Messages.profile_id != ChatSessions.profile_id,
-        ProfileDescription.profile_id == Messages.profile_id
-    ], [
-        Messages.profile_id
-    ])
+        accounts = db_get_rows_2([Profiles.profile_id],
+                                 [Profiles.profile_password
+                                  ],
+                                 return_query=True)
+    else:
+        accounts = db_get_rows_2([Visibility.profile_id],
+                                 [
+                                         Visibility.login ==
+                                         current_user.login,
+                                         Visibility.profile_id ==
+                                         Profiles.profile_id,
+                                         Profiles.profile_password],
+                                 return_query=True)
+    if current_user.privileges['PROFILES_VISIBILITY']:
 
-    nickname_of_receiver = db_get_rows_2([ProfileDescription.nickname], [
-        Messages.delay == 1,
-        ChatSessions.chat_id == Messages.chat_id,
-        Messages.profile_id != ChatSessions.profile_id,
-        ProfileDescription.profile_id == ChatSessions.profile_id
-    ], [
-        Messages.profile_id
-    ])
-    return render_template('mail_future.html', future_messages=future_messages,
-                           nickname_of_sender=nickname_of_sender,
-                           nickname_of_receiver=nickname_of_receiver)
+        accounts_subq = db_get_rows_2([ProfileDescription.nickname,
+                                       Profiles.profile_id,
+                                       ChatSessions.chat_id],
+                                      [ChatSessions.profile_id ==
+                                       Profiles.profile_id,
+                                       Profiles.profile_password,
+                                       Profiles.profile_id ==
+                                       ProfileDescription.profile_id
+                                       ],
+                                      return_query=True).subquery()
+    else:
+        accounts_subq = db_get_rows_2([ProfileDescription.nickname,
+                                       Visibility.profile_id,
+                                       ChatSessions.chat_id],
+                                      [ChatSessions.profile_id ==
+                                       Visibility.profile_id,
+                                       Visibility.login ==
+                                       current_user.login,
+                                       Visibility.profile_id ==
+                                       Profiles.profile_id,
+                                       Profiles.profile_password,
+                                       Profiles.profile_id ==
+                                       ProfileDescription.profile_id
+                                       ],
+                                      return_query=True).subquery()
+    # load profiles which have chat with this account
+    account_chats = db_get_rows_2([ChatSessions.chat_id],
+                                  [ChatSessions.profile_id.in_(accounts)],
+                                  return_query=True)
+    profiles = db_get_rows_2([ChatSessions.profile_id,
+                              ChatSessions.chat_id,
+                              ProfileDescription.nickname],
+                             [
+                                     ChatSessions.chat_id.in_(account_chats),
+                                     ChatSessions.profile_id.notin_(accounts),
+                                     ProfileDescription.profile_id ==
+                                     ChatSessions.profile_id],
+                             return_query=True).subquery()
+    chats = db_get_rows_2([ChatSessions.chat_id],
+                          [ChatSessions.chat_id.in_(account_chats),
+                           ChatSessions.profile_id.notin_(accounts)],
+                          return_query=True)
+    start_time = time()
+    last_messages = db_get_rows_2([Texts.text,
+                                   Messages.send_time,
+                                   Messages.profile_id,
+                                   Messages.viewed,
+                                   Messages.delay,
+                                   Messages.chat_id],
+                                  [Messages.chat_id.in_(chats),
+                                   Texts.text_id == Messages.text_id,
+                                   Messages.delay],
+                                  group_by=[Messages.chat_id],
+                                  order_by=[Messages.send_time],
+                                  return_query=True).subquery()
+    messages = db_get_rows_2([last_messages, profiles, accounts_subq],
+                             [last_messages.c.chat_id == profiles.c.chat_id,
+                              last_messages.c.chat_id ==
+                              accounts_subq.c.chat_id],
+                             group_by=[profiles.c.chat_id],
+                             order_by=[last_messages.c.send_time])
+    print("TIME", time() - start_time)
+    start_time = time()
+    last_messages = [{'text': message[0],
+                      'send_time': message[1],
+                      'last_from': message[2],
+                      'viewed': message[3],
+                      'delay': message[4],
+                      'profile_id': message[6],
+                      'nickname': message[8],
+                      'account_nickname': message[9],
+                      'account_id': message[10]}
+                     for message in messages]
+    # all_messages.extend(last_messages)
+    last_messages.sort(key=lambda x: x['send_time'], reverse=True)
+    print("SORT", time() - start_time)
+    return render_template('mail_future.html', dialogue=last_messages)
 
 
 @app.route('/mail/outbox', methods=['GET', 'POST'])
@@ -1392,9 +1436,9 @@ def logs():
 
 if __name__ == "__main__":
     # Проверка базы данных на ошибки
-    """db_error_check(empty_chats=True,
+    db_error_check(empty_chats=True,
                    profiles_without_chats=True,
-                   unused_texts=True)"""
+                   unused_texts=True)
 
     # Обработка сообщений и подготовка шаблонов с якорями
     """from background_worker import worker_msg_sender
