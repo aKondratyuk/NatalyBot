@@ -798,10 +798,14 @@ def db_get_rows(tables: list,
 def db_get_rows_2(tables: list,
                   statements: list = None,
                   order_by: list = None,
+                  group_by: list = None,
                   descending: bool = False,
                   limit: int = None,
                   return_query: bool = False,
-                  one: bool = False) -> list:
+                  one: bool = False,
+                  return_to: list = False,
+                  add_columns: list = False,
+                  distinct: list = False) -> list:
     """Select all rows from tables list,
     which have been filtered with 'statements'"""
     db_session = Session()
@@ -809,6 +813,13 @@ def db_get_rows_2(tables: list,
     if statements:
         for statement in statements:
             query = query.filter(statement != '')
+
+    if distinct:
+        for dist in distinct:
+            query = query.distinct(*dist)
+    if group_by:
+        for group in group_by:
+            query = query.group_by(group)
     if order_by:
         for sort in order_by:
             if descending:
@@ -817,14 +828,20 @@ def db_get_rows_2(tables: list,
                 query = query.order_by(sort)
     if limit:
         query = query.limit(limit)
+    if add_columns:
+        query = query.add_columns(*add_columns)
     if return_query:
         db_session.close()
+        if return_to:
+            return_to.append(query)
         return query
     if one:
         result = query.one()
     else:
         result = query.all()
     db_session.close()
+    if return_to:
+        return_to.append(result)
     return result
 
 
