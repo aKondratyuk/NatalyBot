@@ -896,8 +896,37 @@ def dialogue_profile(sender, receiver):
                         jsonify({'status': 'message_not_send'}))
                 return response
             elif request_data['method'] == 'send_no_template_message':
-                # response = make_response(jsonify({'status': 'message_send'}))
-                response = make_response(jsonify({'status': 'message_not_send'}))
+                account = db_get_rows_2([Profiles.profile_id,
+                                         Profiles.profile_password],
+                                        [Profiles.profile_id == sender],
+                                        one=True)
+                chats_sender = db_get_rows_2([ChatSessions.chat_id],
+                                             [
+                                                     ChatSessions.profile_id
+                                                     == sender],
+                                             return_query=True)
+                chat = db_get_rows_2([ChatSessions.chat_id],
+                                     [ChatSessions.profile_id == receiver,
+                                      ChatSessions.chat_id.in_(chats_sender)],
+                                     one=True)
+                account_session, account_id = site_login(account[0],
+                                                         account[1])
+                result = message(session=account_session,
+                                 receiver_profile_id=receiver,
+                                 message_text=request_data['text'])
+                if result:
+                    db_message_create(
+                            chat_id=chat[0],
+                            send_time=datetime.now(),
+                            viewed=False,
+                            sender=account[0],
+                            text=request_data['text'],
+                            delay=False)
+                    response = make_response(
+                        jsonify({'status': 'message_send'}))
+                else:
+                    response = make_response(
+                        jsonify({'status': 'message_not_send'}))
                 return response
             elif request_data['method'] == 'edit_template':
                 # Здесь обновляем в базе темлпейт
