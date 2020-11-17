@@ -139,10 +139,13 @@
                         </form>
                     </div>
                 </div>
-                <button type="submit" id="delete" data-toggle="modal" data-target="#staticBackdrop"
-                            class="btn btn-fill btn-danger">Удалить
+                <button type="submit" id="delete" data-toggle="modal"
+                        data-target="#staticBackdrop"
+                        class="btn btn-fill btn-danger">Удалить
                 </button>
                 <form action="/users/access/selected/delete" method="post">
+                    <input name="selected_user" type="hidden"
+                           value="{{ selected_user }}"/>
                     <table id="table"
                            class="table table-striped table table-bordered mydatatable"
                            style="width: 100%">
@@ -287,18 +290,20 @@
     </script>
     <script>
         $('#DeleteModal').on('show.bs.modal', function (event) {
-          var button = $(event.relatedTarget) // Button that triggered the modal
-          var profile_id = button.data('profile')
-          // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-          // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-          var modal = $(this)
-          modal.find('.modal-title').text('Удаление профиля ' + profile_id)
-          modal.find('#user_delete').attr('action', '/users/access/delete/' + profile_id)
+            var button = $(event.relatedTarget) // Button that triggered the modal
+            var profile_id = button.data('profile')
+            // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+            // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+            var modal = $(this)
+            modal.find('.modal-title').text('Удаление профиля ' + profile_id)
+            modal.find('#user_delete').attr('action',
+                '/users/access/delete/' + '{{ selected_user }}' + ':' +
+                +profile_id)
         })
     </script>
     <script>
-        $(document).ready(function(){
-        $("#table #checkall").click(function () {
+        $(document).ready(function () {
+            $("#table #checkall").click(function () {
                 if ($("#table #checkall").is(':checked')) {
                     $("#table input[type=checkbox]").each(function () {
                         $(this).prop("checked", true);

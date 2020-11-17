@@ -427,15 +427,20 @@ def access():
                            error=error)
 
 
-@app.route('/users/access/delete/<profile_id>', methods=['POST'])
+@app.route('/users/access/delete/<selected_user>:<profile_id>', methods=[
+        'POST'])
 @login_required
-def users_access_delete(profile_id):
-    if True:
-        logger.info(f'User {current_user.login} successfully deleted:'
-                    f' {profile_id}')
+def users_access_delete(selected_user, profile_id):
+    deleted_rows = db_delete_rows_2([Visibility],
+                                    [Visibility.login == selected_user,
+                                     Visibility.profile_id == profile_id])
+    if deleted_rows != 0:
+        logger.info(f'User {current_user.login} successfully deleted '
+                    f'visibility of {profile_id} for user {selected_user}')
     else:
         logger.info(f'User {current_user.login} tried to '
-                    f'delete: {profile_id} but something gone wrong!')
+                    f'delete: {profile_id} for user '
+                    f'{selected_user} but something gone wrong!')
     return redirect(request.referrer)
 
 
@@ -443,14 +448,21 @@ def users_access_delete(profile_id):
 @login_required
 def users_access_selected_delete():
     list_profiles = request.form.getlist('mycheckbox')
+    selected_user = request.form.get('selected_user')
     logger.info(f'User {current_user.login} starting '
                 f'delete profiles: {list_profiles}')
-    for profile in list_profiles:
-        if True:
-            logger.info(f'User {current_user.login} delete: {profile}')
-        else:
-            logger.info(f'User {current_user.login} tried to delete '
-                        f'profile: {profile} but something gone wrong!')
+    deleted_rows = db_delete_rows_2([Visibility],
+                                    [Visibility.login == selected_user,
+                                     Visibility.profile_id.in_(list_profiles)],
+                                    synchronize_session='fetch')
+    if deleted_rows != 0:
+        logger.info(f'User {current_user.login} successfully deleted '
+                    f'visibility of {list_profiles} for user {selected_user}')
+    else:
+        logger.info(f'User {current_user.login} tried to '
+                    f'delete: {list_profiles} for user '
+                    f'{selected_user} but something gone wrong!'
+                    f'Deleted only {deleted_rows} profiles.')
     return redirect(request.referrer)
 
 
