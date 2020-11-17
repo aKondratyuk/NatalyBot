@@ -51,7 +51,7 @@
 				<div class="row">
 					<!-- BEGIN INBOX MENU -->
 					<div class="col-md-3">
-						<h2 class="grid-title" style="font-size: 28px;"><i class="fa fa-inbox"></i>     Входящие</h2>
+						<h2 class="grid-title" style="font-size: 28px;"><i class="fa fa-inbox"></i>     Диалоги</h2>
 						<button type="submit" id="new_message" data-toggle="modal" data-target="#compose-modal"
                                 class="btn btn-fill btn-primary"
                                 style="width: 100%; margin-top: 8px; margin-bottom: 8px;">
@@ -72,24 +72,14 @@
                                 <li style="padding-top: 5px;"><a
                                         href="{{ url_for('mail') }}" style="color:
                                         #1DC7EA;"><i class="fa
-                                        fa-inbox"></i> Входящие
+                                        fa-inbox"></i> Диалоги
                                     ({{ dialogue|length }})
                                 </a></li>
-                                <li style="padding-top: 5px;"><a
-                                        href="{{ url_for('mail_star') }}"
-                                        style="color: #9A9A9A;"><i
-                                        class="fa fa-star"></i> Помеченные</a>
-                                </li>
                                 <li style="padding-top: 5px;"><a
                                         href="{{ url_for('mail_future') }}"
                                         style="color: #9A9A9A;"><i
                                         class="fa fa-clock-o"></i> Будут
                                     отправлены</a></li>
-                                <li style="padding-top: 5px;"><a
-                                        href="{{ url_for('mail_outbox') }}"
-                                        style="color: #9A9A9A;"><i
-                                        class="fa fa-mail-forward"></i>
-                                    Отправленые</a></li>
                             </ul>
                         </div>
                     </div>
@@ -145,13 +135,33 @@
                                             <td align="center">{{ dialogue[i]['send_time'] }}</td>
                                             <td class="td-actions"
                                                 align="center">
-                                                <a rel="tooltip"
-                                                   title="Просмотреть профиль"
-                                                   class="btn-sm table-action view"
-                                                   style="color: blue;"
-                                                   href="https://www.natashaclub.com/{{ dialogue[i]['profile_id'] }}">
-                                                    <i class="fa fa-user"></i>
-                                                </a>
+                                                {% set last_from = dialogue[i]['last_from'] %}
+                                                {% set account_id = dialogue[i]['account_id'] %}
+                                                {% set delay = dialogue[i]['delay'] %}
+                                                {% set viewed = dialogue[i]['viewed'] %}
+                                                {% set profile_id = dialogue[i]['profile_id'] %}
+                                                {% if last_from == account_id and delay %}
+                                                    <a rel="tooltip"
+                                                       title="Сформирован шаблонный ответ"
+                                                       class="btn-sm table-action view"
+                                                       style="color: green;">
+                                                        <i class="fa fa-circle"></i>
+                                                    </a>
+                                                {% elif last_from == profile_id %}
+                                                    <a rel="tooltip"
+                                                       title="Получено новое письмо и мы не ответили"
+                                                       class="btn-sm table-action view"
+                                                       style="color: red;">
+                                                        <i class="fa fa-circle"></i>
+                                                    </a>
+                                                {% elif last_from == account_id and viewed %}
+                                                    <a rel="tooltip"
+                                                       title="Письмо прочитано на стороне 'м'"
+                                                       class="btn-sm table-action view"
+                                                       style="color: cornflowerblue;">
+                                                        <i class="fa fa-check"></i>
+                                                    </a>
+                                                {% endif %}
                                             </td>
                                         </tr>
                                     {% endfor %}
