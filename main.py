@@ -296,12 +296,12 @@ def users():
         error = not create_invite(creator=current_user,
                                   invited_email=invited_email,
                                   role=assigned_role)
-        user_list = db_get_users()
+        user_list = db_get_users(RolesOfUsers.user_role != 'deleted')
         return render_template('users.html',
                                user_list=user_list,
                                error=error)
     logger.info(f'User {current_user.login} opened user list')
-    user_list = db_get_users()
+    user_list = db_get_users(RolesOfUsers.user_role != 'deleted')
     return render_template('users.html', user_list=user_list)
 
 
@@ -910,8 +910,12 @@ def dialogue_profile(sender, receiver):
                             sender=account[0],
                             text=request_data['text'],
                             delay=False)
+
+                    logger.info(f'User {current_user.login} created message '
+                                f'for account {sender} in dialogue with '
+                                f'profile {receiver}')
                     response = make_response(
-                        jsonify({'status': 'message_send'}))
+                            jsonify({'status': 'message_send'}))
                 else:
                     response = make_response(
                         jsonify({'status': 'message_not_send'}))

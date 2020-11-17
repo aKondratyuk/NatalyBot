@@ -741,7 +741,6 @@ def db_get_users(*statements) -> list:
     query = query.group_by(Users.login)
     query = query.filter(Users.login != 'anonymous')
     query = query.filter(Users.login != 'server')
-    query = query.filter(RolesOfUsers.user_role != 'deleted')
     for statement in statements:
         query = query.filter(statement != '')
     users = query.all()
