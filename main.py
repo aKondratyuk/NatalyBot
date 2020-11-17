@@ -43,11 +43,17 @@ class MyLogger(Logger):
     def __init__(self, name, level=0):
         super().__init__(name, level)
         logging.addLevelName(30, "NOTIFICATION")
+        logging.addLevelName(50, "STOPWATCH")
 
     def notification(self, message, *args, **kws):
         if self.isEnabledFor(30):
             # Yes, logger takes its '*args' as 'args'.
             self._log(30, message, args, **kws)
+
+    def stopwatch(self, message, *args, **kws):
+        if self.isEnabledFor(30):
+            # Yes, logger takes its '*args' as 'args'.
+            self._log(50, message, args, **kws)
 
 
 logger = MyLogger("werkzeug")
