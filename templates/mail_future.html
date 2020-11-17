@@ -64,10 +64,8 @@
 						<div>
 							<ul class="nav nav-pills nav-stacked" style="display: block;">
 								<li class="header"><b>Категории</b></li>
-								<li style="padding-top: 5px;"><a href="{{ url_for('mail') }}" style="color: #9A9A9A;"><i class="fa fa-inbox"></i> Входящие (14)</a></li>
-								<li style="padding-top: 5px;"><a href="{{ url_for('mail_star') }}" style="color: #9A9A9A;"><i class="fa fa-star"></i> Помеченные</a></li>
-								<li style="padding-top: 5px;"><a href="{{ url_for('mail_future') }}" style="color: #1DC7EA;"><i class="fa fa-clock-o"></i> Будут отправлены</a></li>
-								<li style="padding-top: 5px;"><a href="{{ url_for('mail_outbox') }}" style="color: #9A9A9A;"><i class="fa fa-mail-forward"></i> Отправленые</a></li>
+								<li style="padding-top: 5px;"><a href="{{ url_for('mail') }}" style="color: #9A9A9A;"><i class="fa fa-inbox"></i> Диалоги</a></li>
+								<li style="padding-top: 5px;"><a href="{{ url_for('mail_future') }}" style="color: #1DC7EA;"><i class="fa fa-clock-o"></i> Будут отправлены ({{ dialogue|length }})</a></li>
 							</ul>
 						</div>
 					</div>

@@ -114,7 +114,7 @@ def create_message_response(template_number,
             temp_text_template.insert(i, anchor_text[0])
             used_texts.append(anchor_text[1])
     # Соединяем все элементы списка в единый текст. Если якорей так и не было, то текст будет теперь без {}
-    text_template = "\n\n".join(temp_text_template)
+    text_template = "\n".join(temp_text_template)
 
     return text_template, used_texts
 

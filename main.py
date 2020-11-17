@@ -539,7 +539,6 @@ def dialogue():
                           [ChatSessions.chat_id.in_(account_chats),
                            ChatSessions.profile_id.notin_(accounts)],
                           return_query=True)
-    start_time = time()
     last_messages = db_get_rows_2([Texts.text,
                                    Messages.send_time,
                                    Messages.profile_id,
@@ -557,8 +556,6 @@ def dialogue():
                               accounts_subq.c.chat_id],
                              group_by=[profiles.c.chat_id],
                              order_by=[last_messages.c.send_time])
-    print("TIME", time() - start_time)
-    start_time = time()
     last_messages = [{'text': message[0],
                       'send_time': message[1],
                       'last_from': message[2],
@@ -571,7 +568,6 @@ def dialogue():
                      for message in messages]
     # all_messages.extend(last_messages)
     last_messages.sort(key=lambda x: x['send_time'], reverse=True)
-    print("SORT", time() - start_time)
     return render_template('dialogue.html', dialogue=last_messages)
 
 
@@ -638,7 +634,6 @@ def mail():
                           [ChatSessions.chat_id.in_(account_chats),
                            ChatSessions.profile_id.notin_(accounts)],
                           return_query=True)
-    start_time = time()
     last_messages = db_get_rows_2([Texts.text,
                                    Messages.send_time,
                                    Messages.profile_id,
@@ -656,13 +651,11 @@ def mail():
                               accounts_subq.c.chat_id],
                              group_by=[profiles.c.chat_id],
                              order_by=[last_messages.c.send_time])
-    print("TIME", time() - start_time)
-    start_time = time()
     last_messages = [{'text': message[0],
                       'send_time': message[1],
-                      'last_from': message[2],
-                      'viewed': message[3],
-                      'delay': message[4],
+                      'last_from': message[2], # yellow lamp we sent message if last_from = account_id
+                      'viewed': message[3], # green lamp message viewed by man if last_from = account_id and viewed = True
+                      'delay': message[4],  # blue lamp template is formed delay = 1
                       'profile_id': message[6],
                       'nickname': message[8],
                       'account_nickname': message[9],
@@ -670,7 +663,6 @@ def mail():
                      for message in messages]
     # all_messages.extend(last_messages)
     last_messages.sort(key=lambda x: x['send_time'], reverse=True)
-    print("SORT", time() - start_time)
     return render_template('mail.html', dialogue=last_messages)
 
 
@@ -743,7 +735,6 @@ def mail_future():
                           [ChatSessions.chat_id.in_(account_chats),
                            ChatSessions.profile_id.notin_(accounts)],
                           return_query=True)
-    start_time = time()
     last_messages = db_get_rows_2([Texts.text,
                                    Messages.send_time,
                                    Messages.profile_id,
@@ -762,8 +753,6 @@ def mail_future():
                               accounts_subq.c.chat_id],
                              group_by=[profiles.c.chat_id],
                              order_by=[last_messages.c.send_time])
-    print("TIME", time() - start_time)
-    start_time = time()
     last_messages = [{'text': message[0],
                       'send_time': message[1],
                       'last_from': message[2],
@@ -776,7 +765,6 @@ def mail_future():
                      for message in messages]
     # all_messages.extend(last_messages)
     last_messages.sort(key=lambda x: x['send_time'], reverse=True)
-    print("SORT", time() - start_time)
     return render_template('mail_future.html', dialogue=last_messages)
 
 
@@ -1520,9 +1508,9 @@ def logs():
 
 if __name__ == "__main__":
     # Проверка базы данных на ошибки
-    db_error_check(empty_chats=True,
+    """db_error_check(empty_chats=True,
                    profiles_without_chats=True,
-                   unused_texts=True)
+                   unused_texts=True)"""
 
     # Обработка сообщений и подготовка шаблонов с якорями
     """from background_worker import worker_msg_sender
