@@ -409,6 +409,17 @@ def access():
                                       profile_id=profile)
         # load available profiles
         if user:
+            other_profiles = db_get_rows_2([Visibility.profile_id],
+                                           return_query=True)
+            profiles = db_get_rows([
+                    Profiles.profile_id,
+                    ProfileDescription.name,
+                    ProfileDescription.nickname
+                    ],
+                    Profiles.profile_id.notin_(other_profiles),
+                    Profiles.profile_id == ProfileDescription.profile_id,
+                    Profiles.available,
+                    Profiles.profile_password)
             available_profiles = db_get_rows([
                     Visibility.profile_id,
                     ProfileDescription.name,
