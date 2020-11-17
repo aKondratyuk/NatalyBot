@@ -1,4 +1,4 @@
-from threading import Thread
+from threading import Thread, active_count
 from time import sleep, time
 
 from control_panel import account_dialogs_checker, db_get_rows, \
@@ -152,6 +152,8 @@ def worker_profile_and_msg_updater() -> None:
 
         t = Thread(target=account_dialogs_checker,
                    args=(profile_id, profile_pass, max_page))
+        while active_count() >= 250:
+            continue
         t.start()
 
         threads.append(t)

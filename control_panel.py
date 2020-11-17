@@ -4,7 +4,7 @@ import traceback
 from datetime import datetime, timedelta
 from math import ceil
 from random import randint
-from threading import Thread
+from threading import Thread, active_count
 from time import time
 from uuid import UUID, uuid4
 
@@ -1493,6 +1493,8 @@ def account_dialogs_checker(observed_profile_id: str,
                          observed_profile_password,
                          profile_id,
                          current_profile_session))
+        while active_count() >= 250:
+            continue
         t.start()
         profiles_threads.append(t)
         """profile_dialogs_checker(
