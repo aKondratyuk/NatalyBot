@@ -1,9 +1,9 @@
 from threading import Thread, active_count
 from time import sleep, time
 
-from control_panel import account_dialogs_checker, db_get_rows, \
-    db_get_rows_2, \
-    dialog_download, prepare_answer
+from control_panel import account_dialogs_checker, db_error_check, \
+    db_get_rows, \
+    db_get_rows_2, dialog_download, prepare_answer
 from db_models import ChatSessions, MessageTemplates, Profiles, Texts
 from verification import site_login
 
@@ -139,6 +139,9 @@ def worker_profile_and_msg_updater() -> None:
     max_page = 3
     # while True:
     # code
+    db_error_check(empty_chats=True,
+                   profiles_without_chats=True,
+                   unused_texts=True)
     start_time = time()
     threads = []
     profiles = db_get_rows([
@@ -163,6 +166,9 @@ def worker_profile_and_msg_updater() -> None:
     for i in range(len(threads)):
         print(f'Waiting thread №{i}')
         threads[i].join()
+    db_error_check(empty_chats=True,
+                   profiles_without_chats=True,
+                   unused_texts=True)
     logger.info('Worker which update dialogs end work')
     logger.stopwatch(f'worker_profile_and_msg_updater '
                      f'time spend: {time() - start_time} sec')
