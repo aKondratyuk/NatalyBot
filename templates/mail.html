@@ -109,8 +109,8 @@
                                     <th data-field="preview">Превью сообщения
                                     </th>
                                     <th data-field="time">Время</th>
-                                    <th data-field="action"
-                                        data-sortable="false">Действия
+                                    <th data-field="notification"
+                                        data-sortable="false">Уведомление
                                     </th>
                                 </tr>
                                 </thead>
@@ -133,14 +133,15 @@
                                                 </a>
                                             </td>
                                             <td align="center">{{ dialogue[i]['send_time'] }}</td>
-                                            <td class="td-actions"
-                                                align="center">
+                                            <td align="center">
                                                 {% set last_from = dialogue[i]['last_from'] %}
                                                 {% set account_id = dialogue[i]['account_id'] %}
                                                 {% set delay = dialogue[i]['delay'] %}
                                                 {% set viewed = dialogue[i]['viewed'] %}
                                                 {% set profile_id = dialogue[i]['profile_id'] %}
+
                                                 {% if last_from == account_id and delay %}
+                                                <p style="font-size: 0px; line-height: 0; visibility: hidden">Сформирован шаблонный ответ</p>
                                                     <a rel="tooltip"
                                                        title="Сформирован шаблонный ответ"
                                                        class="btn-sm table-action view"
@@ -148,6 +149,7 @@
                                                         <i class="fa fa-circle"></i>
                                                     </a>
                                                 {% elif last_from == profile_id %}
+                                                <p style="font-size: 0px; line-height: 0; visibility: hidden">Получено новое письмо и мы не ответили</p>
                                                     <a rel="tooltip"
                                                        title="Получено новое письмо и мы не ответили"
                                                        class="btn-sm table-action view"
@@ -155,6 +157,7 @@
                                                         <i class="fa fa-circle"></i>
                                                     </a>
                                                 {% elif last_from == account_id and viewed %}
+                                                <p style="font-size: 0px; line-height: 0; visibility: hidden">Письмо прочитано на стороне 'м'</p>
                                                     <a rel="tooltip"
                                                        title="Письмо прочитано на стороне 'м'"
                                                        class="btn-sm table-action view"
@@ -174,7 +177,7 @@
                                     <th>Профиль</th>
                                     <th>Превью сообщения</th>
                                     <th>Время</th>
-                                    <th>Действия</th>
+                                    <th>Уведомление</th>
                                 </tr>
                                 </tfoot>
                                 <div class="modal fade" id="staticBackdrop"
