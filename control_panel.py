@@ -1219,6 +1219,14 @@ def db_add_profile(profile_id: str,
         db_session.add(new_profile)
         logger.info(f'User {current_user} added profile, '
                     f'with profile_id: {profile_id}')
+    user_role = db_delete_rows_2([RolesOfUsers.user_role],
+                                 [RolesOfUsers.login == current_user.login])
+    if len(user_role) >= 0:
+        if user_role[0][0] == 'default':
+            profile_visibility = Visibility(profile_id=profile_id,
+                                            login=current_user.login)
+            db_session.add(profile_visibility)
+
     db_session.commit()
     db_session.close()
 
