@@ -1508,9 +1508,9 @@ def logs():
 
 if __name__ == "__main__":
     # Проверка базы данных на ошибки
-    """db_error_check(empty_chats=True,
+    db_error_check(empty_chats=True,
                    profiles_without_chats=True,
-                   unused_texts=True)"""
+                   unused_texts=True)
 
     # Обработка сообщений и подготовка шаблонов с якорями
     """from background_worker import worker_msg_sender
