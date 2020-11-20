@@ -1576,7 +1576,7 @@ if __name__ == "__main__":
     t1.start()
     workers_number += 1"""
     # Основной бот:
-    """from background_worker import worker_profile_and_msg_updater
+    """from background_worker import main_worker
     from multiprocessing import Process
     p_mainbot = Process(target=main_worker)
     p_mainbot.start()
