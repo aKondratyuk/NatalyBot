@@ -1556,5 +1556,11 @@ if __name__ == "__main__":
     t1 = Process(target=worker_profile_and_msg_updater)
     t1.start()
     workers_number += 1"""
+    # Основной бот:
+    """from background_worker import worker_profile_and_msg_updater
+    from multiprocessing import Process
+    p_mainbot = Process(target=main_worker)
+    p_mainbot.start()
+    workers_number += 1"""
     # Run the app until stopped
     app.run()
