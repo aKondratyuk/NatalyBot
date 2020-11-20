@@ -1,5 +1,4 @@
 # coding: utf8
-from flask import request
 from flask_login import UserMixin
 from sqlalchemy import update
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -49,6 +48,7 @@ class User(UserMixin):
 
 def find_user(login: str = None,
               user_id: str = None):
+    from control_panel import db_get_rows_2
     session = Session()
 
     if user_id:
@@ -68,7 +68,7 @@ def find_user(login: str = None,
         password = user.user_password
         user_id = generate_password_hash(login, "sha256", salt_length=8)
 
-        query = session.query(RolesOfUsers, PrivilegesAssigns)
+        """query = session.query(RolesOfUsers, PrivilegesAssigns)
         query = query.outerjoin(
                 UserRoles,
                 UserRoles.user_role == RolesOfUsers.user_role)
@@ -76,8 +76,16 @@ def find_user(login: str = None,
                 PrivilegesAssigns,
                 PrivilegesAssigns.user_role == UserRoles.user_role)
         query = query.filter(RolesOfUsers.login == login)
-        q_result = query.all()
-        if len(q_result) == 0:
+        q_result = query.all()"""
+        user_roles = db_get_rows_2([RolesOfUsers.user_role],
+                                   [RolesOfUsers.login == login])
+        role = [role[0] for role in user_roles]
+
+        user_privileges = db_get_rows_2([PrivilegesAssigns.privilege_name,
+                                         PrivilegesAssigns.privilege_status],
+                                        [PrivilegesAssigns.user_role.in_(
+                                            role)])
+        """if len(q_result) == 0:
             role, privileges = [], {}
         elif q_result[0][1]:
             role = [row[0].user_role for row in q_result]
@@ -85,7 +93,10 @@ def find_user(login: str = None,
                           for row in q_result}
         else:
             role = [row[0].user_role for row in q_result]
-            privileges = {}
+            privileges = {}"""
+
+        privileges = {privilege[0]: privilege[1]
+                      for privilege in user_privileges}
 
         session.close()
         if request.environ['REMOTE_ADDR']:

@@ -232,18 +232,19 @@
     <script src="{{ url_for('static', filename='js/demo.js') }}"></script>
     <script>
         $('#DeleteModal').on('show.bs.modal', function (event) {
-          var button = $(event.relatedTarget) // Button that triggered the modal
-          var login = button.data('login')
-          // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-          // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-          var modal = $(this)
-          modal.find('.modal-title').text('Удаление аккаунта ' + login)
-          modal.find('#user_delete').attr('action', 'users/accounts/delete/' + login)
+            var button = $(event.relatedTarget) // Button that triggered the modal
+            var login = button.data('login')
+            // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+            // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+            var modal = $(this)
+            modal.find('.modal-title').text('Удаление аккаунта ' + login)
+            modal.find('#user_delete').attr('action', 'users/accounts/delete:'
+                + login)
         })
     </script>
     <script>
-        $(document).ready(function(){
-        $("#table #checkall").click(function () {
+        $(document).ready(function () {
+            $("#table #checkall").click(function () {
                 if ($("#table #checkall").is(':checked')) {
                     $("#table input[type=checkbox]").each(function () {
                         $(this).prop("checked", true);
