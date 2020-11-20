@@ -111,7 +111,7 @@ def invite_user():
 @login_required
 def profile_dialogue():
     db_session = Session()
-    if current_user.privileges['PROFILES_VISIBILITY']:
+    if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
         # if user can view all profiles, we doesn't filter by access
         senders = db_get_rows([
                 Profiles.profile_id,
@@ -491,16 +491,31 @@ def users_accounts():
         account_password = request.form.get('account-password')
         error = db_add_profile(profile_id=account_login,
                                profile_password=account_password)
+    user_visibility = db_get_rows_2([Visibility.profile_id],
+                                    [Visibility.login == current_user.login],
+                                    return_query=True)
 
-    profiles = db_get_rows([
-            ProfileDescription.profile_id,
-            ProfileDescription.nickname,
-            Profiles.profile_password,
-            ProfileDescription.age,
-            Profiles.available
-            ],
-            ProfileDescription.profile_id == Profiles.profile_id,
-            Profiles.profile_password)
+    if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
+        profiles = db_get_rows_2([
+                ProfileDescription.profile_id,
+                ProfileDescription.nickname,
+                Profiles.profile_password,
+                ProfileDescription.age,
+                Profiles.available
+                ],
+                [ProfileDescription.profile_id == Profiles.profile_id,
+                 Profiles.profile_password])
+    else:
+        profiles = db_get_rows_2([
+                ProfileDescription.profile_id,
+                ProfileDescription.nickname,
+                Profiles.profile_password,
+                ProfileDescription.age,
+                Profiles.available
+                ],
+                [ProfileDescription.profile_id == Profiles.profile_id,
+                 Profiles.profile_password,
+                 Profiles.profile_id.in_(user_visibility)])
     return render_template("accounts.html", profiles=profiles)
 
 
@@ -509,7 +524,7 @@ def users_accounts():
 @login_required
 def dialogue():
     # get accounts which this user can see
-    if current_user.privileges['PROFILES_VISIBILITY']:
+    if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
 
         accounts = db_get_rows_2([Profiles.profile_id],
                                  [Profiles.profile_password
@@ -524,7 +539,7 @@ def dialogue():
                                          Profiles.profile_id,
                                          Profiles.profile_password],
                                  return_query=True)
-    if current_user.privileges['PROFILES_VISIBILITY']:
+    if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
 
         accounts_subq = db_get_rows_2([ProfileDescription.nickname,
                                        Profiles.profile_id,
@@ -604,7 +619,7 @@ def dialogue():
 @login_required
 def mail():
     # get accounts which this user can see
-    if current_user.privileges['PROFILES_VISIBILITY']:
+    if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
 
         accounts = db_get_rows_2([Profiles.profile_id],
                                  [Profiles.profile_password
@@ -619,7 +634,7 @@ def mail():
                                          Profiles.profile_id,
                                          Profiles.profile_password],
                                  return_query=True)
-    if current_user.privileges['PROFILES_VISIBILITY']:
+    if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
 
         accounts_subq = db_get_rows_2([ProfileDescription.nickname,
                                        Profiles.profile_id,
@@ -705,7 +720,7 @@ def mail_star():
 @login_required
 def mail_future():
     # get accounts which this user can see
-    if current_user.privileges['PROFILES_VISIBILITY']:
+    if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
 
         accounts = db_get_rows_2([Profiles.profile_id],
                                  [Profiles.profile_password
@@ -720,7 +735,7 @@ def mail_future():
                                          Profiles.profile_id,
                                          Profiles.profile_password],
                                  return_query=True)
-    if current_user.privileges['PROFILES_VISIBILITY']:
+    if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
 
         accounts_subq = db_get_rows_2([ProfileDescription.nickname,
                                        Profiles.profile_id,
@@ -801,7 +816,7 @@ def mail_future():
 @login_required
 def mail_outbox():
     # get accounts which this user can see
-    if current_user.privileges['PROFILES_VISIBILITY']:
+    if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
 
         accounts = db_get_rows_2([ProfileDescription.nickname,
                                   Profiles.profile_id],
@@ -1002,7 +1017,7 @@ def dialogue_profile(sender, receiver):
 @app.route('/mail/templates', methods=['GET', 'POST'])
 @login_required
 def message_templates():
-    if current_user.privileges['PROFILES_VISIBILITY']:
+    if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
         # if user can view all profiles, we doesn't filter by access
         accounts = db_get_rows([
                 Profiles.profile_id,
@@ -1032,7 +1047,7 @@ def message_templates():
                 break
         if profile_id:
 
-            if current_user.privileges['PROFILES_VISIBILITY']:
+            if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
                 templates = db_get_rows([
                         Texts.text_id,
                         Texts.text,
@@ -1101,7 +1116,7 @@ def message_templates():
             #
             # END UPDATE SECTION
             #
-            if current_user.privileges['PROFILES_VISIBILITY']:
+            if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
                 templates = db_get_rows([
                         Texts.text_id,
                         Texts.text,
@@ -1164,7 +1179,7 @@ def message_templates():
         #
         # END CREATE SECTION
         #
-        if current_user.privileges['PROFILES_VISIBILITY']:
+        if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
             templates = db_get_rows([
                     Texts.text_id,
                     Texts.text,
@@ -1278,7 +1293,7 @@ def message_template_account(account):
 @app.route('/mail/anchors', methods=['GET', 'POST'])
 @login_required
 def message_anchor():
-    if current_user.privileges['PROFILES_VISIBILITY']:
+    if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
         # if user can view all profiles, we doesn't filter by access
         accounts = db_get_rows([
                 Profiles.profile_id,
@@ -1308,7 +1323,7 @@ def message_anchor():
                 break
         if profile_id:
 
-            if current_user.privileges['PROFILES_VISIBILITY']:
+            if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
                 anchors = db_get_rows([
                         Texts.text_id,
                         Texts.text],
@@ -1392,7 +1407,7 @@ def message_anchor():
         # END CREATE SECTION
         #
         if profile_id:
-            if current_user.privileges['PROFILES_VISIBILITY']:
+            if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
                 anchors = db_get_rows([
                         Texts.text_id,
                         Texts.text],
@@ -1540,9 +1555,9 @@ def logs():
 
 if __name__ == "__main__":
     # Проверка базы данных на ошибки
-    db_error_check(empty_chats=True,
+    """db_error_check(empty_chats=True,
                    profiles_without_chats=True,
-                   unused_texts=True)
+                   unused_texts=True)"""
 
     # Обработка сообщений и подготовка шаблонов с якорями
     """from background_worker import worker_msg_sender
