@@ -518,7 +518,7 @@ def users_accounts():
                  Profiles.profile_id.in_(user_visibility)])
     return render_template("accounts.html", profiles=profiles)
 
-@app.route('/users/accounts/delete<account_id>', methods=['GET', 'POST'])
+@app.route('/users/accounts/delete:<account_id>', methods=['GET', 'POST'])
 @login_required
 def account_delete(account_id):
     error = delete_accounts([account_id])
