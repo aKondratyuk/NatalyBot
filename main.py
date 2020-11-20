@@ -521,7 +521,8 @@ def users_accounts():
 @app.route('/users/accounts/delete<account_id>', methods=['GET', 'POST'])
 @login_required
 def account_delete(account_id):
-    return redirect("accounts")
+    error = delete_accounts([account_id])
+    return redirect(url_for('users_accounts'))
 
 @app.route('/dialogue', methods=['GET', 'POST'])
 @login_required
