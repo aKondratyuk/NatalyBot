@@ -524,6 +524,21 @@ def account_delete(account_id):
     error = delete_accounts([account_id])
     return redirect(url_for('users_accounts'))
 
+
+@app.route('/users/accounts/selected/delete', methods=['GET', 'POST'])
+@login_required
+def account_selected_delete():
+    list_accounts = request.form.getlist('mycheckbox')
+    logger.info(f'User {current_user.login} starting '
+                f'delete accounts: {list_accounts}')
+    if delete_accounts(list_accounts):
+        logger.info(f'User {current_user.login} deleted accounts: {list_accounts}')
+    else:
+        logger.info(f'User {current_user.login} tried to '
+                    f'delete accounts: {list_accounts} but something gone wrong!')
+
+    return redirect(url_for('users_accounts'))
+
 @app.route('/dialogue', methods=['GET', 'POST'])
 @login_required
 def dialogue():
