@@ -1549,7 +1549,8 @@ def logs():
                           Logs.create_time
                           ],
                          order_by=[Logs.create_time],
-                         descending=True)
+                         descending=True,
+                         limit=1000)
     return render_template('logs.html', logs=logs)
 
 
