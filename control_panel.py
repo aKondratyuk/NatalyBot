@@ -738,7 +738,9 @@ def db_get_users(*statements) -> list:
                             Users.login == SentInvites.login)
     query = query.outerjoin(RolesOfUsers,
                             Users.login == RolesOfUsers.login)
-    query = query.group_by(Users.login)
+    if len(db_get_rows_2([SentInvites.invite_id])) != 0:
+        # if invites exists, else error without this check
+        query = query.group_by(Users.login)
     query = query.filter(Users.login != 'anonymous')
     query = query.filter(Users.login != 'server')
     for statement in statements:

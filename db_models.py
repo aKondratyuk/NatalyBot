@@ -13,6 +13,15 @@ from sqlalchemy.dialects.mysql import BINARY, BOOLEAN, FLOAT, INTEGER, \
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+os.environ['APP_SECRET_KEY'] = 'xA_1uhWl'
+os.environ['DB_ADRESS'] = '45.83.193.158'
+os.environ['DB_DIALECT'] = 'mysql'
+os.environ['DB_DRIVER'] = 'mysqlconnector'
+os.environ['DB_ENCODING'] = 'charset=utf8'
+os.environ['DB_NAME'] = 'ormax_nataly_schema'
+os.environ['DB_PASS'] = 'zX4FN(PARLlx'
+os.environ['DB_USER'] = 'ormax_admin'
+
 engine = create_engine(f"{os.environ.get('DB_DIALECT')}+"
                        f"{os.environ.get('DB_DRIVER')}://"
                        f"{os.environ.get('DB_USER')}:"
@@ -21,7 +30,6 @@ engine = create_engine(f"{os.environ.get('DB_DIALECT')}+"
                        f"{os.environ.get('DB_NAME')}"
                        f"?{os.environ.get('DB_ENCODING')}",
                        pool_recycle=3600,
-                       encoding='utf8',
                        connect_args={'use_pure': True})
 
 Base = declarative_base()

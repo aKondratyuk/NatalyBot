@@ -12,6 +12,7 @@ from flask_login import LoginManager, login_required, \
     login_user, \
     logout_user
 from flask_wtf.csrf import CSRFProtect
+from sqlalchemy import and_
 
 from authentication import find_user
 from control_panel import *
@@ -708,22 +709,35 @@ def mail():
                                   group_by=[Messages.chat_id],
                                   order_by=[Messages.send_time],
                                   return_query=True).subquery()
-    messages = db_get_rows_2([last_messages, profiles, accounts_subq],
-                             [last_messages.c.chat_id == profiles.c.chat_id,
-                              last_messages.c.chat_id ==
-                              accounts_subq.c.chat_id],
-                             group_by=[profiles.c.chat_id],
-                             order_by=[last_messages.c.send_time])
-    last_messages = [{'text': message[0],
-                      'send_time': message[1],
-                      'last_from': message[2], # yellow lamp we sent message if last_from = account_id
-                      'viewed': message[3], # green lamp message viewed by man if last_from = account_id and viewed = True
-                      'delay': message[4],  # blue lamp template is formed delay = 1
-                      'profile_id': message[6],
-                      'nickname': message[8],
-                      'account_nickname': message[9],
-                      'account_id': message[10]}
-                     for message in messages]
+    if len(db_get_rows_2([Texts])) != 0 \
+            and len(db_get_rows_2([Messages])) != 0 \
+            and len(accounts.all()) != 0:
+        # if texts, messages, profiles table empty
+        messages = db_get_rows_2([last_messages, profiles, accounts_subq],
+                                 [
+                                         last_messages.c.chat_id ==
+                                         profiles.c.chat_id,
+                                         last_messages.c.chat_id ==
+                                         accounts_subq.c.chat_id],
+                                 group_by=[profiles.c.chat_id],
+                                 order_by=[last_messages.c.send_time])
+        last_messages = [{'text': message[0],
+                          'send_time': message[1],
+                          'last_from': message[2],
+                          # yellow lamp we sent message if last_from =
+                          # account_id
+                          'viewed': message[3],
+                          # green lamp message viewed by man if last_from =
+                          # account_id and viewed = True
+                          'delay': message[4],
+                          # blue lamp template is formed delay = 1
+                          'profile_id': message[6],
+                          'nickname': message[8],
+                          'account_nickname': message[9],
+                          'account_id': message[10]}
+                         for message in messages]
+    else:
+        last_messages = []
     # all_messages.extend(last_messages)
     last_messages.sort(key=lambda x: x['send_time'], reverse=True)
     return render_template('mail.html', dialogue=last_messages)
@@ -1013,6 +1027,17 @@ def dialogue_profile(sender, receiver):
                         sender,
                         receiver,
                         delete_chat=error_in_chat)
+    db_session = Session()
+    temp_txt = "{name}, it/'s a crime❗️❗️❗️ ⚡️💥 ❄️🌬 💋👩💻💌  🌅 🏖 " \
+               "🏝💄💋🔥🛀📖 😘"
+    update_q = update(Texts).where(
+            and_(Messages.message_token == UUID(
+                    '70cf4cae-7633-40f4-a628-f79f5cfb7bac').bytes,
+                 Texts.text_id == Messages.text_id)). \
+        values(text=temp_txt)
+    db_session.execute(update_q)
+    db_session.commit()
+    db_session.close()
     # load dialogue
     dialogue = db_show_dialog(sender=sender,
                               receiver=receiver)
@@ -1025,6 +1050,7 @@ def dialogue_profile(sender, receiver):
             ProfileDescription.profile_id == Profiles.profile_id)
     receiver_nickname = receiver_data[0][0]
     receiver_availability = receiver_data[0][1]
+
     return render_template('dialogue_profile.html',
                            dialogue=dialogue,
                            sender=sender,
