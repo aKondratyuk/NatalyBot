@@ -1,6 +1,5 @@
 # coding: utf8
 import logging
-import os
 import socket
 import traceback
 from uuid import uuid4
@@ -13,24 +12,24 @@ from sqlalchemy.dialects.mysql import BINARY, BOOLEAN, FLOAT, INTEGER, \
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-os.environ['APP_SECRET_KEY'] = 'xA_1uhWl'
-os.environ['DB_ADRESS'] = '45.83.193.158'
-os.environ['DB_DIALECT'] = 'mysql'
-os.environ['DB_DRIVER'] = 'mysqlconnector'
-os.environ['DB_ENCODING'] = 'charset=utf8'
-os.environ['DB_NAME'] = 'ormax_nataly_schema'
-os.environ['DB_PASS'] = 'zX4FN(PARLlx'
-os.environ['DB_USER'] = 'ormax_admin'
+DB_ADRESS = "localhost:3306"
+DB_DIALECT = "mysql"
+DB_DRIVER = "pymysql"
+DB_ENCODING = "charset=utf8"
+DB_NAME = "matchlov_nataly_schema"
+DB_PASS = "Vi3mMe170z"
+DB_USER = "matchlov_admin"
+PYTHONUNBUFFERED = 1
 
-engine = create_engine(f"{os.environ.get('DB_DIALECT')}+"
-                       f"{os.environ.get('DB_DRIVER')}://"
-                       f"{os.environ.get('DB_USER')}:"
-                       f"{os.environ.get('DB_PASS')}@"
-                       f"{os.environ.get('DB_ADRESS')}/"
-                       f"{os.environ.get('DB_NAME')}"
-                       f"?{os.environ.get('DB_ENCODING')}",
+engine = create_engine(f"{DB_DIALECT}+"
+                       f"{DB_DRIVER}://"
+                       f"{DB_USER}:"
+                       f"{DB_PASS}@"
+                       f"{DB_ADRESS}/"
+                       f"{DB_NAME}"
+                       f"?{DB_ENCODING}",
                        pool_recycle=3600,
-                       connect_args={'use_pure': True})
+                       encoding='utf8')
 
 Base = declarative_base()
 Session = sessionmaker()
@@ -160,7 +159,7 @@ class Privileges(Base):
 
     def __repr__(self):
         return "<Privileges(privilege_name='%s')>" % (
-                       self.privilege_name)
+                self.privilege_name)
 
 
 class ProfileCategories(Base):

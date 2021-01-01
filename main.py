@@ -1,7 +1,6 @@
 # coding: utf8
 # Imports the Flask class
 import logging
-import os
 from logging import Logger
 from urllib.parse import urljoin, urlparse
 
@@ -12,7 +11,6 @@ from flask_login import LoginManager, login_required, \
     login_user, \
     logout_user
 from flask_wtf.csrf import CSRFProtect
-from sqlalchemy import and_
 
 from authentication import find_user
 from control_panel import *
@@ -24,7 +22,7 @@ from email_service import send_email_instruction
 workers_number = 0  # counter for workers
 app = Flask(__name__)
 app.config.update(TESTING=True,
-                  SECRET_KEY=os.environ.get('APP_SECRET_KEY'),
+                  SECRET_KEY='xA_1uhWl',
                   FLASK_DEBUG=1)
 Bootstrap(app)
 CSRFProtect(app)
@@ -68,6 +66,33 @@ app.logger = logger
 # this logger work only with DB
 db_logger = MyLogger("DB_logger")
 db_logger.addHandler(sql_handler)
+
+
+def admin_required(func):
+    def check():
+        if 'admin' not in current_user.role:
+            redirect(url_for('login'))
+        func()
+
+    return check()
+
+
+def PROFILES_VISIBILITY_required(func):
+    def check():
+        if 'PROFILES_VISIBILITY' not in list(current_user.privileges.keys()):
+            redirect(url_for('login'))
+        func()
+
+    return check()
+
+
+def USER_EDIT_required(func):
+    def check():
+        if 'USER_EDIT' not in list(current_user.privileges.keys()):
+            redirect(url_for('login'))
+        func()
+
+    return check()
 
 
 @login_manager.user_loader
@@ -638,108 +663,94 @@ def dialogue():
 @app.route('/mail', methods=['GET', 'POST'])
 @login_required
 def mail():
+    start = time()
     # get accounts which this user can see
-    if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
+    accounts = db_get_rows_2([Profiles.profile_id],
+                             [Profiles.profile_password
+                              ],
+                             return_query=True)
+    visibility_join, visibility_filter = '', ''
+    if 'PROFILES_VISIBILITY' not in list(current_user.privileges.keys()):
+        visibility_join = """
+        INNER JOIN
+        Visibility
+    ON Profiles.profile_id = Visibility.profile_id"""
+        visibility_filter = f" and Visibility.login = {current_user.login}"
 
-        accounts = db_get_rows_2([Profiles.profile_id],
-                                 [Profiles.profile_password
-                                  ],
-                                 return_query=True)
-    else:
-        accounts = db_get_rows_2([Visibility.profile_id],
-                                 [
-                                         Visibility.login ==
-                                         current_user.login,
-                                         Visibility.profile_id ==
-                                         Profiles.profile_id,
-                                         Profiles.profile_password],
-                                 return_query=True)
-    if 'PROFILES_VISIBILITY' in list(current_user.privileges.keys()):
+    raw_sql = """SELECT Texts.text,
+       Messages.send_time,
+       Messages.profile_id,
+       Messages.viewed,
+       Messages.delay,
+       not_accounts.profile_id,
+       not_accounts.nickname,
+       Profile_description.profile_id,
+       Profile_description.nickname
 
-        accounts_subq = db_get_rows_2([ProfileDescription.nickname,
-                                       Profiles.profile_id,
-                                       ChatSessions.chat_id],
-                                      [ChatSessions.profile_id ==
-                                       Profiles.profile_id,
-                                       Profiles.profile_password,
-                                       Profiles.profile_id ==
-                                       ProfileDescription.profile_id
-                                       ],
-                                      return_query=True).subquery()
-    else:
-        accounts_subq = db_get_rows_2([ProfileDescription.nickname,
-                                       Visibility.profile_id,
-                                       ChatSessions.chat_id],
-                                      [ChatSessions.profile_id ==
-                                       Visibility.profile_id,
-                                       Visibility.login ==
-                                       current_user.login,
-                                       Visibility.profile_id ==
-                                       Profiles.profile_id,
-                                       Profiles.profile_password,
-                                       Profiles.profile_id ==
-                                       ProfileDescription.profile_id
-                                       ],
-                                      return_query=True).subquery()
-    # load profiles which have chat with this account
-    account_chats = db_get_rows_2([ChatSessions.chat_id],
-                                  [ChatSessions.profile_id.in_(accounts)],
-                                  return_query=True)
-    profiles = db_get_rows_2([ChatSessions.profile_id,
-                              ChatSessions.chat_id,
-                              ProfileDescription.nickname],
-                             [
-                                     ChatSessions.chat_id.in_(account_chats),
-                                     ChatSessions.profile_id.notin_(accounts),
-                                     ProfileDescription.profile_id ==
-                                     ChatSessions.profile_id],
-                             return_query=True).subquery()
-    chats = db_get_rows_2([ChatSessions.chat_id],
-                          [ChatSessions.chat_id.in_(account_chats),
-                           ChatSessions.profile_id.notin_(accounts)],
-                          return_query=True)
-    last_messages = db_get_rows_2([Texts.text,
-                                   Messages.send_time,
-                                   Messages.profile_id,
-                                   Messages.viewed,
-                                   Messages.delay,
-                                   Messages.chat_id],
-                                  [Messages.chat_id.in_(chats),
-                                   Texts.text_id == Messages.text_id],
-                                  group_by=[Messages.chat_id],
-                                  order_by=[Messages.send_time],
-                                  return_query=True).subquery()
-    if len(db_get_rows_2([Texts])) != 0 \
-            and len(db_get_rows_2([Messages])) != 0 \
-            and len(accounts.all()) != 0:
-        # if texts, messages, profiles table empty
-        messages = db_get_rows_2([last_messages, profiles, accounts_subq],
-                                 [
-                                         last_messages.c.chat_id ==
-                                         profiles.c.chat_id,
-                                         last_messages.c.chat_id ==
-                                         accounts_subq.c.chat_id],
-                                 group_by=[profiles.c.chat_id],
-                                 order_by=[last_messages.c.send_time])
-        last_messages = [{'text': message[0],
-                          'send_time': message[1],
-                          'last_from': message[2],
-                          # yellow lamp we sent message if last_from =
-                          # account_id
-                          'viewed': message[3],
-                          # green lamp message viewed by man if last_from =
-                          # account_id and viewed = True
-                          'delay': message[4],
-                          # blue lamp template is formed delay = 1
-                          'profile_id': message[6],
-                          'nickname': message[8],
-                          'account_nickname': message[9],
-                          'account_id': message[10]}
-                         for message in messages]
-    else:
-        last_messages = []
-    # all_messages.extend(last_messages)
-    last_messages.sort(key=lambda x: x['send_time'], reverse=True)
+FROM
+    Texts
+        INNER JOIN
+    Messages
+    ON Texts.text_id = Messages.text_id
+        INNER JOIN
+    (SELECT MAX(Messages.send_time) as last_msg_time,
+            Messages.chat_id
+     FROM
+         Messages
+     group by Messages.chat_id) as last_messages
+    ON last_messages.chat_id = Messages.chat_id
+        INNER JOIN
+    Chat_sessions
+    ON Messages.chat_id = Chat_sessions.chat_id
+        INNER JOIN
+    (SELECT Profiles.profile_id
+     FROM Profiles""" \
+              + visibility_join \
+              + """
+    WHERE Profiles.profile_password IS NOT NULL
+    """ \
+              + visibility_filter \
+              + """) AS accounts
+    ON Chat_sessions.profile_id = accounts.profile_id
+        INNER JOIN
+    Profile_description
+    ON accounts.profile_id = Profile_description.profile_id
+        INNER JOIN
+    (SELECT Chat_sessions.chat_id,
+            profiles.profile_id,
+            Profile_description.nickname
+     FROM
+         Chat_sessions
+             INNER JOIN
+         (SELECT Profiles.profile_id
+          FROM Profiles
+          WHERE Profiles.profile_password IS NULL) AS profiles
+         ON Chat_sessions.profile_id = profiles.profile_id
+             INNER JOIN
+         Profile_description
+         ON profiles.profile_id = Profile_description.profile_id)
+        AS not_accounts
+    ON not_accounts.chat_id = Chat_sessions.chat_id
+
+where Messages.send_time = last_messages.last_msg_time
+order by send_time desc"""
+    db_session = Session()
+    messages = db_session.execute(raw_sql)
+    db_session.close()
+    last_messages = [{'text': message[0],
+                      'send_time': message[1],
+                      'last_from': message[2],
+                      # yellow lamp we sent message if last_from = account_id
+                      'viewed': message[3],
+                      # green lamp message viewed by man if last_from =
+                      # account_id and viewed = True
+                      'delay': message[4],
+                      # blue lamp template is formed delay = 1
+                      'profile_id': message[5],
+                      'nickname': message[6],
+                      'account_id': message[7],
+                      'account_nickname': message[8]}
+                     for message in messages]
     return render_template('mail.html', dialogue=last_messages)
 
 
@@ -1027,17 +1038,6 @@ def dialogue_profile(sender, receiver):
                         sender,
                         receiver,
                         delete_chat=error_in_chat)
-    db_session = Session()
-    temp_txt = "{name}, it/'s a crime❗️❗️❗️ ⚡️💥 ❄️🌬 💋👩💻💌  🌅 🏖 " \
-               "🏝💄💋🔥🛀📖 😘"
-    update_q = update(Texts).where(
-            and_(Messages.message_token == UUID(
-                    '70cf4cae-7633-40f4-a628-f79f5cfb7bac').bytes,
-                 Texts.text_id == Messages.text_id)). \
-        values(text=temp_txt)
-    db_session.execute(update_q)
-    db_session.commit()
-    db_session.close()
     # load dialogue
     dialogue = db_show_dialog(sender=sender,
                               receiver=receiver)
@@ -1601,9 +1601,9 @@ def logs():
 
 if __name__ == "__main__":
     # Проверка базы данных на ошибки
-    """db_error_check(empty_chats=True,
+    db_error_check(empty_chats=True,
                    profiles_without_chats=True,
-                   unused_texts=True)"""
+                   unused_texts=True)
 
     # Обработка сообщений и подготовка шаблонов с якорями
     """from background_worker import worker_msg_sender
@@ -1611,13 +1611,14 @@ if __name__ == "__main__":
 
     # Обновление диалогов с сайта
     """from background_worker import worker_profile_and_msg_updater
-    from multiprocessing import Process
+    from threading import Thread
 
-    t1 = Process(target=worker_profile_and_msg_updater)
+    t1 = Thread(target=worker_profile_and_msg_updater)
     t1.start()
     workers_number += 1"""
     # Основной бот:
-    """from background_worker import main_worker
+    """
+    from background_worker import main_worker
     from multiprocessing import Process
     p_mainbot = Process(target=main_worker)
     p_mainbot.start()

@@ -806,7 +806,9 @@ def db_get_rows_2(tables: list,
                   one: bool = False,
                   return_to: list = False,
                   add_columns: list = False,
-                  distinct: list = False):
+                  distinct: list = False,
+                  to_set: bool = False,
+                  to_dict_key=False):
     """Select all rows from tables list,
     which have been filtered with 'statements'"""
     db_session = Session()
@@ -841,6 +843,17 @@ def db_get_rows_2(tables: list,
     else:
         result = query.all()
     db_session.close()
+    if to_set:
+        result_set = set()
+        for row in result:
+            result_set.add(row[0])
+        result = result_set
+
+    if to_dict_key:
+        result_dict = {}
+        for row in result:
+            result_dict[row[to_dict_key]] = row
+        result = result_dict
     if return_to:
         return_to.append(result)
     return result
