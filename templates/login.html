@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Login V15</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!--===============================================================================================-->
+	<link rel="icon" type="image/png" href="static/images/icons/favicon.ico"/>
+	<!--===============================================================================================-->
+	<link href="static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet"
+		  type="text/css">
+	<!--===============================================================================================-->
+	<link href="static/fonts/font-awesome-4.7.0/css/font-awesome.min.css"
+		  rel="stylesheet"
+		  type="text/css">
+	<!--===============================================================================================-->
+	<link href="static/fonts/Linearicons-Free-v1.0.0/icon-font.min.css"
+		  rel="stylesheet"
+		  type="text/css">
+	<!--===============================================================================================-->
+	<link href="static/vendor/animate/animate.css" rel="stylesheet"
+		  type="text/css">
+	<!--===============================================================================================-->
+	<link href="static/vendor/css-hamburgers/hamburgers.min.css"
+		  rel="stylesheet"
+		  type="text/css">
+	<!--===============================================================================================-->
+	<link href="static/vendor/animsition/css/animsition.min.css"
+		  rel="stylesheet"
+		  type="text/css">
+	<!--===============================================================================================-->
+	<link href="static/vendor/select2/select2.min.css" rel="stylesheet"
+		  type="text/css">
+	<!--===============================================================================================-->
+	<link href="static/vendor/daterangepicker/daterangepicker.css"
+		  rel="stylesheet"
+		  type="text/css">
+	<!--===============================================================================================-->
+	<link href="static/css/util.css" rel="stylesheet" type="text/css">
+	<link href="static/css/main.css" rel="stylesheet" type="text/css">
+	<!--===============================================================================================-->
+</head>
+<body>
+
+<div class="limiter">
+	<div class="container-login100">
+		<div class="wrap-login100">
+			<div class="login100-form-title"
+				 style="background-image: url(static/images/bg-01.jpg);">
+					<span class="login100-form-title-1">
+						ВХОД В СИСТЕМУ
+					</span>
+			</div>
+
+			<form action="/" class="login100-form validate-form p-b-30"
+				  method="post" style="padding-left: 130px;">
+				<input name="csrf_token" type="hidden"
+					   value="{{ csrf_token() }}"/>
+				<div class="wrap-input100 validate-input m-b-{% if error %}10{% else %}26{% endif %}"
+					 data-validate="Необходимо ввести email">
+					<span class="label-input100">Email</span>
+					<input class="input100" name="email"
+						   placeholder="Введите email"
+						   required type="email">
+					<span class="focus-input100"></span>
+				</div>
+				{% if error %}
+				<div class="invalid-feedback" style="display: inline;">
+				  Неверный логин или пароль!
+				</div>
+				{% endif %}
+				<div class="wrap-input100 validate-input m-b-18"
+					 data-validate="Необходимо ввести пароль">
+					<span class="label-input100">Пароль</span>
+					<input class="input100" id="password-input" maxlength="20"
+						   minlength="6" name="password"
+						   placeholder="Введите пароль" required size="30"
+						   type="password">
+					<span class="focus-input100"></span>
+					<a class="password-control" href="#"></a>
+				</div>
+
+				<div class="flex-sb-m w-full p-b-30">
+					<div class="contact100-form-checkbox">
+						<input class="input-checkbox100" id="ckb1"
+							   name="remember-me" type="checkbox">
+						<label class="label-checkbox100" for="ckb1">
+							Запомнить меня
+						</label>
+					</div>
+
+					<div>
+						<a class="txt1" href="#">
+							Забыли пароль?
+						</a>
+					</div>
+				</div>
+
+				<div class="container-login100-form-btn">
+					<button class="login100-form-btn">
+						Войти
+					</button>
+				</div>
+
+				<div class="flex-c-m w-full p-t-50">
+					<div>
+						<a class="txt2" href="{{ url_for('signup') }}">
+							Создать новый аккаунт
+							<i aria-hidden="true"
+							   class="fa fa-long-arrow-right m-l-5"></i>
+						</a>
+					</div>
+				</div>
+			</form>
+			</div>
+		</div>
+	</div>
+	
+<!--===============================================================================================-->
+	<script src="static/vendor/jquery/jquery-3.2.1.min.js"></script>
+<!--===============================================================================================-->
+	<script src="static/vendor/animsition/js/animsition.min.js"></script>
+<!--===============================================================================================-->
+	<script src="static/vendor/bootstrap/js/popper.js"></script>
+	<script src="static/vendor/bootstrap/js/bootstrap.min.js"></script>
+<!--===============================================================================================-->
+	<script src="static/vendor/select2/select2.min.js"></script>
+<!--===============================================================================================-->
+	<script src="static/vendor/daterangepicker/moment.min.js"></script>
+	<script src="static/vendor/daterangepicker/daterangepicker.js"></script>
+<!--===============================================================================================-->
+	<script src="static/vendor/countdowntime/countdowntime.js"></script>
+<!--===============================================================================================-->
+	<script src="static/js/main.js"></script>
+
+</body>
+</html>

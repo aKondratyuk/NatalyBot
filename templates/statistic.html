@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet"
+              href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+              integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk"
+              crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css"
+              href="{{ url_for('static', filename='admin.css') }}">
+
+        <title>admin pannel</title>
+    </head>
+<body>
+<div class="container">
+    Admin page
+    <br>
+    {% if current_user.is_authenticated and  current_user.admin %}
+        Hi {{ current_user.username }}!
+    {% endif %}
+    <br>
+    <form action="/logout">
+        <input type="submit" value="Logout" class="btn btn-primary"/>
+    </form>
+    Register new admin in system:
+    {% if get_flashed_messages()|length() > 0 %}
+        <br>
+        Ошибки:
+        {% for category, message in  get_flashed_messages(with_categories=true) %}
+            <spam class="{{ category }}">{{ message }}</spam>
+        {% endfor %}
+    {% endif %}
+    <br>
+    <form action="/register" method="post">
+        {{ register_f.csrf_token }}
+        {% for field in register_f if field != register_f.csrf_token and field != register_f.submit and field != register_f.admin %}
+            <p>
+                {{ field(placeholder = field.label.text) }}
+                {% if field.errors %}
+                    {% for error in field.errors %}
+                        {{ error }}
+                    {% endfor %}
+                {% endif %}
+            </p>
+        {% endfor %}
+        {{ register_f.admin.label() }}
+        {{ register_f.admin() }}
+
+        {{ register_f.submit(class_="btn btn-primary") }}
+    </form>
+</div>
+<br>
+Список админов:
+<div class="container">
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Имя пользователя</th>
+            <th scope="col">Пароль</th>
+            <th scope="col">Админ</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            <tr align="center">
+                <td>{{ user['_id'] }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.password }}</td>
+                <td>{{ user.admin }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<br>
+Добавить данные входа в профиль:
+<form action="/add_profile" method="post">
+    {{ add_profile_f.csrf_token }}
+    {% for field in add_profile_f if field != add_profile_f.csrf_token and field != add_profile_f.submit %}
+        <p>
+            {{ field(placeholder = field.label.text) }}
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    {{ error }}
+                {% endfor %}
+            {% endif %}
+        </p>
+    {% endfor %}
+    {{ add_profile_f.submit(class_="btn btn-primary") }}
+</form>
+<div class="conteiner">
+    Список профилей:
+    <form action="/profile_table" method="post">
+        <table id="dtVerticalScrollExample"
+               class="table table-striped table-bordered table-sm"
+               cellspacing="0"
+               width="100%">
+            <thead>
+            <tr>
+                <th class="th-sm">ID</th>
+                <th class="th-sm">Логин</th>
+                <th class="th-sm">Пароль</th>
+                <th class="th-sm">Имя</th>
+                <th class="th-sm">Никнейм</th>
+                <th class="th-sm">Возраст</th>
+                <th class="th-sm">Имя инвайта</th>
+                <th class="th-sm">Выбор</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for profile in profiles %}
+                {% if profile['deleted'] %}
+                    <tr id={{ profile['login'] }} bgcolor="#d3d3d3">
+                        {% elif profile['hidden'] %}
+                    <tr bgcolor="#a52a2a">
+                        {% elif profile['msg_limit'] %}
+                    <tr bgcolor="#ffd700">
+                        {% else %}
+                    <tr align="center">
+                {% endif %}
+            {% for key in profile.keys() if key not in ['deleted', 'hidden', 'msg_limit'] %}
+                <td>{{ profile[key] }}</td>
+            {% endfor %}
+            <td><input type="checkbox" , name={{ profile['login'] }}></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            <tfoot>
+            <tr>
+                <th>ID</th>
+                <th>Логин</th>
+                <th>Пароль</th>
+                <th>Имя</th>
+                <th>Никнейм</th>
+                <th>Возраст</th>
+                <th>Имя инвайта</th>
+                <th>Выбор</th>
+            </tr>
+            </tfoot>
+
+        </table>
+        <br><input type="submit" name="btn" class="btn btn-danger"
+                   value="Delete">
+        <input type="submit" name="btn" class="btn btn-primary"
+               value="Отправить от выбранных профилей">
+        <input type="submit" name="btn" class="btn btn-primary"
+               value="Отправить от всех профилей">
+        <input type="text" name="text" class="form-control"
+               placeholder="Число сообщений"></form>
+    <br></div>
+
+Добавить данные профилей входа в профиль:
+<form action="/add_profile_description" method="post">
+    {{ add_profile_description_f.csrf_token }}
+    {% for field in add_profile_description_f if field != add_profile_description_f.csrf_token and field != add_profile_description_f.submit %}
+        <p>
+            {{ field(placeholder = field.label.text) }}
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    {{ error }}
+                {% endfor %}
+            {% endif %}
+        </p>
+    {% endfor %}
+    {{ add_profile_description_f.submit(class_="btn btn-primary") }}
+</form>
+
+Добавить данные профилей входа в профиль:
+<form action="/upload_profiles" enctype="multipart/form-data" method="post">
+    {{ upload_profiles_f.csrf_token }}
+    {% for field in upload_profiles_f if not field == upload_profiles_f.csrf_token and field != upload_profiles_f.submit %}
+
+        <p>
+            {{ field.label() }}
+            {{ field }}
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    {{ error }}
+                {% endfor %}
+            {% endif %}
+        </p>
+    {% endfor %}
+    {{ upload_profiles_f.submit(class_="btn btn-primary") }}
+
+</form>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+<script src="{{ url_for('static', filename='admin.js') }}"></script>
+</body>
+</html>
