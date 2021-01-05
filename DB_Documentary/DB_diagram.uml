@@ -3,224 +3,174 @@
   <ID>DATABASE</ID>
   <OriginalElement>938ba658-d9a5-4ae0-8f36-6f7c11376af3.SCHEMA:nataly_schema</OriginalElement>
   <nodes>
-    <node x="2263.956962481962" y="547.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Roles_of_users</node>
-    <node x="745.606824925816" y="919.9524743945631">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Tagging</node>
-    <node x="2339.956962481962" y="170.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.User_roles</node>
-    <node x="206.0" y="170.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Religions</node>
-    <node x="525.0" y="170.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Countries</node>
-    <node x="1919.220346320346" y="503.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Logs</node>
-    <node x="2107.956962481962" y="547.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Sent_invites</node>
-    <node x="0.0" y="170.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Ethnicities</node>
-    <node x="1722.0" y="547.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Visibility</node>
-    <node x="1927.956962481962" y="159.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Users</node>
-    <node x="1180.5625" y="904.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Message_templates</node>
-    <node x="369.0" y="170.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Zodiacs</node>
-    <node x="315.0" y="371.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_description</node>
-    <node x="1643.720346320346" y="170.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Languages</node>
-    <node x="2511.956962481962" y="170.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Privileges</node>
-    <node x="1408.25" y="915.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Message_anchors</node>
-    <node x="917.206818181818" y="860.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Messages</node>
-    <node x="1105.486616161616" y="0.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Categories</node>
-    <node x="831.9032828282825" y="536.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Chat_sessions</node>
-    <node x="837.0" y="104.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Email_info</node>
-    <node x="651.7088159280177" y="738.4563989662104">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Tags</node>
-    <node x="1151.986616161616" y="159.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Category_level</node>
-    <node x="2465.456962481962" y="536.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Privileges_assigns</node>
-    <node x="1198.486616161616" y="536.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_categories</node>
-    <node x="1534.0" y="536.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_languages</node>
-    <node x="689.0" y="170.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Chats</node>
-    <node x="2129.956962481962" y="159.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Invites</node>
-    <node x="1405.8751443001438" y="104.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profiles</node>
-    <node x="1510.220346320346" y="0.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Levels</node>
-    <node x="1029.9032828282825" y="547.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Texts</node>
+    <node x="678.0" y="933.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Levels</node>
+    <node x="890.0" y="-38.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Tags</node>
+    <node x="696.0" y="-38.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Tagging</node>
+    <node x="1761.0" y="1201.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Invites</node>
+    <node x="189.5" y="430.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Chat_sessions</node>
+    <node x="691.0" y="81.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Texts</node>
+    <node x="192.0" y="26.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Messages</node>
+    <node x="1067.0" y="1310.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Privileges_assigns</node>
+    <node x="1291.0" y="133.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Zodiacs</node>
+    <node x="180.0" y="626.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Email_info</node>
+    <node x="386.5" y="1053.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Categories</node>
+    <node x="946.5" y="1031.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_categories</node>
+    <node x="1237.0" y="265.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_description</node>
+    <node x="676.0" y="671.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_languages</node>
+    <node x="1523.5" y="1482.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Roles_of_users</node>
+    <node x="-25.0" y="453.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Chats</node>
+    <node x="1526.0" y="922.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Visibility</node>
+    <node x="1567.5" y="453.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Religions</node>
+    <node x="1347.0" y="1333.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Privileges</node>
+    <node x="1238.0" y="1037.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Logs</node>
+    <node x="1083.5" y="1493.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.User_roles</node>
+    <node x="1771.5" y="1082.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Sent_invites</node>
+    <node x="443.0" y="693.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Languages</node>
+    <node x="676.0" y="230.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Message_templates</node>
+    <node x="1507.5" y="1081.5">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Users</node>
+    <node x="1266.5" y="853.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Ethnicities</node>
+    <node x="964.0" y="82.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Message_anchors</node>
+    <node x="866.0666258232502" y="448.944478480625">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profiles</node>
+    <node x="1567.0" y="773.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Countries</node>
+    <node x="666.5" y="1042.0">938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Category_level</node>
   </nodes>
   <notes />
   <edges>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_languages" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Languages">
-      <point x="56.0" y="-49.0" />
-      <point x="1674.0" y="351.0" />
-      <point x="1719.220346320346" y="351.0" />
-      <point x="0.0" y="27.0" />
+      <point x="-84.0" y="0.0" />
+      <point x="77.0" y="0.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Roles_of_users" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.User_roles">
-      <point x="38.0" y="-38.0" />
-      <point x="-38.0" y="27.0" />
+      <point x="-76.5" y="0.0" />
+      <point x="76.5" y="0.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Message_templates" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Texts">
-      <point x="-42.0" y="-49.5" />
-      <point x="1222.5625" y="840.0" />
-      <point x="1115.5282828282825" y="840.0" />
-      <point x="17.125" y="38.5" />
-    </edge>
-    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Messages" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Texts">
-      <point x="43.75" y="-93.5" />
-      <point x="1048.456818181818" y="840.0" />
-      <point x="1081.2782828282825" y="840.0" />
-      <point x="-17.125" y="38.5" />
-    </edge>
-    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Privileges_assigns" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.User_roles">
-      <point x="-46.5" y="-49.5" />
-      <point x="2511.956962481962" y="351.0" />
-      <point x="2453.956962481962" y="351.0" />
-      <point x="38.0" y="27.0" />
-    </edge>
-    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_description" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Religions">
-      <point x="-48.80000000000001" y="-214.5" />
-      <point x="388.20000000000005" y="341.0" />
-      <point x="277.5" y="341.0" />
-      <point x="0.0" y="27.0" />
-    </edge>
-    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Chat_sessions" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profiles">
-      <point x="59.33333333333337" y="-49.5" />
-      <point x="980.2366161616159" y="331.0" />
-      <point x="1447.660858585858" y="331.0" />
-      <point x="-55.71428571428578" y="93.5" />
-    </edge>
-    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Sent_invites" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Invites">
-      <point x="34.0" y="-38.0" />
+      <point x="0.0" y="-49.5" />
       <point x="0.0" y="38.5" />
     </edge>
-    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Logs" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Users">
-      <point x="0.0" y="-82.5" />
-      <point x="1999.720346320346" y="351.0" />
-      <point x="1996.206962481962" y="351.0" />
-      <point x="-22.75" y="38.5" />
+    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Messages" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Texts">
+      <point x="88.0" y="0.0" />
+      <point x="-69.0" y="0.0" />
     </edge>
-    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_languages" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Levels">
-      <point x="0.0" y="-49.0" />
-      <point x="1618.0" y="351.0" />
-      <point x="1633.220346320346" y="351.0" />
-      <point x="41.0" y="27.0" />
+    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_description" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Religions">
+      <point x="123.0" y="0.0" />
+      <point x="-72.5" y="0.0" />
+    </edge>
+    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Privileges_assigns" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.User_roles">
+      <point x="0.0" y="49.5" />
+      <point x="0.0" y="-27.0" />
+    </edge>
+    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Chat_sessions" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profiles">
+      <point x="90.5" y="0.0" />
+      <point x="-99.0" y="0.0" />
+    </edge>
+    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Sent_invites" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Invites">
+      <point x="0.0" y="38.0" />
+      <point x="0.0" y="-38.5" />
+    </edge>
+    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Logs" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Users">
+      <point x="82.0" y="0.0" />
+      <point x="-92.5" y="0.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_description" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profiles">
-      <point x="97.60000000000002" y="-214.5" />
-      <point x="534.6" y="321.0" />
-      <point x="1419.8037157287154" y="321.0" />
-      <point x="-83.57142857142867" y="93.5" />
+      <point x="-123.0" y="0.0" />
+      <point x="99.0" y="0.0" />
+    </edge>
+    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_languages" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Levels">
+      <point x="0.0" y="49.0" />
+      <point x="0.0" y="-27.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Visibility" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Users">
-      <point x="36.75" y="-38.0" />
-      <point x="1832.25" y="351.0" />
-      <point x="1950.706962481962" y="351.0" />
-      <point x="-68.25" y="38.5" />
+      <point x="0.0" y="38.0" />
+      <point x="0.0" y="-38.5" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_description" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Countries">
-      <point x="48.80000000000001" y="-214.5" />
-      <point x="485.79999999999995" y="311.0" />
-      <point x="597.0" y="311.0" />
-      <point x="0.0" y="27.0" />
+      <point x="40.0" y="214.5" />
+      <point x="1400.0" y="800.0" />
+      <point x="-73.0" y="0.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Message_anchors" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Texts">
-      <point x="-38.0" y="-38.0" />
-      <point x="1446.25" y="830.0" />
-      <point x="1149.7782828282825" y="830.0" />
-      <point x="51.375" y="38.5" />
-    </edge>
-    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_description" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Ethnicities">
-      <point x="-97.60000000000002" y="-214.5" />
-      <point x="339.4" y="351.0" />
-      <point x="93.0" y="351.0" />
-      <point x="0.0" y="27.0" />
+      <point x="-76.0" y="0.0" />
+      <point x="69.0" y="0.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_languages" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profiles">
-      <point x="-56.0" y="-49.0" />
-      <point x="1562.0" y="351.0" />
-      <point x="1559.0894300144296" y="351.0" />
-      <point x="55.71428571428578" y="93.5" />
+      <point x="0.0" y="-49.0" />
+      <point x="760.0" y="520.0" />
+      <point x="-99.0" y="40.0" />
+    </edge>
+    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_description" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Ethnicities">
+      <point x="0.0" y="214.5" />
+      <point x="0.0" y="-27.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_categories" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Category_level">
-      <point x="-46.5" y="-49.0" />
-      <point x="0.0" y="38.0" />
+      <point x="-93.5" y="0.0" />
+      <point x="93.5" y="0.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Category_level" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Categories">
-      <point x="-46.5" y="-38.0" />
-      <point x="0.0" y="27.0" />
+      <point x="-93.5" y="0.0" />
+      <point x="93.5" y="0.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Message_templates" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profiles">
-      <point x="42.0" y="-49.5" />
-      <point x="1306.5625" y="840.0" />
-      <point x="1455.456962481962" y="840.0" />
-      <point x="1455.456962481962" y="351.0" />
-      <point x="1503.3751443001438" y="351.0" />
-      <point x="0.0" y="93.5" />
+      <point x="84.0" y="0.0" />
+      <point x="1000.0" y="280.0" />
+      <point x="-40.0" y="-93.5" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Chat_sessions" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Chats">
-      <point x="-59.33333333333337" y="-49.5" />
-      <point x="861.5699494949491" y="311.0" />
-      <point x="753.0" y="311.0" />
-      <point x="0.0" y="27.0" />
+      <point x="-90.5" y="0.0" />
+      <point x="65.0" y="0.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Messages" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Chat_sessions">
-      <point x="-43.75" y="-93.5" />
-      <point x="960.956818181818" y="820.0" />
-      <point x="920.9032828282825" y="820.0" />
-      <point x="0.0" y="49.5" />
+      <point x="0.0" y="93.5" />
+      <point x="0.0" y="-49.5" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Tagging" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Texts">
-      <point x="32.0" y="-38.0" />
-      <point x="847.5434574519" y="831.4841581315211" />
-      <point x="1047.0282828282825" y="830.0" />
-      <point x="-51.375" y="38.5" />
+      <point x="0.0" y="38.0" />
+      <point x="0.0" y="-38.5" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Privileges_assigns" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Privileges">
-      <point x="46.5" y="-49.5" />
-      <point x="0.0" y="27.0" />
+      <point x="93.0" y="0.0" />
+      <point x="-93.0" y="0.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_description" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Zodiacs">
       <point x="0.0" y="-214.5" />
       <point x="0.0" y="27.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Chat_sessions" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Email_info">
-      <point x="0.0" y="-49.5" />
-      <point x="920.9032828282825" y="311.0" />
-      <point x="936.0" y="311.0" />
-      <point x="0.0" y="93.5" />
+      <point x="0.0" y="49.5" />
+      <point x="0.0" y="-93.5" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Roles_of_users" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Users">
-      <point x="-38.0" y="-38.0" />
-      <point x="2301.956962481962" y="341.0" />
-      <point x="2087.206962481962" y="341.0" />
-      <point x="68.25" y="38.5" />
-    </edge>
-    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Tagging" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Tags">
-      <point x="-32.0" y="-38.0" />
+      <point x="0.0" y="-38.0" />
       <point x="0.0" y="38.5" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Visibility" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profiles">
-      <point x="-36.75" y="-38.0" />
-      <point x="1758.75" y="341.0" />
-      <point x="1586.9465728715722" y="341.0" />
-      <point x="83.57142857142844" y="93.5" />
+      <point x="-74.0" y="0.0" />
+      <point x="1080.0" y="960.0" />
+      <point x="40.0" y="93.5" />
+    </edge>
+    <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Tagging" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Tags">
+      <point x="64.0" y="0.0" />
+      <point x="-70.0" y="0.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profile_categories" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profiles">
-      <point x="46.5" y="-49.0" />
-      <point x="1337.986616161616" y="341.0" />
-      <point x="1475.5180014430011" y="341.0" />
-      <point x="-27.85714285714289" y="93.5" />
+      <point x="0.0" y="-49.0" />
+      <point x="0.0" y="93.5" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Sent_invites" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Users">
-      <point x="-34.0" y="-38.0" />
-      <point x="2141.956962481962" y="351.0" />
-      <point x="2041.706962481962" y="351.0" />
-      <point x="22.75" y="38.5" />
+      <point x="-68.5" y="0.0" />
+      <point x="92.5" y="0.0" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Message_anchors" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Profiles">
-      <point x="38.0" y="-38.0" />
-      <point x="1522.25" y="351.0" />
-      <point x="1531.232287157287" y="351.0" />
-      <point x="27.85714285714289" y="93.5" />
+      <point x="0.0" y="38.0" />
+      <point x="0.0" y="-93.5" />
     </edge>
     <edge source="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Category_level" target="938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Levels">
-      <point x="46.5" y="-38.0" />
-      <point x="1291.486616161616" y="79.0" />
-      <point x="1551.220346320346" y="79.0" />
-      <point x="-41.0" y="27.0" />
+      <point x="0.0" y="-38.0" />
+      <point x="0.0" y="27.0" />
     </edge>
   </edges>
-  <settings layout="Hierarchic Group" zoom="0.6737826507578201" x="1268.617689288791" y="701.3513927443285" />
-  <SelectedNodes>
-    <node>938ba658-d9a5-4ae0-8f36-6f7c11376af3.TABLE:nataly_schema.Tags</node>
-  </SelectedNodes>
+  <settings layout="Orthogonal" zoom="0.4804267844002941" x="1198.0179602647377" y="347.29667636697843" />
+  <SelectedNodes />
   <Categories>
     <Category>Key columns</Category>
     <Category>Columns</Category>

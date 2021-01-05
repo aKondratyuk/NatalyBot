@@ -738,7 +738,9 @@ def db_get_users(*statements) -> list:
                             Users.login == SentInvites.login)
     query = query.outerjoin(RolesOfUsers,
                             Users.login == RolesOfUsers.login)
-    query = query.group_by(Users.login)
+    if len(db_get_rows_2([SentInvites.invite_id])) != 0:
+        # if invites exists, else error without this check
+        query = query.group_by(Users.login)
     query = query.filter(Users.login != 'anonymous')
     query = query.filter(Users.login != 'server')
     for statement in statements:
@@ -804,7 +806,9 @@ def db_get_rows_2(tables: list,
                   one: bool = False,
                   return_to: list = False,
                   add_columns: list = False,
-                  distinct: list = False):
+                  distinct: list = False,
+                  to_set: bool = False,
+                  to_dict_key=False):
     """Select all rows from tables list,
     which have been filtered with 'statements'"""
     db_session = Session()
@@ -839,6 +843,17 @@ def db_get_rows_2(tables: list,
     else:
         result = query.all()
     db_session.close()
+    if to_set:
+        result_set = set()
+        for row in result:
+            result_set.add(row[0])
+        result = result_set
+
+    if to_dict_key:
+        result_dict = {}
+        for row in result:
+            result_dict[row[to_dict_key]] = row
+        result = result_dict
     if return_to:
         return_to.append(result)
     return result
@@ -1196,7 +1211,7 @@ def db_add_profile(profile_id: str,
 
     from main import logger
     if profile_deleted(profile_id=profile_id):
-        logger.info(f'User {current_user} tried to add profile info, '
+        logger.info(f'User {current_user.login} tried to add profile info, '
                     f'for profile_id: {profile_id}, '
                     f'but this profile deleted on site')
         return False
@@ -1208,7 +1223,7 @@ def db_add_profile(profile_id: str,
             where(Profiles.profile_id == profile_id). \
             values(profile_password=profile_password)
         db_session.execute(update_q)
-        logger.info(f'User {current_user} updated profile info, '
+        logger.info(f'User {current_user.login} updated profile info, '
                     f'for profile_id: {profile_id}')
     else:
         # create new profile
@@ -1217,12 +1232,15 @@ def db_add_profile(profile_id: str,
                                available=True,
                                can_receive=True)
         db_session.add(new_profile)
-        logger.info(f'User {current_user} added profile, '
+        logger.info(f'User {current_user.login} added profile, '
                     f'with profile_id: {profile_id}')
     if 'default' in current_user.role:
         profile_visibility = Visibility(profile_id=profile_id,
                                         login=current_user.login)
         db_session.add(profile_visibility)
+        logger.info(f'User {current_user.login} added visibility for '
+                    f'profile_id: {profile_id} '
+                    f'for user {current_user.login}')
 
     db_session.commit()
     db_session.close()
@@ -1817,14 +1835,88 @@ def db_error_check(empty_chats=False,
                                                   texts_in_messages),
                                               Texts.text_id.notin_(
                                                   texts_in_anchors),
-                                              Texts.text_id.notin_(
-                                                  texts_in_anchors)],
+                                                     Texts.text_id.notin_(
+                                                             texts_in_anchors)],
                                              synchronize_session='fetch')
 
             logger.info(f'Unused texts {deleted_texts} in database deleted')
         except Exception as e:
             logger.info('Unused texts in database not deleted')
 
+    return True
+
+
+def delete_accounts(accounts: list) -> bool:
+    from main import logger
+    logger.info(f"User {current_user.login} start delete "
+                f"accounts: {accounts}")
+    profiles = db_get_rows_2([Profiles.profile_id],
+                             [Profiles.profile_id.in_(accounts)])
+    profiles = set([profile[0] for profile in profiles])
+    del_pr_desc = db_delete_rows_2([ProfileDescription],
+                                   [ProfileDescription.profile_id.in_(
+                                           profiles)],
+                                   synchronize_session='fetch')
+    logger.info(f'User {current_user.login} deleted profile '
+                f'descriptions {del_pr_desc}')
+
+    del_pr_cat = db_delete_rows_2([ProfileCategories],
+                                  [ProfileCategories.profile_id.in_(
+                                          profiles)],
+                                  synchronize_session='fetch')
+    logger.info(f'User {current_user.login} deleted '
+                f'profile categories {del_pr_cat}')
+
+    del_pr_lang = db_delete_rows_2([ProfileLanguages],
+                                   [ProfileLanguages.profile_id.in_(
+                                           profiles)],
+                                   synchronize_session='fetch')
+    logger.info(f'User {current_user.login} deleted'
+                f' profile languages {del_pr_lang}')
+
+    del_vis = db_delete_rows_2([Visibility],
+                               [Visibility.profile_id.in_(profiles)],
+                               synchronize_session='fetch')
+    logger.info(f'User {current_user.login} deleted'
+                f' visibility for {del_vis} users')
+
+    templates = db_get_rows_2([Texts.text_id],
+                              [MessageTemplates.profile_id.in_(profiles),
+                               MessageTemplates.text_id == Texts.text_id],
+                              return_query=True)
+    anchors = db_get_rows_2([Texts.text_id],
+                            [MessageAnchors.profile_id.in_(profiles),
+                             MessageAnchors.text_id == Texts.text_id],
+                            return_query=True)
+    del_tagging = db_delete_rows_2([Tagging],
+                                   [or_(Tagging.text_id.in_(templates),
+                                        Tagging.text_id.in_(anchors))],
+                                   synchronize_session='fetch')
+    logger.info(f'User {current_user.login} deleted'
+                f' tags from texts {del_tagging}')
+    del_templates = db_delete_rows_2([MessageTemplates],
+                                     [or_(Tagging.text_id.in_(templates),
+                                          Tagging.text_id.in_(anchors))],
+                                     synchronize_session='fetch')
+    logger.info(f'User {current_user.login} deleted'
+                f' templates {del_templates}')
+    del_anchors = db_delete_rows_2([MessageAnchors],
+                                   [or_(Tagging.text_id.in_(templates),
+                                        Tagging.text_id.in_(anchors))],
+                                   synchronize_session='fetch')
+    logger.info(f'User {current_user.login} deleted'
+                f' anchors {del_anchors}')
+    texts = db_delete_rows_2([Texts],
+                             [or_(Tagging.text_id.in_(templates),
+                                  Tagging.text_id.in_(anchors))],
+                             synchronize_session='fetch')
+    logger.info(f'User {current_user.login} deleted'
+                f' texts {texts}')
+    del_profiles = db_delete_rows_2([Profiles],
+                                    [Profiles.profile_id.in_(profiles)],
+                                    synchronize_session='fetch')
+    logger.info(f'User {current_user.login} successfully '
+                f'deleted {del_profiles} from accounts: {accounts}')
     return True
 
 
