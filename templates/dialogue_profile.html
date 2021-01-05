@@ -251,7 +251,8 @@
                                 {% if dialogue[-1]['delay'] %}
                                     <button type="button"
                                         id="send_template_button"
-                                        onclick="SendMessage(id)"
+                                        value="{{ dialogue[-1]['message_token'] }}"
+                                        onclick="SendMessage(id, value)"
                                         class="btn btn-fill btn-warning">
                                         Отправить
                                     </button>
@@ -384,14 +385,38 @@
             document.getElementById('closepopup').style.display = 'none';
         }
 
-        function send_request(method, text) {
+        function send_request(method, text, message_token) {
             $.ajax({
                 url: "{{ url_for('dialogue_profile', sender=sender, receiver=receiver) }}",
                 type: 'POST',
                 contentType: "application/json",
                 data: JSON.stringify({
                     'method': method,
-                    'text': text
+                    'text': text,
+                    'message_token': message_token
+                }),
+                success: function (data, textStatus, request) {
+                    console.log(data);
+                    let status = data['status'];
+                    if (status === "message_send") {
+                        showSuccess();
+                        location.reload();
+                    }
+                    else if (status === "message_not_send") {
+                        showError();
+                    }
+                }
+            });
+        }
+
+        function send_request_2(method, text) {
+            $.ajax({
+                url: "{{ url_for('dialogue_profile', sender=sender, receiver=receiver) }}",
+                type: 'POST',
+                contentType: "application/json",
+                data: JSON.stringify({
+                    'method': method,
+                    'text': text,
                 }),
                 success: function (data, textStatus, request) {
                     console.log(data);
@@ -420,20 +445,20 @@
           document.getElementById("dark-mode").style.display = "none";
         }
 
-        function SendMessage(button_id) {
+        function SendMessage(button_id, message_token) {
             if (button_id === "send_template_button") {
                 const textarea = document.getElementById('text_template');
                 const method = 'send_template_message';
                 const text = textarea.value;
                 myFunction();
-                send_request(method, text);
+                send_request(method, text, message_token);
             }
             else {
                 const textarea = document.getElementById('text_no_template');
                 const method = 'send_no_template_message';
                 const text = textarea.value;
                 myFunction();
-                send_request(method, text);
+                send_request_2(method, text);
             }
 
         }
