@@ -1624,4 +1624,4 @@ if __name__ == "__main__":
     p_mainbot.start()
     workers_number += 1"""
     # Run the app until stopped
-    app.run()
+    app.run(host='0.0.0.0')

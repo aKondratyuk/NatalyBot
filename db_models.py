@@ -12,13 +12,13 @@ from sqlalchemy.dialects.mysql import BINARY, BOOLEAN, FLOAT, INTEGER, \
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-DB_ADRESS = "localhost:3306"
+DB_ADRESS = "natalybot_db_1"
 DB_DIALECT = "mysql"
 DB_DRIVER = "pymysql"
 DB_ENCODING = "charset=utf8"
-DB_NAME = "matchlov_nataly_schema"
-DB_PASS = "Vi3mMe170z"
-DB_USER = "matchlov_admin"
+DB_NAME = "nataly_schema"
+DB_PASS = "root"
+DB_USER = "root"
 PYTHONUNBUFFERED = 1
 
 engine = create_engine(f"{DB_DIALECT}+"

@@ -147,6 +147,7 @@ def site_login(profile_login, password):
             "ID": profile_login,
             "Password": password
             }
+
     # Отправляем запрос для входа на сайт
     request = send_request(session=session, method="POST",
                            link="https://www.natashaclub.com/member.php",

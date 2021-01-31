@@ -1,0 +1,20 @@
+version: "2"
+services:
+  app:
+    build: .
+    links:
+      - db
+    ports:
+      - "5000:5000"
+
+  db:
+    image: mysql:5.7
+    ports:
+      - "32000:3306"
+    environment:
+      MYSQL_DATABASE: nataly_schema
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: root
+      MYSQL_PASSWORD: testing
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
