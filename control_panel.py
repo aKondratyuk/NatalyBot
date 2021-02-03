@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from math import ceil
 from random import randint
 from threading import Thread, active_count
-from time import time
+from time import sleep, time
 from uuid import UUID, uuid4
 
 from flask_login import current_user
@@ -1164,13 +1164,25 @@ def db_load_profile_description(profile_id: str) -> bool:
                 # check if user not specified languages
                 if language.lower() == 'not specified':
                     continue
-                elif level_name.lower() == 'not specified':
+                elif level_name.lower() == 'not specified' \
+                        or level_name.lower() == '':
                     level_name = None
-
+                if db_duplicate_check(
+                        [ProfileLanguages],
+                        ProfileLanguages.profile_id == profile_id,
+                        ProfileLanguages.language == language,
+                        ProfileLanguages.level_name == level_name):
+                    logger.info(f'User {current_user} added duplicate '
+                                f'profile language'
+                                f'for profile_id: {profile_id}, '
+                                f'language: {language}, '
+                                f'level_name: {level_name}')
+                    continue
                 new_lang_lvl = ProfileLanguages(
                         profile_id=profile_id,
                         language=language,
                         level_name=level_name)
+
                 db_session.add(new_lang_lvl)
                 db_session.commit()
             continue
@@ -1178,6 +1190,17 @@ def db_load_profile_description(profile_id: str) -> bool:
         # check if key in categories table
         elif db_duplicate_check([Categories],
                                 Categories.category_name == key.lower()):
+            if db_duplicate_check(
+                    [ProfileCategories],
+                    ProfileCategories.category_name == key.lower(),
+                    ProfileCategories.profile_id == profile_id,
+                    ProfileCategories.level_name == val):
+                logger.info(f'User {current_user} added duplicate profile '
+                            f'category'
+                            f'for profile_id: {profile_id}, '
+                            f'category_name: {key.lower()}, '
+                            f'level_name: {val}')
+                continue
             # add new category levels
             new_category_lvl = ProfileCategories(
                     category_name=key.lower(),
@@ -1189,6 +1212,12 @@ def db_load_profile_description(profile_id: str) -> bool:
         setattr(new_pr_desc, key.lower(), val)
     db_session.close()
     db_session = Session()
+
+    if db_duplicate_check([ProfileDescription],
+                          ProfileDescription.profile_id == profile_id):
+        sleep(1)
+        db_session.close()
+        return True
     db_session.add(new_pr_desc)
     db_session.commit()
     logger.info(f'User {current_user} added profile '
@@ -1471,7 +1500,6 @@ def account_dialogs_checker(observed_profile_id: str,
     from main import logger
     logger.info(f'Message update worker start load dialog from:'
                 f'account: {observed_profile_id}')
-
     current_profile_session, observed_profile_id = site_login(
             profile_login=observed_profile_id,
             password=observed_profile_password)

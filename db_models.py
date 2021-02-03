@@ -10,14 +10,14 @@ from sqlalchemy import Column, create_engine
 from sqlalchemy.dialects.mysql import BINARY, BOOLEAN, FLOAT, INTEGER, \
     MEDIUMINT, TIMESTAMP, TINYINT, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, validates
 
 DB_ADRESS = "natalybot_db_1"
 DB_DIALECT = "mysql"
 DB_DRIVER = "pymysql"
-DB_ENCODING = "charset=utf8"
+DB_ENCODING = "charset=utf8mb4"
 DB_NAME = "nataly_schema"
-DB_PASS = "root"
+DB_PASS = "tOxaMBlETeNi"
 DB_USER = "root"
 PYTHONUNBUFFERED = 1
 
@@ -28,8 +28,7 @@ engine = create_engine(f"{DB_DIALECT}+"
                        f"{DB_ADRESS}/"
                        f"{DB_NAME}"
                        f"?{DB_ENCODING}",
-                       pool_recycle=3600,
-                       encoding='utf8')
+                       pool_recycle=3600)
 
 Base = declarative_base()
 Session = sessionmaker()
@@ -224,7 +223,7 @@ class ProfileDescription(Base):
 class ProfileLanguages(Base):
     __tablename__ = 'Profile_languages'
     language = Column(VARCHAR(190), primary_key=True)
-    level_name = Column(VARCHAR(190), primary_key=True)
+    level_name = Column(VARCHAR(190), primary_key=True, default='')
     profile_id = Column(VARCHAR(20), primary_key=True)
 
     def __repr__(self):
@@ -341,6 +340,15 @@ class Texts(Base):
     def __repr__(self):
         return "<Texts(text_id='%s', text='%s')>" % (
                 self.text_id, self.text[:100] + '...')
+
+    # https://stackoverflow.com/questions/32364499/
+    # truncating-too-long-varchar-when-inserting-to-mysql-via-sqlalchemy
+    @validates('text')
+    def validate_code(self, key, value):
+        max_len = getattr(self.__class__, key).prop.columns[0].type.length
+        if value and len(value) > max_len:
+            return value[:max_len]
+        return value
 
 
 class UserRoles(Base):

@@ -1617,11 +1617,20 @@ if __name__ == "__main__":
     t1.start()
     workers_number += 1"""
     # Основной бот:
-    """
-    from background_worker import main_worker
+
+    """from background_worker import main_worker
     from multiprocessing import Process
     p_mainbot = Process(target=main_worker)
     p_mainbot.start()
     workers_number += 1"""
+
+    """from verification import site_login
+    current_profile_session, observed_profile_id = site_login(
+            profile_login='1000655770',
+            password='321olga')
+    profile_dialogs_checker(observed_profile_id='1000655770',
+                            observed_profile_password='321olga',
+                            profile_id='1000430310',
+                            account_session=current_profile_session)"""
     # Run the app until stopped
     app.run(host='0.0.0.0')

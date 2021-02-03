@@ -13,8 +13,16 @@ services:
       - "32000:3306"
     environment:
       MYSQL_DATABASE: nataly_schema
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: tOxaMBlETeNi
       MYSQL_USER: root
-      MYSQL_PASSWORD: testing
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      MYSQL_PASSWORD: tOxaMBlETeNi
+      MYSQL_ROOT_HOST: "0.0.0.0"
+
+  bot:
+    build:
+      context: .
+      dockerfile: DockerfileBot
+    links:
+      - db
+    ports:
+      - "5001:5001"

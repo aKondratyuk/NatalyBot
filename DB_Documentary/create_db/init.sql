@@ -1,4 +1,3 @@
-DROP DATABASE nataly_schema;
 CREATE DATABASE nataly_schema;
 use nataly_schema;
 
@@ -127,9 +126,9 @@ create table if not exists Profile_categories
 
 create table if not exists Profile_languages
 (
-    language   varchar(190)            not null,
-    level_name varchar(190) default '' not null,
-    profile_id varchar(20)             not null,
+    language   varchar(190) not null,
+    level_name varchar(190) not null,
+    profile_id varchar(20)  not null,
     primary key (language, level_name, profile_id),
     constraint FK_PROFILE__PROFILE_K_LANGUAGE
         foreign key (level_name) references Levels (level_name),
@@ -160,8 +159,7 @@ create table if not exists Texts
     text_id binary(16)     not null
         primary key,
     text    varchar(10000) not null
-)
-    charset = utf8mb4;
+);
 
 create table if not exists Message_anchors
 (
@@ -1250,6 +1248,30 @@ VALUES ('not living with me', 'where_children');
 INSERT INTO nataly_schema.Category_level (level_name, category_name)
 VALUES ('sometimes living with me', 'where_children');
 
+INSERT INTO nataly_schema.Privileges (privilege_name)
+VALUES ('PROFILES_VISIBILITY');
+INSERT INTO nataly_schema.Privileges (privilege_name)
+VALUES ('USER_EDIT');
+
+INSERT INTO nataly_schema.User_roles (user_role)
+VALUES ('admin');
+INSERT INTO nataly_schema.User_roles (user_role)
+VALUES ('default');
+INSERT INTO nataly_schema.User_roles (user_role)
+VALUES ('deleted');
+INSERT INTO nataly_schema.User_roles (user_role)
+VALUES ('moderator');
+
+INSERT INTO nataly_schema.Privileges_assigns (user_role, privilege_name, privilege_status)
+VALUES ('admin', 'PROFILES_VISIBILITY', 1);
+INSERT INTO nataly_schema.Privileges_assigns (user_role, privilege_name, privilege_status)
+VALUES ('admin', 'USER_EDIT', 1);
+
+INSERT INTO nataly_schema.Roles_of_users (login, user_role)
+VALUES ('admin3@gmail.com', 'default');
+INSERT INTO nataly_schema.Roles_of_users (login, user_role)
+VALUES ('admin@gmail.com', 'admin');
+
 INSERT INTO nataly_schema.Religions (religion)
 VALUES ('Adventist');
 INSERT INTO nataly_schema.Religions (religion)
@@ -1326,25 +1348,6 @@ VALUES ('check system', 1);
 INSERT INTO nataly_schema.Tags (tag, forbidden)
 VALUES ('bot profile', 1);
 
-INSERT INTO nataly_schema.Privileges (privilege_name)
-VALUES ('PROFILES_VISIBILITY');
-INSERT INTO nataly_schema.Privileges (privilege_name)
-VALUES ('USER_EDIT');
-
-INSERT INTO nataly_schema.User_roles (user_role)
-VALUES ('admin');
-INSERT INTO nataly_schema.User_roles (user_role)
-VALUES ('default');
-INSERT INTO nataly_schema.User_roles (user_role)
-VALUES ('deleted');
-INSERT INTO nataly_schema.User_roles (user_role)
-VALUES ('moderator');
-
-INSERT INTO nataly_schema.Privileges_assigns (user_role, privilege_name, privilege_status)
-VALUES ('admin', 'PROFILES_VISIBILITY', 1);
-INSERT INTO nataly_schema.Privileges_assigns (user_role, privilege_name, privilege_status)
-VALUES ('admin', 'USER_EDIT', 1);
-
 INSERT INTO nataly_schema.Users (login, user_password)
 VALUES ('server', 'server');
 INSERT INTO nataly_schema.Users (login, user_password)
@@ -1355,12 +1358,6 @@ VALUES ('admin3@gmail.com',
 INSERT INTO nataly_schema.Users (login, user_password)
 VALUES ('admin@gmail.com',
         'sha256$RgDpo8YJ$c4a830dfa1b1665a8411787d1e54b30102d7e4d3ccca9f3729e44e50d479d525');
-
-INSERT INTO nataly_schema.Roles_of_users (login, user_role)
-VALUES ('admin3@gmail.com', 'default');
-INSERT INTO nataly_schema.Roles_of_users (login, user_role)
-VALUES ('admin@gmail.com', 'admin');
-
 
 INSERT INTO nataly_schema.Zodiacs (zodiac)
 VALUES ('Aquarius');
