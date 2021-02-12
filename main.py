@@ -663,7 +663,6 @@ def dialogue():
 @app.route('/mail', methods=['GET', 'POST'])
 @login_required
 def mail():
-    start = time()
     # get accounts which this user can see
     accounts = db_get_rows_2([Profiles.profile_id],
                              [Profiles.profile_password
