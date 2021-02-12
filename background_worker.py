@@ -135,15 +135,23 @@ def worker_profile_and_msg_updater() -> None:
     """Ищет в инбоксе и оутбоксе сообщения, первые 10 страниц, и загружает 
     их, попутно добавляя профиля и диалоги в базу"""
     from main import logger
-    time_delta = 3600
+
+    # sleep time
+    # time_delta = 3600
+
+    # check dialogs for this page depth
     max_page = 3
-    # while True:
-    # code
+    threads = []
+
+    # check DB on errors
     db_error_check(empty_chats=True,
                    profiles_without_chats=True,
                    unused_texts=True)
+
+    # start stopwatch
     start_time = time()
-    threads = []
+
+    # get all accounts (profiles with password)
     profiles = db_get_rows([
             Profiles.profile_id,
             Profiles.profile_password
@@ -161,15 +169,22 @@ def worker_profile_and_msg_updater() -> None:
         """account_dialogs_checker(observed_profile_id=profile_id,
                                 observed_profile_password=profile_pass,
                                 max_page=max_page)"""
+
+    # wait all threads end work
     for i in range(len(threads)):
         print(f'Waiting thread №{i}')
         threads[i].join()
+
+    # check DB on errors
     db_error_check(empty_chats=True,
                    profiles_without_chats=True,
                    unused_texts=True)
+
+    # logging about end worker work
     logger.info('Worker which update dialogs end work')
     logger.stopwatch(f'worker_profile_and_msg_updater '
                      f'time spend: {time() - start_time} sec')
+
     # sleep(time_delta)
 
 
@@ -186,11 +201,14 @@ def worker_timer(num) -> None:
 
 
 def main_worker() -> None:
+    # sleep time
     time_delta = 3600
+
     # Function for dialogues refreshing
     worker_profile_and_msg_updater()
     # Function for template prepare and sending templates
     worker_msg_sender()
+
     sleep(time_delta)
 
 

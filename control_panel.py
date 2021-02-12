@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from math import ceil
 from random import randint
 from threading import Thread, active_count
-from time import sleep, time
+from time import sleep
 from uuid import UUID, uuid4
 
 from flask_login import current_user
@@ -1497,16 +1497,22 @@ def send_messages(profile_id_list: str,
 def account_dialogs_checker(observed_profile_id: str,
                             observed_profile_password: str,
                             max_page: int = None) -> bool:
+    """This function check all messages in inbox, and add new"""
     from main import logger
+    # logging about start search for account (profile without password)
     logger.info(f'Message update worker start load dialog from:'
                 f'account: {observed_profile_id}')
-    current_profile_session, observed_profile_id = site_login(
+
+    # log in into site natashaclub.com
+    current_profile_session, _ = site_login(
             profile_login=observed_profile_id,
             password=observed_profile_password)
-    start_time = time()
+
+    # scrapping profiles list from site
     profiles = set()
     page = 1
     for inbox in [True, False]:
+        # inbox - True, outbox - False
         while True:
             if inbox:
                 link = "https://www.natashaclub.com/inbox.php"
@@ -1533,10 +1539,11 @@ def account_dialogs_checker(observed_profile_id: str,
             if max_page:
                 if max_page <= page:
                     break
+
+        # reset page to 1, start page
         page = 1
-    """print(f"Время считывания профилей для аккаунта: {observed_profile_id}, "
-          f"{time() - start_time} sec")"""
-    # start_time = time()
+
+    # start searching messages for profiles
     profiles_threads = []
     for profile_id in profiles:
         t = Thread(target=profile_dialogs_checker,
@@ -1544,19 +1551,18 @@ def account_dialogs_checker(observed_profile_id: str,
                          observed_profile_password,
                          profile_id,
                          current_profile_session))
+
+        # max threads value limiter
         while active_count() >= 250:
             continue
         t.start()
         profiles_threads.append(t)
-        """profile_dialogs_checker(
-                observed_profile_id=observed_profile_id,
-                observed_profile_password=observed_profile_password,
-                profile_id=profile_id)"""
-    """print(f"Время загрузки диалогов для аккаунта:"
-          f" {observed_profile_id}, "
-          f"{time() - start_time} sec")"""
+
+    # wait all threads end work
     for i in range(len(profiles_threads)):
         profiles_threads[i].join()
+
+    # logging about end search for account (profile without password)
     logger.info(f'Message update worker finished load dialog from:'
                 f'account: {observed_profile_id}')
     return True
@@ -1567,37 +1573,35 @@ def profile_dialogs_checker(observed_profile_id,
                             profile_id,
                             account_session):
     from main import logger
-    # start_time_for_profile = time()
+
     logger.info(f'Start load dialog for profile_id: {profile_id}')
     # load dialogue
     dialogue = db_show_dialog(sender=observed_profile_id,
                               receiver=profile_id)
+    # check chat consistency
     error_in_chat = db_dialogue_checker(dialogue=dialogue)
-    # start_time_for_profile_dialogue = time()
+
+    # download messages from profile
     db_download_new_msg(
             observer_login=observed_profile_id,
             observer_password=observed_profile_password,
             sender_id=profile_id,
             receiver_profile_id=profile_id,
             account_session=account_session,
-            delete_chat=error_in_chat)
+            delete_chat=error_in_chat
+            )
+    # download messages from account
     db_download_new_msg(
             observer_login=observed_profile_id,
             observer_password=observed_profile_password,
             sender_id=observed_profile_id,
             receiver_profile_id=profile_id,
             account_session=account_session,
-            delete_chat=error_in_chat)
-    """print(f"Время загрузки диалогов профиля: {profile_id}, "
-          f"{time() - start_time_for_profile_dialogue} sec")"""
+            delete_chat=error_in_chat
+            )
+
     # load description for profile
-    # start_time_for_profile_desc = time()
     db_load_profile_description(profile_id)
-    """print(f"Время загрузки описания профиля: {profile_id}, "
-          f"{time() - start_time_for_profile_desc} sec")
-    print(f"Все время загрузки диалогов для аккаунта:"
-          f" {observed_profile_id} и профиля: {profile_id}, "
-          f"{time() - start_time_for_profile} sec")"""
 
 
 def prepare_answer(account: list,
