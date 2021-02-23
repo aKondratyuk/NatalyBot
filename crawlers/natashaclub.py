@@ -7,7 +7,9 @@ class NatashaclubSpider(scrapy.Spider):
     auth_id, auth_password = '', ''
     auth_token = ''
 
-    ENTRIES_PER_PAGE = 100
+    ENTRIES_PER_PAGE = 100  # VALID RANGE: 20-100
+    SHOW_NEW_ONLY = 0  # 0 = FALSE, 1 = TRUE
+
     NEXT_PAGE_LINK_SELECTOR = '#ContentDiv div.DataDiv td[colspan="3"] a:nth-last-child(2)'
     MESSAGE_HREF_SELECTOR = '#ContentDiv div.DataDiv form[name=msg_form] tr.table td:nth-child(5) a[href]'
 
@@ -20,7 +22,7 @@ class NatashaclubSpider(scrapy.Spider):
     }
 
     START_URL = f'https://www.natashaclub.com/inbox.php?page=1&filterID=&filterStartDate=&filterEndDate=' \
-                f'&filterNewOnly=&filterPPage={ENTRIES_PER_PAGE}'
+                f'&filterNewOnly={SHOW_NEW_ONLY}&filterPPage={ENTRIES_PER_PAGE}'
     AUTH_URL = 'https://www.natashaclub.com/member.php'
 
     HEADERS = {
