@@ -1,5 +1,4 @@
 import scrapy
-from db_models import Session
 
 
 class NatashaclubSpider(scrapy.Spider):
@@ -34,6 +33,10 @@ class NatashaclubSpider(scrapy.Spider):
     }
 
     def __init__(self, **kwargs):
+        """
+        Initial parameters for web crawler
+        """
+
         super().__init__(**kwargs)
         self.logger.info("Initiating crawler")
 
@@ -43,12 +46,20 @@ class NatashaclubSpider(scrapy.Spider):
         self.show_new_only = 1 if kwargs['show_new_messages'] is True else 0
 
     def start_requests(self):
+        """
+        Crawler authentication phase
+        """
+
         self.logger.info("Authenticating the system")
         yield scrapy.FormRequest(url=self.AUTH_URL,
                                  formdata={'ID': self.auth_id, 'Password': self.auth_password},
                                  callback=self.authenticated)
 
     def authenticated(self, response):
+        """
+        Crawler first redirection, if authentication was successful
+        """
+
         self.logger.info("Crawler authenticated successfully")
         self.auth_token = str(response.headers['Set-Cookie']).split(';')[0].split('=')[-1]
 
@@ -58,6 +69,11 @@ class NatashaclubSpider(scrapy.Spider):
                              callback=self.parse_table, headers=self.HEADERS)
 
     def parse_table(self, response):
+        """
+        Crawler recursive messages table scrapping.
+        Continues while 'Next' link is available on the page.
+        """
+
         refs = [href.attrib['href'] for href in response.css(self.MESSAGE_HREF_SELECTOR)]
 
         for ref in refs:
@@ -71,6 +87,10 @@ class NatashaclubSpider(scrapy.Spider):
                                  callback=self.parse_table, headers=self.HEADERS)
 
     def parse_message(self, response):
+        """
+        Crawler message box data scrapping.
+        """
+
         profile_age_sex = ''.join(response.css(self.PROFILE_AGE_SELECTOR).getall())
 
         try:
