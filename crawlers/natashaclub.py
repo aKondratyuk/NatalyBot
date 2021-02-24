@@ -1,10 +1,11 @@
+import os
 import scrapy
 
 
 class NatashaclubSpider(scrapy.Spider):
     name = 'natashaclub'
     allowed_domain = 'www.natashaclub.com'
-    auth_id, auth_password = '', ''
+    auth_id, auth_password = os.getenv('VAR_AUTH_ID'), os.getenv('VAR_AUTH_PASSWORD')
     auth_token = ''
 
     ENTRIES_PER_PAGE = 100  # VALID RANGE: 20-100
@@ -13,10 +14,14 @@ class NatashaclubSpider(scrapy.Spider):
     NEXT_PAGE_LINK_SELECTOR = '#ContentDiv div.DataDiv td[colspan="3"] a:nth-last-child(2)'
     MESSAGE_HREF_SELECTOR = '#ContentDiv div.DataDiv form[name=msg_form] tr.table td:nth-child(5) a[href]'
 
+    PROFILE_NICKNAME_SELECTOR, PROFILE_MESSAGE_SELECTOR = 'li.profile_nickname::text', 'td.table::text'
+    PROFILE_AGE_SELECTOR, PROFILE_LOCATION_SELECTOR = 'li.profile_age_sex::text', 'li.profile_location::text'
+    PROFILE_TIMESTAMP_SELECTOR = 'tr.panel:nth-child(3) > td:nth-child(2)::text'
+
     custom_settings = {
-        'CONCURRENT_REQUESTS': 5,
-        'CONCURRENT_REQUESTS_PER_DOMAIN': 5,
-        'CONCURRENT_REQUESTS_PER_IP': 5,
+        'CONCURRENT_REQUESTS': int(os.getenv('VAR_CONCURRENT_REQUESTS')),
+        'CONCURRENT_REQUESTS_PER_DOMAIN': int(os.getenv('VAR_CONCURRENT_REQUESTS_PER_DOMAIN')),
+        'CONCURRENT_REQUESTS_PER_IP': int(os.getenv('VAR_CONCURRENT_REQUESTS_PER_IP')),
         'RANDOMIZE_DOWNLOAD_DELAY': 0,
         'DOWNLOAD_DELAY': 0
     }
@@ -52,12 +57,20 @@ class NatashaclubSpider(scrapy.Spider):
         refs = [href.attrib['href'] for href in response.css(self.MESSAGE_HREF_SELECTOR)]
 
         for ref in refs:
-            yield {
-                'message': ref
-            }
+            yield scrapy.Request("https://" + self.allowed_domain + "/" + ref, callback=self.parse_message,
+                                 headers=self.HEADERS)
 
         next_page_link_element = response.css(self.NEXT_PAGE_LINK_SELECTOR)
 
         if next_page_link_element:
             yield scrapy.Request("https://" + self.allowed_domain + next_page_link_element.attrib['href'],
                                  callback=self.parse_table, headers=self.HEADERS)
+
+    def parse_message(self, response):
+        yield {
+            'profile_nickname': ''.join(response.css(self.PROFILE_NICKNAME_SELECTOR).getall()),
+            'profile_age_sex': ''.join(response.css(self.PROFILE_AGE_SELECTOR).getall()),
+            'profile_location': ''.join(response.css(self.PROFILE_LOCATION_SELECTOR).getall()),
+            'profile_message': ''.join(response.css(self.PROFILE_MESSAGE_SELECTOR).getall()),
+            'profile_timestamp': response.css(self.PROFILE_TIMESTAMP_SELECTOR).getall()[1][1:-1]
+        }
