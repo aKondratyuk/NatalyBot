@@ -1,4 +1,5 @@
 import scrapy
+from control_panel import db_message_create
 
 
 class NatashaclubSpider(scrapy.Spider):
@@ -11,6 +12,9 @@ class NatashaclubSpider(scrapy.Spider):
 
     NEXT_PAGE_LINK_SELECTOR = '#ContentDiv div.DataDiv td[colspan="3"] a:nth-last-child(2)'
     MESSAGE_HREF_SELECTOR = '#ContentDiv div.DataDiv form[name=msg_form] tr.table td:nth-child(5) a[href]'
+    MARKER_HREF_SELECTOR = '#ContentDiv div.DataDiv form[name=msg_form] tr.table td:nth-child(2) img'
+
+    NEW_MARKER_LINK = '/templates/tmpl_nc/images_nc/new.gif'
 
     PROFILE_NICKNAME_SELECTOR, PROFILE_MESSAGE_SELECTOR = 'li.profile_nickname::text', 'td.table::text'
     PROFILE_AGE_SELECTOR, PROFILE_LOCATION_SELECTOR = 'li.profile_age_sex::text', 'li.profile_location::text'
@@ -44,6 +48,7 @@ class NatashaclubSpider(scrapy.Spider):
         self.auth_password = kwargs['auth_password']
         self.concurrent_requests = kwargs['concurrent_requests']
         self.show_new_only = 1 if kwargs['show_new_messages'] is True else 0
+        self.store_db = kwargs['save_db']
 
     def start_requests(self):
         """
@@ -75,10 +80,14 @@ class NatashaclubSpider(scrapy.Spider):
         """
 
         refs = [href.attrib['href'] for href in response.css(self.MESSAGE_HREF_SELECTOR)]
+        markers = [marker.attrib['src'] for marker in response.css(self.MARKER_HREF_SELECTOR)]
 
-        for ref in refs:
+        for ref, marker in zip(refs, markers):
+            query = self.parse_query(ref)
+            is_new = marker == self.NEW_MARKER_LINK
+
             yield scrapy.Request("https://" + self.allowed_domain + "/" + ref, callback=self.parse_message,
-                                 headers=self.HEADERS)
+                                 headers=self.HEADERS, cb_kwargs=dict(query=query, is_new=is_new))
 
         next_page_link_element = response.css(self.NEXT_PAGE_LINK_SELECTOR)
 
@@ -86,15 +95,18 @@ class NatashaclubSpider(scrapy.Spider):
             yield scrapy.Request("https://" + self.allowed_domain + next_page_link_element.attrib['href'],
                                  callback=self.parse_table, headers=self.HEADERS)
 
-    def parse_message(self, response):
+    def parse_message(self, response, **kwargs):
         """
         Crawler message box data scrapping.
         """
 
+        query, is_new = kwargs['query'], kwargs['is_new']
         profile_age_sex = ''.join(response.css(self.PROFILE_AGE_SELECTOR).getall())
 
         try:
             payload = {
+                'chat_id': query['message'],
+                'viewed': is_new,
                 'profile_nickname': ''.join(response.css(self.PROFILE_NICKNAME_SELECTOR).getall()),
                 'profile_age': int(profile_age_sex.split()[0]),
                 'profile_sex': str(profile_age_sex.split()[2]),
@@ -103,6 +115,18 @@ class NatashaclubSpider(scrapy.Spider):
                 'profile_timestamp': response.css(self.PROFILE_TIMESTAMP_SELECTOR).getall()[1][1:-1]
             }
 
+            if self.store_db is True:
+                db_message_create(chat_id=query['message'].encode('ascii'),
+                                  send_time=payload['profile_timestamp'],
+                                  viewed=is_new,
+                                  sender=payload['profile_nickname'],
+                                  text=payload['profile_message'])
+
             yield payload
         except Exception as ex:
             self.logger.error(ex)
+
+    @staticmethod
+    def parse_query(url: str) -> dict:
+        query_string = url.split('?')[1]
+        return {query_pair.split('=')[0]: query_pair.split('=')[1] for query_pair in query_string.split('&')}

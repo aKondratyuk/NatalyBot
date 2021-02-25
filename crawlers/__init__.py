@@ -17,8 +17,8 @@ def start_crawler(**kwargs):
           Crawler simultaneous worker count
         * *save_json* (``str``) --
           (Optional) Option for crawler to store collected records in JSON file
-        * *session* (``Session``) --
-          (Optional) SQL server session
+        * *save_db* (``bool``) --
+          (Optional) Option for crawler to store collected records in SQL Server
     """
 
     if 'save_json' in kwargs:
@@ -35,5 +35,6 @@ def start_crawler(**kwargs):
 if __name__ == "__main__":
     start_crawler(auth_id=os.getenv('VAR_AUTH_ID'),
                   auth_password=os.getenv('VAR_AUTH_PASSWORD'),
-                  show_new_messages=bool(os.getenv('VAR_AUTH_PASSWORD')),
-                  concurrent_requests=int(os.getenv('VAR_CONCURRENT_REQUESTS')))
+                  show_new_messages=os.getenv('VAR_NEW_MESSAGES') == 'True',
+                  concurrent_requests=int(os.getenv('VAR_CONCURRENT_REQUESTS')),
+                  save_db=os.getenv('VAR_SAVE_DB') == 'True')
