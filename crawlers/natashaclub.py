@@ -6,7 +6,6 @@ class NatashaclubSpider(scrapy.Spider):
     name = 'natashaclub'
     allowed_domain = 'www.natashaclub.com'
     auth_id, auth_password, auth_token = '', '', ''
-    concurrent_requests = 5
 
     ENTRIES_PER_PAGE = 100  # VALID RANGE: 20-100
 
@@ -19,14 +18,6 @@ class NatashaclubSpider(scrapy.Spider):
     PROFILE_NICKNAME_SELECTOR, PROFILE_MESSAGE_SELECTOR = 'li.profile_nickname::text', 'td.table::text'
     PROFILE_AGE_SELECTOR, PROFILE_LOCATION_SELECTOR = 'li.profile_age_sex::text', 'li.profile_location::text'
     PROFILE_TIMESTAMP_SELECTOR = 'tr.panel:nth-child(3) > td:nth-child(2)::text'
-
-    custom_settings = {
-        'CONCURRENT_REQUESTS': concurrent_requests,
-        'CONCURRENT_REQUESTS_PER_DOMAIN': concurrent_requests,
-        'CONCURRENT_REQUESTS_PER_IP': concurrent_requests,
-        'RANDOMIZE_DOWNLOAD_DELAY': 0,
-        'DOWNLOAD_DELAY': 0
-    }
 
     AUTH_URL = 'https://www.natashaclub.com/member.php'
 
@@ -46,7 +37,6 @@ class NatashaclubSpider(scrapy.Spider):
 
         self.auth_id = kwargs['auth_id']
         self.auth_password = kwargs['auth_password']
-        self.concurrent_requests = kwargs['concurrent_requests']
         self.show_new_only = 1 if kwargs['show_new_messages'] is True else 0
         self.store_db = kwargs['save_db']
 
@@ -99,7 +89,6 @@ class NatashaclubSpider(scrapy.Spider):
         """
         Crawler message box data scrapping.
         """
-
         query, is_new = kwargs['query'], kwargs['is_new']
         profile_age_sex = ''.join(response.css(self.PROFILE_AGE_SELECTOR).getall())
 
