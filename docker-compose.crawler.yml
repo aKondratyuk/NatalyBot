@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  crawler:
+    build: ./crawlers
+    links:
+      - mysql:mysql
+    ports:
+      - '80:80'
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:5.7
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_DATABASE: 'matchlov_nataly_schema'
+      MYSQL_USER: 'matchlov_admin'
+      MYSQL_PASSWORD: 'Vi3mMe170z'
+      MYSQL_ROOT_PASSWORD: 'Vi3mMe170z'
+    restart: always

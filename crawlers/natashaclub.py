@@ -1,5 +1,5 @@
 import scrapy
-from control_panel import db_message_create
+from models import db_message_create, Session
 
 
 class NatashaclubSpider(scrapy.Spider):
@@ -40,11 +40,16 @@ class NatashaclubSpider(scrapy.Spider):
         self.show_new_only = 1 if kwargs['show_new_messages'] is True else 0
         self.store_db = kwargs['save_db']
 
+        if self.store_db is True:
+            self.logger.info("Creating DB engine session")
+            self.session = Session()
+
     def start_requests(self):
         """
         Crawler authentication phase
         """
 
+        super().start_requests()
         self.logger.info("Authenticating the system")
         yield scrapy.FormRequest(url=self.AUTH_URL,
                                  formdata={'ID': self.auth_id, 'Password': self.auth_password},
@@ -105,7 +110,8 @@ class NatashaclubSpider(scrapy.Spider):
             }
 
             if self.store_db is True:
-                db_message_create(chat_id=query['message'].encode('ascii'),
+                db_message_create(self.session,
+                                  chat_id=query['message'].encode('ascii'),
                                   send_time=payload['profile_timestamp'],
                                   viewed=is_new,
                                   sender=payload['profile_nickname'],
@@ -114,6 +120,13 @@ class NatashaclubSpider(scrapy.Spider):
             yield payload
         except Exception as ex:
             self.logger.error(ex)
+
+    def close(self, reason):
+        if self.store_db is True:
+            self.logger.info("Closing DB engine session")
+            self.session.close()
+
+        super().close(self, reason)
 
     @staticmethod
     def parse_query(url: str) -> dict:
