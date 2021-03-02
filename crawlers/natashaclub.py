@@ -1,5 +1,8 @@
 import scrapy
-from models import db_message_create, Session
+import datetime
+
+from dbcontext import Session
+from services import DialogueService
 
 
 class NatashaclubSpider(scrapy.Spider):
@@ -15,6 +18,7 @@ class NatashaclubSpider(scrapy.Spider):
 
     NEW_MARKER_LINK = '/templates/tmpl_nc/images_nc/new.gif'
 
+    PROFILE_HREF_SELECTOR = 'tr.panel:nth-child(1) > td:nth-child(1) > a:nth-child(2)'
     PROFILE_NICKNAME_SELECTOR, PROFILE_MESSAGE_SELECTOR = 'li.profile_nickname::text', 'td.table::text'
     PROFILE_AGE_SELECTOR, PROFILE_LOCATION_SELECTOR = 'li.profile_age_sex::text', 'li.profile_location::text'
     PROFILE_TIMESTAMP_SELECTOR = 'tr.panel:nth-child(3) > td:nth-child(2)::text'
@@ -43,6 +47,7 @@ class NatashaclubSpider(scrapy.Spider):
         if self.store_db is True:
             self.logger.info("Creating DB engine session")
             self.session = Session()
+            self.dialogue_service = DialogueService(self.session)
 
     def start_requests(self):
         """
@@ -95,27 +100,29 @@ class NatashaclubSpider(scrapy.Spider):
         Crawler message box data scrapping.
         """
         query, is_new = kwargs['query'], kwargs['is_new']
-        profile_age_sex = ''.join(response.css(self.PROFILE_AGE_SELECTOR).getall())
+        profile_href = response.css(self.PROFILE_HREF_SELECTOR).attrib['href']
+        profile_id = profile_href.split('=')[1]
+        message_timestamp = response.css(self.PROFILE_TIMESTAMP_SELECTOR).getall()[1][1:-1]
 
         try:
             payload = {
-                'chat_id': query['message'],
+                'account_id': self.auth_id,
+                'sender_id': profile_id,
+                'dialogue_id': query['message'],
+                'send_time': datetime.datetime.strptime(message_timestamp, '%Y-%m-%d %H:%M:%S'),
                 'viewed': is_new,
-                'profile_nickname': ''.join(response.css(self.PROFILE_NICKNAME_SELECTOR).getall()),
-                'profile_age': int(profile_age_sex.split()[0]),
-                'profile_sex': str(profile_age_sex.split()[2]),
-                'profile_location': ''.join(response.css(self.PROFILE_LOCATION_SELECTOR).getall()),
-                'profile_message': ''.join(response.css(self.PROFILE_MESSAGE_SELECTOR).getall()),
-                'profile_timestamp': response.css(self.PROFILE_TIMESTAMP_SELECTOR).getall()[1][1:-1]
+                'text': ''.join(response.css(self.PROFILE_MESSAGE_SELECTOR).getall())
             }
 
             if self.store_db is True:
-                db_message_create(self.session,
-                                  chat_id=query['message'].encode('ascii'),
-                                  send_time=payload['profile_timestamp'],
-                                  viewed=is_new,
-                                  sender=payload['profile_nickname'],
-                                  text=payload['profile_message'])
+                self.dialogue_service.record_dialogue(
+                    dialogue_id=payload['dialogue_id'],
+                    sender_id=payload['sender_id'],
+                    send_time=payload['send_time'],
+                    viewed=payload['viewed'],
+                    sender_message=payload['text'],
+                    receiver_id=payload['account_id'],
+                )
 
             yield payload
         except Exception as ex:

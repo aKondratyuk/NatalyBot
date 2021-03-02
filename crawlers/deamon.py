@@ -1,9 +1,8 @@
 import json
 
-from models import engine
-from sqlalchemy_utils import create_database, database_exists
 from scrapy.crawler import CrawlerProcess
 from natashaclub import NatashaclubSpider
+from services import create_tables
 
 
 def start_crawling():
@@ -40,7 +39,5 @@ def start_crawling():
 
 
 if __name__ == "__main__":
-    if not database_exists(engine.url):
-        create_database(engine.url)
-
+    create_tables()
     start_crawling()
