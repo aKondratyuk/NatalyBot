@@ -43,6 +43,7 @@ class NatashaclubSpider(scrapy.Spider):
         self.auth_password = kwargs['auth_password']
         self.show_new_only = 1 if kwargs['show_new_messages'] is True else 0
         self.store_db = kwargs['save_db']
+        self.logger.info(f"Parsing data for ID {self.auth_id}")
 
         if self.store_db is True:
             self.logger.info("Creating DB engine session")
