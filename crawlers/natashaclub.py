@@ -38,6 +38,7 @@ class NatashaclubSpider(scrapy.Spider):
 
         super().__init__(**kwargs)
         self.logger.info("Initiating crawler")
+        print(f"Initiating crawler")
 
         self.auth_id = kwargs['auth_id']
         self.auth_password = kwargs['auth_password']
@@ -47,6 +48,7 @@ class NatashaclubSpider(scrapy.Spider):
 
         if self.store_db is True:
             self.logger.info("Creating DB engine session")
+            print("Creating DB engine session")
             self.session = Session()
             self.dialogue_service = DialogueService(self.session)
 
@@ -57,6 +59,7 @@ class NatashaclubSpider(scrapy.Spider):
 
         super().start_requests()
         self.logger.info("Authenticating the system")
+        print("Authenticating the system")
         yield scrapy.FormRequest(url=self.AUTH_URL,
                                  formdata={'ID': self.auth_id, 'Password': self.auth_password},
                                  callback=self.authenticated)
@@ -67,6 +70,7 @@ class NatashaclubSpider(scrapy.Spider):
         """
 
         self.logger.info("Crawler authenticated successfully")
+        print("Crawler authenticated successfully")
         self.auth_token = str(response.headers['Set-Cookie']).split(';')[0].split('=')[-1]
 
         self.logger.info(f"Using cookie token: {self.auth_token}")
@@ -132,6 +136,7 @@ class NatashaclubSpider(scrapy.Spider):
     def close(self, reason):
         if self.store_db is True:
             self.logger.info("Closing DB engine session")
+            print("Closing DB engine session")
             self.session.close()
 
         super().close(self, reason)

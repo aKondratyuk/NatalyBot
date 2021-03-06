@@ -1,15 +1,27 @@
-from scrapy.crawler import CrawlerProcess
+from datetime import timedelta
+from datetime import datetime
+from twisted.internet import reactor, task
+from twisted.internet.defer import inlineCallbacks
+from scrapy.crawler import CrawlerRunner, Settings
 from natashaclub import NatashaclubSpider
 from services import create_tables, AccountService
 from dbcontext import session
 
 
-def start_crawling(**kwargs):
+def register_end():
+    print("Crawler finished job on: " + datetime.now().strftime("%H:%M:%S"))
+
+
+@inlineCallbacks
+def crawl_job(**kwargs):
+    print("Crawler started job on: " + datetime.now().strftime("%H:%M:%S"))
+
+    create_tables()
     account_service = AccountService(session)
     accounts = account_service.fetch_accounts()
 
-    if 'save_json' in kwargs:
-        process = CrawlerProcess(settings={
+    if 'save_json' in kwargs and kwargs['save_json'] is True:
+        settings = Settings(values={
             "FEEDS": {"profiles.json": {"format": "json"}},
             'CONCURRENT_REQUESTS': kwargs['concurrent_requests'],
             'CONCURRENT_REQUESTS_PER_DOMAIN': kwargs['concurrent_requests'],
@@ -18,7 +30,7 @@ def start_crawling(**kwargs):
             'DOWNLOAD_DELAY': 0
         })
     else:
-        process = CrawlerProcess(settings={
+        settings = Settings(values={
             'CONCURRENT_REQUESTS': kwargs['concurrent_requests'],
             'CONCURRENT_REQUESTS_PER_DOMAIN': kwargs['concurrent_requests'],
             'CONCURRENT_REQUESTS_PER_IP': kwargs['concurrent_requests'],
@@ -26,20 +38,29 @@ def start_crawling(**kwargs):
             'DOWNLOAD_DELAY': 0
         })
 
+    runner = CrawlerRunner(settings)
+
     for account in accounts:
-        process.crawl(NatashaclubSpider,
-                      auth_id=account.account_id,
-                      auth_password=account.account_password,
-                      show_new_messages=kwargs['show_new_messages'],
-                      save_db=kwargs['save_db'],
-                      save_json=kwargs['save_json'])
+        yield runner.crawl(NatashaclubSpider,
+                           auth_id=account.account_id,
+                           auth_password=account.account_password,
+                           show_new_messages=kwargs['show_new_messages'],
+                           save_db=kwargs['save_db'],
+                           save_json=kwargs['save_json'])
 
-    process.start()
+    return register_end()
 
 
-if __name__ == "__main__":
-    create_tables()
-    start_crawling(show_new_messages=False,
-                   concurrent_requests=5,
-                   save_db=True,
-                   save_json=False)
+loop = task.LoopingCall(crawl_job,
+                        show_new_messages=True,
+                        concurrent_requests=5,
+                        save_db=True,
+                        save_json=False)
+
+
+def schedule_crawl(delay: timedelta):
+    loop.start(delay.seconds)
+
+
+def main():
+    reactor.run()

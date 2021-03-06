@@ -42,6 +42,20 @@ class AccountService:
         return [Account(account_id=proxy.account_id,
                         account_password=proxy.account_password) for proxy in proxies]
 
+    def record_account(self,
+                       account_id: str,
+                       account_password: str):
+        if len(self.session.query(Dialogue).filter_by(account_id=account_id).all()):
+            logging.info(f"Entity with id {account_id} already exists")
+
+        else:
+            account = Account(account_id=account_id,
+                              account_password=account_password)
+
+            logging.info(f"Recording entity: {account}")
+            self.session.add(account)
+            self.session.commit()
+
 
 def create_tables():
     logging.info("Creating missing table infrastructure")
