@@ -1,5 +1,5 @@
-from datetime import timedelta
-from datetime import datetime
+import threading
+from datetime import timedelta, datetime
 from twisted.internet import reactor, task
 from twisted.internet.defer import inlineCallbacks
 from scrapy.crawler import CrawlerRunner, Settings
@@ -60,7 +60,12 @@ loop = task.LoopingCall(crawl_job,
 
 def schedule_crawl(delay: timedelta):
     loop.start(delay.seconds)
+    reactor.run(installSignalHandlers=False)
 
 
-def main():
-    reactor.run()
+def deamonise_crawler(delay: timedelta):
+    crawl_thread = threading.Thread(target=schedule_crawl,
+                                    args=(delay,),
+                                    daemon=False)
+    crawl_thread.start()
+    return crawl_thread
