@@ -14,4 +14,4 @@ dialogue_table = Table('Dialogue',
                        Column('send_time', DateTime, nullable=False),
                        Column('viewed', Boolean, nullable=False),
                        Column('sender_message', Text, nullable=False),
-                       Column('receiver_id', String(10), ForeignKey('Account.account_id')))
+                       Column('receiver_id', None, ForeignKey('Account.account_id')))

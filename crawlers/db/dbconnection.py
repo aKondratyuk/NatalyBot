@@ -7,7 +7,7 @@ HOST = os.getenv('VAR_HOST')
 PORT = '5432'
 DATABASE = os.getenv('VAR_DATABASE')
 
-connection_string = '{base}://{user}:{pw}@{host}:{port}/{db}'.format(
+DSN = '{base}://{user}:{pw}@{host}:{port}/{db}'.format(
     base=BASE, user=USERNAME, pw=PASSWORD,
     host=HOST, port=PORT, db=DATABASE
 )
