@@ -1,17 +1,16 @@
-from sqlalchemy import MetaData, Table, Column, String,\
-    DateTime, Boolean, Text, ForeignKey
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-metadata = MetaData()
-account_table = Table('Account',
-                      metadata,
-                      Column('account_id', String(10), primary_key=True),
-                      Column('account_password', String(50), nullable=False))
+from .dbconnection import *
 
-dialogue_table = Table('Dialogue',
-                       metadata,
-                       Column('dialogue_id', String(10), primary_key=True),
-                       Column('sender_id', String(10), nullable=False),
-                       Column('send_time', DateTime, nullable=False),
-                       Column('viewed', Boolean, nullable=False),
-                       Column('sender_message', Text, nullable=False),
-                       Column('receiver_id', None, ForeignKey('Account.account_id')))
+connection_string = '{base}://{user}:{pw}@{host}:{port}/{db}'.format(
+    base=BASE, user=USERNAME, pw=PASSWORD,
+    host=HOST, port=PORT, db=DATABASE
+)
+
+DBEngine = create_engine(connection_string)
+Session = sessionmaker(bind=DBEngine)
+
+ModelBase = declarative_base()
+session = Session()
