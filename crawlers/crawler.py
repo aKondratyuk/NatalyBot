@@ -87,15 +87,15 @@ class Crawler:
             await self.parse_tables(http, token)
 
     async def parse_tables(self, http, token):
-        response = await http.get(f'https://www.natashaclub.com/inbox.php?page=1&filterID=&filterStartDate'
-                                     f'=&filterEndDate=&'
-                                     f'filterNewOnly={self.show_new_only}&filterPPage={self.ENTRIES_PER_PAGE}',
-                                  headers=self.form_headers(token))
+        resource_href = f'https://www.natashaclub.com/inbox.php?page=1&filterID=&filterStartDate=&filterEndDate=&' \
+                        f'filterNewOnly={self.show_new_only}&filterPPage={self.ENTRIES_PER_PAGE}'
 
-        document = html.fromstring(await response.text())
-        next_page_link_element = document.cssselect(self.NEXT_PAGE_LINK_SELECTOR)
+        while True:
+            response = await http.get(resource_href, headers=self.form_headers(token))
 
-        while len(next_page_link_element) > 0:
+            document = html.fromstring(await response.text())
+            next_page_link_elements = document.cssselect(self.NEXT_PAGE_LINK_SELECTOR)
+
             refs = [href.attrib['href'] for href in document.cssselect(self.MESSAGE_HREF_SELECTOR)]
             markers = [marker.attrib['src'] for marker in document.cssselect(self.MARKER_HREF_SELECTOR)]
 
@@ -107,4 +107,8 @@ class Crawler:
                                    for ref, marker in
                                    zip(refs, markers)])
 
-            next_page_link_element = []
+            if len(next_page_link_elements) == 0:
+                break
+            else:
+                resource_href = "https://www.natashaclub.com" + [href.attrib['href'] for href
+                                                                 in next_page_link_elements][0]
