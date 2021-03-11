@@ -2,7 +2,7 @@ import asyncio
 import threading
 
 from crawler import Crawler
-from db import AccountService, Session, create_tables
+from db import AccountService, session, create_tables
 
 
 async def crawl_single(**kwargs):
@@ -11,7 +11,7 @@ async def crawl_single(**kwargs):
 
 
 async def main_event_loop(delay: float):
-    service = AccountService(Session())
+    service = AccountService(session)
     accounts = service.fetch_accounts()
 
     await asyncio.sleep(delay)

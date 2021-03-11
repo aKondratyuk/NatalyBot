@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import aiohttp
 
-from db import DialogueService, Session
+from db import DialogueService, session
 from lxml import html
 
 
@@ -35,12 +35,10 @@ class Crawler:
 
         if self.store_db is True:
             print("Creating DB engine session")
+            self.dialogue_service = DialogueService(session)
 
-            self.session = Session()
-            self.dialogue_service = DialogueService(self.session)
-
-    async def parse_single_message(self, session, token, ref, query, is_new):
-        async with session.get(ref, headers=self.form_headers(token)) as response:
+    async def parse_single_message(self, http, token, ref, query, is_new):
+        async with http.get(ref, headers=self.form_headers(token)) as response:
             resp = await response.text()
 
             document = html.fromstring(resp)
@@ -81,18 +79,18 @@ class Crawler:
             'Password': self.auth_password
         }
 
-        async with aiohttp.ClientSession() as session:
-            response = await session.post(self.AUTH_URL, data=form_data)
+        async with aiohttp.ClientSession() as http:
+            response = await http.post(self.AUTH_URL, data=form_data)
             token = str(response.headers['Set-Cookie']).split(';')[0].split('=')[-1]
 
             print(f"Using authentication token: {token} for {self.auth_id}")
-            await self.parse_tables(session, token)
+            await self.parse_tables(http, token)
 
-    async def parse_tables(self, session, token):
-        response = await session.get(f'https://www.natashaclub.com/inbox.php?page=1&filterID=&filterStartDate'
+    async def parse_tables(self, http, token):
+        response = await http.get(f'https://www.natashaclub.com/inbox.php?page=1&filterID=&filterStartDate'
                                      f'=&filterEndDate=&'
                                      f'filterNewOnly={self.show_new_only}&filterPPage={self.ENTRIES_PER_PAGE}',
-                                     headers=self.form_headers(token))
+                                  headers=self.form_headers(token))
 
         document = html.fromstring(await response.text())
         next_page_link_element = document.cssselect(self.NEXT_PAGE_LINK_SELECTOR)
@@ -101,7 +99,7 @@ class Crawler:
             refs = [href.attrib['href'] for href in document.cssselect(self.MESSAGE_HREF_SELECTOR)]
             markers = [marker.attrib['src'] for marker in document.cssselect(self.MARKER_HREF_SELECTOR)]
 
-            await asyncio.gather(*[self.parse_single_message(session,
+            await asyncio.gather(*[self.parse_single_message(http,
                                                              token,
                                                              "https://www.natashaclub.com/" + ref,
                                                              self.parse_url_query(ref),
