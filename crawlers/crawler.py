@@ -37,28 +37,29 @@ class Crawler:
             print("Creating DB engine session")
             self.dialogue_service = DialogueService(session)
 
-    async def parse_single_message(self, http, token, ref, query, is_new):
-        async with http.get(ref, headers=self.form_headers(token)) as response:
-            resp = await response.text()
+    async def parse_single_message(self, token, ref, query, is_new):
+        async with aiohttp.ClientSession() as http:
+            async with http.get(ref, headers=self.form_headers(token)) as response:
+                resp = await response.text()
 
-            document = html.fromstring(resp)
-            profile_hrefs = [refs.attrib['href'] for refs
-                             in document.cssselect(self.PROFILE_HREF_SELECTOR)]
+                document = html.fromstring(resp)
+                profile_hrefs = [refs.attrib['href'] for refs
+                                 in document.cssselect(self.PROFILE_HREF_SELECTOR)]
 
-            message_timestamps = [stamp.text_content() for stamp
-                                  in document.cssselect(self.PROFILE_TIMESTAMP_SELECTOR)]
-            key_message_timestamp = message_timestamps[0].replace('\xa0Date:', '')[1:-1]
+                message_timestamps = [stamp.text_content() for stamp
+                                      in document.cssselect(self.PROFILE_TIMESTAMP_SELECTOR)]
+                key_message_timestamp = message_timestamps[0].replace('\xa0Date:', '')[1:-1]
 
-            if self.store_db is True:
-                self.dialogue_service.record_dialogue(
-                    dialogue_id=query['message'],
-                    sender_id=profile_hrefs[0].split('=')[1],
-                    send_time=datetime.datetime.strptime(key_message_timestamp, '%Y-%m-%d %H:%M:%S'),
-                    viewed=is_new,
-                    sender_message=''.join([chunk.text_content()
-                                            for chunk in document.cssselect(self.PROFILE_MESSAGE_SELECTOR)]),
-                    receiver_id=self.auth_id,
-                )
+                if self.store_db is True:
+                    self.dialogue_service.record_dialogue(
+                        dialogue_id=query['message'],
+                        sender_id=profile_hrefs[0].split('=')[1],
+                        send_time=datetime.datetime.strptime(key_message_timestamp, '%Y-%m-%d %H:%M:%S'),
+                        viewed=is_new,
+                        sender_message=''.join([chunk.text_content()
+                                                for chunk in document.cssselect(self.PROFILE_MESSAGE_SELECTOR)]),
+                        receiver_id=self.auth_id,
+                    )
 
     @staticmethod
     def form_headers(auth_token: str):
@@ -84,31 +85,34 @@ class Crawler:
             token = str(response.headers['Set-Cookie']).split(';')[0].split('=')[-1]
 
             print(f"Using authentication token: {token} for {self.auth_id}")
-            await self.parse_tables(http, token)
+            await self.parse_tables(token)
 
-    async def parse_tables(self, http, token):
-        resource_href = f'https://www.natashaclub.com/inbox.php?page=1&filterID=&filterStartDate=&filterEndDate=&' \
-                        f'filterNewOnly={self.show_new_only}&filterPPage={self.ENTRIES_PER_PAGE}'
+    async def parse_tables(self, token):
+        resource_href = f'https://www.natashaclub.com/inbox.php?page=1&filterID=&filterStartDate=&' \
+                        f'filterEndDate=&filterNewOnly={self.show_new_only}&filterPPage={self.ENTRIES_PER_PAGE}'
 
         while True:
-            response = await http.get(resource_href, headers=self.form_headers(token))
+            async with aiohttp.ClientSession() as http:
+                response = await http.get(resource_href, headers=self.form_headers(token))
 
-            document = html.fromstring(await response.text())
-            next_page_link_elements = document.cssselect(self.NEXT_PAGE_LINK_SELECTOR)
+                document = html.fromstring(await response.text())
+                page_navigation_link_elements = document.cssselect(self.NEXT_PAGE_LINK_SELECTOR)
 
-            refs = [href.attrib['href'] for href in document.cssselect(self.MESSAGE_HREF_SELECTOR)]
-            markers = [marker.attrib['src'] for marker in document.cssselect(self.MARKER_HREF_SELECTOR)]
+                page_navigation_link = [href.attrib['href'] for href in page_navigation_link_elements
+                                        if href.text_content() == 'Next']
 
-            await asyncio.gather(*[self.parse_single_message(http,
-                                                             token,
-                                                             "https://www.natashaclub.com/" + ref,
-                                                             self.parse_url_query(ref),
-                                                             marker == self.NEW_MARKER_LINK)
-                                   for ref, marker in
-                                   zip(refs, markers)])
+                refs = [href.attrib['href'] for href in document.cssselect(self.MESSAGE_HREF_SELECTOR)]
+                markers = [marker.attrib['src'] for marker in document.cssselect(self.MARKER_HREF_SELECTOR)]
 
-            if len(next_page_link_elements) == 0:
-                break
-            else:
-                resource_href = "https://www.natashaclub.com" + [href.attrib['href'] for href
-                                                                 in next_page_link_elements][0]
+                await asyncio.gather(*[self.parse_single_message(token,
+                                                                 "https://www.natashaclub.com/" + ref,
+                                                                 self.parse_url_query(ref),
+                                                                 marker == self.NEW_MARKER_LINK)
+                                       for ref, marker in
+                                       zip(refs, markers)])
+
+                if len(page_navigation_link) == 0:
+                    break
+                else:
+                    resource_href = "https://www.natashaclub.com" + page_navigation_link[0]
+                    print(f"Switching to: {resource_href}")
