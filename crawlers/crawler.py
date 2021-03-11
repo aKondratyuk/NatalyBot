@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import aiohttp
 
-from db import DialogueService, session
+from .db import DialogueService, session
 from lxml import html
 
 

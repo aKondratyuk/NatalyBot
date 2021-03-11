@@ -1,8 +1,8 @@
 import asyncio
 import threading
 
-from crawler import Crawler
-from db import AccountService, session, create_tables
+from .crawler import Crawler
+from .db import AccountService, session
 
 
 async def crawl_single(**kwargs):
@@ -41,8 +41,3 @@ def crawler_fire_and_forget(delay: float, join_after_complete=False, show_new_me
 
     if join_after_complete:
         crawler_thread.join()
-
-
-if __name__ == '__main__':
-    create_tables()
-    crawler_fire_and_forget(delay=0.0, show_new_messages=False)
